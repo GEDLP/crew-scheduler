@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Crew Scheduler v5</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand-card">
+        <div class="brand-mark">CS</div>
+        <div>
+          <div class="brand-title">Crew Scheduler</div>
+          <div class="brand-subtitle">Prototype v5 • style Loadout</div>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <button class="nav-btn active" data-section="dashboard">Calendrier</button>
+        <button class="nav-btn" data-section="people">Équipe</button>
+        <button class="nav-btn" data-section="event-detail">Événement</button>
+        <button class="nav-btn" data-section="outbox">Envois</button>
+        <button class="nav-btn" data-section="settings">Connexions</button>
+      </nav>
+
+      <div class="sidebar-block small">
+        <div class="sidebar-label">Données</div>
+        <button id="exportDataBtn" class="ghost-btn full">Exporter JSON</button>
+        <label class="ghost-btn full upload-like">
+          Importer JSON
+          <input id="importJsonInput" type="file" accept="application/json" hidden />
+        </label>
+        <button id="resetDemoBtn" class="ghost-btn full danger">Réinitialiser démo</button>
+      </div>
+
+      <div class="sidebar-block small">
+        <div class="sidebar-label">Outlook</div>
+        <div class="hint">La vraie connexion viendra après hébergement HTTPS.</div>
+        <button id="simulateOutlookSyncBtn" class="primary-btn full">Simuler sync Outlook</button>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="page-header">
+        <div>
+          <h1>Crew Scheduler</h1>
+          <p>Planification d’équipes événementielles avec calendrier visible, préférences email/SMS et base prête pour GitHub Pages.</p>
+        </div>
+        <div class="header-actions">
+          <label class="primary-btn upload-like">
+            Importer .ics Outlook
+            <input id="icsInput" type="file" accept=".ics,text/calendar" hidden />
+          </label>
+          <button id="newEventBtn" class="ghost-btn">Nouvel événement</button>
+          <button id="newPersonBtn" class="ghost-btn">Nouvelle personne</button>
+        </div>
+      </header>
+
+      <section id="dashboard" class="section active">
+        <div class="grid two-col">
+          <div class="card">
+            <div class="card-header between">
+              <div>
+                <div class="eyebrow">Calendrier</div>
+                <h2 id="calendarTitle">Mois</h2>
+              </div>
+              <div class="inline-actions">
+                <button id="prevMonthBtn" class="ghost-btn sm">◀</button>
+                <button id="todayBtn" class="ghost-btn sm">Aujourd’hui</button>
+                <button id="nextMonthBtn" class="ghost-btn sm">▶</button>
+              </div>
+            </div>
+            <div id="calendarGrid" class="calendar-grid"></div>
+          </div>
+
+          <div class="stack">
+            <div class="card">
+              <div class="card-header between">
+                <div>
+                  <div class="eyebrow">Événements</div>
+                  <h2>Liste</h2>
+                </div>
+                <input id="eventSearchInput" class="text-input compact" placeholder="Rechercher un événement" />
+              </div>
+              <div id="eventsList" class="list"></div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="eyebrow">Alertes</div>
+                  <h2>Couverture</h2>
+                </div>
+              </div>
+              <div id="alertsList" class="list compact-list"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="people" class="section">
+        <div class="grid two-col">
+          <div class="card">
+            <div class="card-header between">
+              <div>
+                <div class="eyebrow">Ressources</div>
+                <h2>Pigistes et employés</h2>
+              </div>
+              <input id="peopleSearchInput" class="text-input compact" placeholder="Rechercher une personne" />
+            </div>
+            <div id="peopleList" class="list"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="eyebrow">Fiche</div>
+                <h2 id="personFormTitle">Ajouter / modifier une personne</h2>
+              </div>
+            </div>
+            <form id="personForm" class="form-grid">
+              <input type="hidden" id="personId" />
+              <label>
+                <span>Nom</span>
+                <input id="personName" class="text-input" required />
+              </label>
+              <label>
+                <span>Type</span>
+                <select id="personType" class="text-input">
+                  <option value="pigiste">Pigiste</option>
+                  <option value="employe">Employé</option>
+                </select>
+              </label>
+              <label>
+                <span>Rôle principal</span>
+                <input id="personRole" class="text-input" placeholder="Son, éclairage, vidéo..." />
+              </label>
+              <label>
+                <span>Email</span>
+                <input id="personEmail" class="text-input" type="email" />
+              </label>
+              <label>
+                <span>Téléphone</span>
+                <input id="personPhone" class="text-input" />
+              </label>
+              <label>
+                <span>Préférence contact</span>
+                <select id="personContactPreference" class="text-input">
+                  <option value="email">Email</option>
+                  <option value="sms">SMS</option>
+                  <option value="both">Les 2</option>
+                  <option value="none">Aucune</option>
+                </select>
+              </label>
+              <label class="full-span">
+                <span>Notes</span>
+                <textarea id="personNotes" class="text-input textarea"></textarea>
+              </label>
+              <div class="form-actions full-span">
+                <button class="primary-btn" type="submit">Enregistrer la personne</button>
+                <button class="ghost-btn" id="personFormResetBtn" type="button">Vider</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <section id="event-detail" class="section">
+        <div class="grid two-col-detail">
+          <div class="stack">
+            <div class="card">
+              <div class="card-header between">
+                <div>
+                  <div class="eyebrow">Événement sélectionné</div>
+                  <h2 id="selectedEventTitle">Aucun événement sélectionné</h2>
+                </div>
+                <button id="duplicateEventBtn" class="ghost-btn sm">Dupliquer</button>
+              </div>
+              <div id="selectedEventMeta" class="meta"></div>
+            </div>
+
+            <div class="card">
+              <div class="card-header between">
+                <div>
+                  <div class="eyebrow">Besoins</div>
+                  <h2>Rôles requis</h2>
+                </div>
+                <button id="addRequirementBtn" class="ghost-btn sm">Ajouter un rôle</button>
+              </div>
+              <div id="requirementsList" class="list"></div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="eyebrow">Remplacements</div>
+                  <h2>Suggestions automatiques</h2>
+                </div>
+              </div>
+              <div id="replacementSuggestions" class="list compact-list"></div>
+            </div>
+          </div>
+
+          <div class="stack">
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="eyebrow">Assignation</div>
+                  <h2>Équipe de l’événement</h2>
+                </div>
+              </div>
+              <div id="assignmentsList" class="list"></div>
+              <div class="toolbar-bottom">
+                <button id="sendAllEventBtn" class="primary-btn">Envoyer tout</button>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="eyebrow">Édition</div>
+                  <h2>Créer / modifier l’événement</h2>
+                </div>
+              </div>
+              <form id="eventForm" class="form-grid">
+                <input type="hidden" id="eventId" />
+                <label>
+                  <span>Titre</span>
+                  <input id="eventTitleInput" class="text-input" required />
+                </label>
+                <label>
+                  <span>Lieu</span>
+                  <input id="eventLocationInput" class="text-input" />
+                </label>
+                <label>
+                  <span>Début</span>
+                  <input id="eventStartInput" type="datetime-local" class="text-input" required />
+                </label>
+                <label>
+                  <span>Fin</span>
+                  <input id="eventEndInput" type="datetime-local" class="text-input" required />
+                </label>
+                <label class="full-span">
+                  <span>Description</span>
+                  <textarea id="eventDescriptionInput" class="text-input textarea"></textarea>
+                </label>
+                <div class="form-actions full-span">
+                  <button class="primary-btn" type="submit">Enregistrer l’événement</button>
+                  <button class="ghost-btn" id="eventFormResetBtn" type="button">Vider</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="outbox" class="section">
+        <div class="grid two-col">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="eyebrow">Centre d’envoi</div>
+                <h2>Prévisualisation message</h2>
+              </div>
+            </div>
+            <div class="form-grid">
+              <label>
+                <span>Type</span>
+                <select id="messageTypePreview" class="text-input">
+                  <option value="email">Email</option>
+                  <option value="sms">SMS</option>
+                </select>
+              </label>
+              <label>
+                <span>Objet email</span>
+                <input id="messageSubjectPreview" class="text-input" />
+              </label>
+              <label class="full-span">
+                <span>Message</span>
+                <textarea id="messageBodyPreview" class="text-input textarea tall"></textarea>
+              </label>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header between">
+              <div>
+                <div class="eyebrow">Historique</div>
+                <h2>Journal des envois</h2>
+              </div>
+              <button id="clearLogBtn" class="ghost-btn sm">Vider le journal</button>
+            </div>
+            <div id="notificationLogList" class="list"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="settings" class="section">
+        <div class="grid two-col">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="eyebrow">Microsoft 365</div>
+                <h2>Préparation Outlook</h2>
+              </div>
+            </div>
+            <form id="outlookConfigForm" class="form-grid">
+              <label>
+                <span>Client ID</span>
+                <input id="clientIdInput" class="text-input" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" />
+              </label>
+              <label>
+                <span>Tenant ID</span>
+                <input id="tenantIdInput" class="text-input" placeholder="common ou tenant GUID" />
+              </label>
+              <label class="full-span">
+                <span>Redirect URI</span>
+                <input id="redirectUriInput" class="text-input" placeholder="https://ton-site.github.io/crew-scheduler/" />
+              </label>
+              <div class="form-actions full-span">
+                <button class="primary-btn" type="submit">Sauvegarder la config</button>
+                <button id="fakeConnectMicrosoftBtn" class="ghost-btn" type="button">Tester le bouton Microsoft</button>
+              </div>
+            </form>
+            <div id="outlookConfigSummary" class="meta"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="eyebrow">Notifications</div>
+                <h2>Préparer le vrai branchement</h2>
+              </div>
+            </div>
+            <form id="webhookConfigForm" class="form-grid">
+              <label class="full-span">
+                <span>Webhook email (plus tard)</span>
+                <input id="emailWebhookInput" class="text-input" placeholder="https://..." />
+              </label>
+              <label class="full-span">
+                <span>Webhook SMS (plus tard)</span>
+                <input id="smsWebhookInput" class="text-input" placeholder="https://..." />
+              </label>
+              <div class="form-actions full-span">
+                <button class="primary-btn" type="submit">Sauvegarder les webhooks</button>
+              </div>
+            </form>
+            <div id="webhookConfigSummary" class="meta"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <template id="confirmViewTemplate">
+    <div class="confirm-page">
+      <div class="confirm-card">
+        <div class="eyebrow">Confirmation d’événement</div>
+        <h1 id="confirmEventTitle"></h1>
+        <p id="confirmPersonLine"></p>
+        <p id="confirmRoleLine"></p>
+        <p id="confirmDateLine"></p>
+        <div class="confirm-actions">
+          <button id="confirmAcceptBtn" class="primary-btn">Je confirme</button>
+          <button id="confirmDeclineBtn" class="ghost-btn danger">Je refuse</button>
+        </div>
+        <p id="confirmResultMessage" class="confirm-result"></p>
+      </div>
+    </div>
+  </template>
+
+  <script src="app.js"></script>
+</body>
+</html>
