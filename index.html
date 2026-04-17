@@ -225,6 +225,14 @@
     function firstOfMonthIso(offset = 0){ const d = new Date(); d.setDate(1); d.setMonth(d.getMonth()+offset); return d.toISOString().slice(0,10); }
     function escapeHtml(v){ return String(v ?? '').replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s])); }
 
+    function parseJwtPayload(token){
+      try{
+        const part = token.split('.')[1];
+        const base64 = part.replace(/-/g,'+').replace(/_/g,'/');
+        const json = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+        return JSON.parse(json);
+      }catch(e){ return null; }
+    }
 
     function msalConfigFromState(){
       return {
@@ -295,9 +303,13 @@
       msalInstance.setActiveAccount(account);
       try{
         const silent = await msalInstance.acquireTokenSilent({ scopes: OUTLOOK_SCOPES, account });
+        const payload = parseJwtPayload(silent.accessToken);
+        console.log('GRAPH_TOKEN_CLAIMS', {username: account.username, aud: payload?.aud, scp: payload?.scp, tid: payload?.tid, iss: payload?.iss});
         return silent.accessToken;
       }catch(err){
         const popup = await msalInstance.acquireTokenPopup({ scopes: OUTLOOK_SCOPES, account, prompt:'select_account' });
+        const payload = parseJwtPayload(popup.accessToken);
+        console.log('GRAPH_TOKEN_CLAIMS', {username: account.username, aud: payload?.aud, scp: payload?.scp, tid: payload?.tid, iss: payload?.iss});
         return popup.accessToken;
       }
     }
