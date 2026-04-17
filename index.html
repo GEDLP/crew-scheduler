@@ -3,1026 +3,202 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Crew Scheduler v6 — Outlook live + notifications</title>
+  <title>Crew Scheduler v6.2 Debug</title>
   <style>
-    :root{
-      --bg:#f5f7fb; --panel:#fff; --text:#0f172a; --muted:#64748b; --line:#e2e8f0;
-      --blue:#3b82f6; --blueSoft:#dbeafe; --green:#10b981; --greenSoft:#d1fae5;
-      --red:#ef4444; --redSoft:#fee2e2; --amber:#f59e0b; --amberSoft:#fef3c7;
-      --violet:#7c3aed; --violetSoft:#ede9fe; --shadow:0 18px 55px rgba(15,23,42,.08);
-      --radius:22px;
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0; font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      color:var(--text); background:linear-gradient(180deg,#f8fbff 0%, var(--bg) 100%);
-    }
-    button,input,select,textarea{font:inherit}
-    .app{min-height:100vh;display:grid;grid-template-columns:250px 1fr}
-    .sidebar{position:sticky;top:0;height:100vh;padding:18px;border-right:1px solid rgba(226,232,240,.9);background:rgba(255,255,255,.84);backdrop-filter:blur(12px)}
-    .brand,.frame,.hero,.stat,.outlookBox,.detailCard,.noticeCard,.agendaItem,.calendarCell,.miniCard{background:#fff;border:1px solid var(--line);box-shadow:var(--shadow)}
-    .brand{border-radius:26px;padding:18px;margin-bottom:16px;background:linear-gradient(180deg,#fff 0%, #f8fafc 100%)}
-    .logo{width:46px;height:46px;border-radius:15px;background:#111827;color:#fff;display:grid;place-items:center;font-weight:800;letter-spacing:.04em;margin-bottom:12px}
-    .brand h1{margin:0 0 6px;font-size:16px;line-height:1.1}
-    .brand p{margin:0;color:var(--muted);font-size:12px}
-    .nav{display:grid;gap:8px}
-    .nav button{padding:12px 14px;border:none;border-radius:16px;background:transparent;text-align:left;font-weight:700;color:var(--text);cursor:pointer}
-    .nav button.active{background:#eff6ff;color:#1d4ed8}
-    .nav button:hover{background:#f8fafc}
-
-    .main{padding:26px}
-    .topbar{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:16px}
-    .topbar h2{margin:0;font-size:34px;letter-spacing:-.04em}
-    .topbar p{margin:6px 0 0;color:var(--muted);max-width:880px}
-    .actions{display:flex;gap:10px;flex-wrap:wrap}
-    .btn{border:none;border-radius:14px;padding:12px 16px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
-    .btn.primary{background:var(--blue);color:#fff}
-    .btn.secondary{background:#fff;border:1px solid var(--line);color:var(--text)}
-    .btn.ghost{background:#eef2ff;color:#3730a3}
-    .btn.small{padding:8px 12px;border-radius:12px;font-size:13px}
-    .btn.danger{background:#fff1f2;color:#be123c;border:1px solid #fecdd3}
-    .hero{border-radius:26px;padding:18px;margin-bottom:16px;background:linear-gradient(180deg,#fff 0%, #fbfdff 100%)}
-    .heroGrid{display:grid;grid-template-columns:1.25fr .75fr;gap:16px}
-    .pills{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
-    .pill,.tag{display:inline-flex;align-items:center;gap:6px;padding:7px 11px;border-radius:999px;font-size:12px;font-weight:800}
-    .pill.complete{background:var(--greenSoft);color:#047857}.pill.pending{background:var(--amberSoft);color:#b45309}.pill.incomplete{background:var(--redSoft);color:#b91c1c}
-    .pill.confirmed{background:var(--greenSoft);color:#047857}.pill.sent{background:var(--blueSoft);color:#1d4ed8}.pill.declined{background:var(--redSoft);color:#b91c1c}.pill.waiting{background:var(--amberSoft);color:#b45309}
-    .tag.outlook{background:var(--violetSoft);color:#5b21b6}.tag.email{background:#e0f2fe;color:#075985}.tag.sms{background:#ede9fe;color:#6d28d9}.tag.both{background:#ecfccb;color:#3f6212}.tag.none{background:#f1f5f9;color:#475569}
-    .heroHint{border:1px dashed #cbd5e1;border-radius:16px;padding:12px;background:#f8fafc;color:#475569}
-    .heroFields{display:grid;gap:10px}
-    .stats{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:16px}
-    .stat{border-radius:22px;padding:16px;background:linear-gradient(180deg,#fff 0%, #fbfdff 100%)}
-    .stat .label{font-size:12px;color:var(--muted);margin-bottom:10px}.stat .value{font-size:28px;font-weight:900;letter-spacing:-.04em}
-    .frame{border-radius:26px;padding:18px}
-    .layout{display:grid;grid-template-columns:1.18fr .82fr;gap:16px}
-    .stack{display:grid;gap:16px}
-    .sectionHead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px}
-    .sectionHead h3{margin:0;font-size:18px}.sectionHead p{margin:3px 0 0;color:var(--muted);font-size:12px}
-    .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
-    .input,.select,textarea.input{background:#fff;border:1px solid var(--line);border-radius:14px;padding:11px 13px;min-height:44px;color:var(--text)}
-    textarea.input{min-height:92px;resize:vertical}
-
-    .calendarHead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
-    .calendarNav{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-    .calendarTitle{font-size:20px;font-weight:900;letter-spacing:-.03em}
-    .week{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin-bottom:8px}
-    .dow{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);padding:0 4px 4px;font-weight:800}
-    .calendarGrid{display:grid;grid-template-columns:repeat(7,1fr);gap:10px}
-    .calendarCell{min-height:132px;border-radius:20px;padding:10px;display:flex;flex-direction:column;gap:8px;cursor:pointer;background:linear-gradient(180deg,#fff 0%, #fbfdff 100%)}
-    .calendarCell.other{opacity:.45}.calendarCell.today{box-shadow:inset 0 0 0 2px #bfdbfe}.calendarCell.active{box-shadow:inset 0 0 0 2px #3b82f6;background:#f8fbff}
-    .calendarDate{display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:800}
-    .calendarEvents{display:grid;gap:6px}
-    .calendarEvent{border:none;text-align:left;border-radius:12px;padding:8px 9px;background:#eef2ff;color:#312e81;cursor:pointer;font-size:12px;font-weight:800}
-    .calendarBadge{font-size:11px;padding:4px 7px;border-radius:999px;background:#eff6ff;color:#1d4ed8}
-
-    .agendaList,.noticeList,.personList,.assignmentList,.queueList{display:grid;gap:10px}
-    .agendaItem,.noticeCard,.miniCard{border-radius:18px;padding:12px;background:#fff}
-    .agendaItem.active{box-shadow:inset 0 0 0 2px #93c5fd;background:#f8fbff}
-    .agendaTop{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
-    .eventName,.personName{font-weight:900}
-    .muted{color:var(--muted)} .tiny{font-size:12px;color:var(--muted)}
-    .detailCard{border-radius:24px;padding:16px;background:linear-gradient(180deg,#fff 0%, #fbfdff 100%)}
-    .detailTop{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:12px}.detailTop h3{margin:0;font-size:24px;line-height:1.06}
-    .roleMatrix{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:14px}
-    .miniCard{padding:14px}
-    .miniCard strong{display:block;font-size:20px;margin-top:6px}
-    .assignmentRow{display:grid;grid-template-columns:1.2fr auto auto auto;gap:10px;align-items:center;border:1px solid #edf2f7;border-radius:16px;padding:12px;background:#fff}
-    .assignmentMeta,.personMeta{display:flex;gap:8px;flex-wrap:wrap;margin-top:5px}
-    .assignmentActions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
-    .linkBox{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px;padding:10px;border:1px dashed var(--line);border-radius:14px;background:#f8fafc}
-    .linkValue{flex:1;min-width:220px;font-size:12px;color:#334155;word-break:break-all}
-    .noticeCard{border:1px solid #fecaca;background:#fff5f5}.noticeCard.good{border-color:#bbf7d0;background:#f0fdf4}.noticeActions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-    .queueRow{border:1px solid var(--line);border-radius:16px;padding:12px;background:#fff}
-
-    table{width:100%;border-collapse:collapse}.tableWrap{border:1px solid var(--line);border-radius:20px;overflow:hidden;background:#fff}
-    thead th{text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);background:#f8fafc;padding:14px 16px;border-bottom:1px solid var(--line)}
-    tbody td{padding:13px 16px;border-bottom:1px solid #eef2f7;vertical-align:top} tbody tr:last-child td{border-bottom:none}
-
-    dialog{border:none;padding:0;border-radius:24px;max-width:680px;width:min(94vw,680px);box-shadow:0 30px 120px rgba(15,23,42,.28)}
-    dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
-    .modal{padding:20px}.modal h3{margin:0 0 14px;font-size:24px}.formGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.formGrid .full{grid-column:1 / -1} label{display:grid;gap:7px;font-weight:700;font-size:13px}.modalActions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}
-
-    .confirmPage{min-height:100vh;display:grid;place-items:center;padding:20px;background:radial-gradient(circle at top, #eff6ff 0%, #f8fafc 35%, #eef2f7 100%)}
-    .confirmCard{width:min(760px,96vw);background:#fff;border:1px solid var(--line);border-radius:28px;padding:26px;box-shadow:var(--shadow)}
-    .confirmCard h1{margin:12px 0 10px;font-size:34px;letter-spacing:-.04em}.confirmCard p{color:var(--muted)}.confirmActions{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}.confirmInfo{display:grid;gap:10px;margin-top:18px}.confirmInfo .row{border:1px solid var(--line);border-radius:16px;padding:12px;background:#fbfdff}
-    .empty{border:1px dashed var(--line);border-radius:18px;padding:24px;text-align:center;color:var(--muted);background:#fbfdff}
-
-    @media (max-width:1280px){.stats{grid-template-columns:repeat(3,1fr)} .layout{grid-template-columns:1fr} .heroGrid{grid-template-columns:1fr}}
-    @media (max-width:860px){.app{grid-template-columns:1fr}.sidebar{display:none}.main{padding:16px}.stats{grid-template-columns:repeat(2,1fr)}.week,.calendarGrid{grid-template-columns:repeat(2,1fr)}.dow{display:none}.formGrid{grid-template-columns:1fr}.assignmentRow{grid-template-columns:1fr}}
-    @media (max-width:620px){.stats{grid-template-columns:1fr}.topbar{flex-direction:column}.week,.calendarGrid{grid-template-columns:1fr}}
+    body{font-family:Arial,sans-serif;background:#f6f8fb;color:#0f172a;margin:0}
+    .wrap{max-width:1100px;margin:0 auto;padding:24px}
+    .bar{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+    button{border:none;border-radius:10px;padding:10px 14px;background:#2563eb;color:#fff;font-weight:600;cursor:pointer}
+    button.secondary{background:#334155}
+    .card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:16px;margin-bottom:16px}
+    pre{white-space:pre-wrap;word-break:break-word;background:#0b1220;color:#dbeafe;padding:14px;border-radius:12px;max-height:360px;overflow:auto}
+    .muted{color:#64748b}
+    .ok{color:#047857;font-weight:700}
+    .err{color:#b91c1c;font-weight:700}
   </style>
-  <script defer src="https://alcdn.msauth.net/browser/2.35.0/js/msal-browser.min.js"></script>
+  <script src="https://alcdn.msauth.net/browser/2.39.0/js/msal-browser.min.js"></script>
 </head>
 <body>
-  <div id="app"></div>
-  <input type="file" id="icsInput" accept=".ics,text/calendar" hidden />
+<div class="wrap">
+  <h1>Crew Scheduler v6.2 Debug Outlook</h1>
+  <p class="muted">Cette version affiche les détails utiles directement dans la page.</p>
 
-  <dialog id="eventDialog">
-    <form class="modal" method="dialog" id="eventForm">
-      <h3>Nouvel événement</h3>
-      <div class="formGrid">
-        <label class="full">Nom de l'événement
-          <input class="input" name="name" required placeholder="Ex. Gala Fondation Lumière" />
-        </label>
-        <label>Date
-          <input class="input" type="date" name="date" required />
-        </label>
-        <label>Heure
-          <input class="input" type="time" name="time" required value="08:00" />
-        </label>
-        <label>Lieu
-          <input class="input" name="location" placeholder="Ex. Centre Bell" />
-        </label>
-        <label>Rôles requis (format: Son:2, Éclairage:1)
-          <input class="input" name="required" placeholder="Son:2, Éclairage:1, Vidéo:1" />
-        </label>
-        <label class="full">Notes
-          <textarea class="input" name="notes" placeholder="Montage 8h, show 19h, démontage après..."></textarea>
-        </label>
-      </div>
-      <div class="modalActions">
-        <button class="btn secondary" value="cancel">Annuler</button>
-        <button class="btn primary" value="default">Créer</button>
-      </div>
-    </form>
-  </dialog>
+  <div class="bar">
+    <button id="btnLogin">Se connecter à Microsoft</button>
+    <button id="btnSync">Sync Outlook</button>
+    <button id="btnLogout" class="secondary">Se déconnecter</button>
+  </div>
 
-  <dialog id="personDialog">
-    <form class="modal" method="dialog" id="personForm">
-      <h3>Ajouter une ressource</h3>
-      <div class="formGrid">
-        <label>Nom complet
-          <input class="input" name="name" required placeholder="Ex. Marc Tremblay" />
-        </label>
-        <label>Type
-          <select class="select" name="type">
-            <option value="freelance">Pigiste</option>
-            <option value="internal">Employé</option>
-          </select>
-        </label>
-        <label>Rôle principal
-          <select class="select" name="role">
-            <option>Son</option><option>Éclairage</option><option>Vidéo</option><option>Stage</option><option>Camion</option><option>Général</option>
-          </select>
-        </label>
-        <label>Préférence de contact
-          <select class="select" name="contactPreference">
-            <option value="email">Email</option>
-            <option value="sms">SMS</option>
-            <option value="both">Les 2</option>
-            <option value="none">Aucune</option>
-          </select>
-        </label>
-        <label>Email
-          <input class="input" name="email" type="email" placeholder="email@exemple.com" />
-        </label>
-        <label>Téléphone
-          <input class="input" name="phone" placeholder="514-555-1234" />
-        </label>
-      </div>
-      <div class="modalActions">
-        <button class="btn secondary" value="cancel">Annuler</button>
-        <button class="btn primary" value="default">Ajouter</button>
-      </div>
-    </form>
-  </dialog>
+  <div class="card">
+    <h3>État</h3>
+    <div id="status">Prêt.</div>
+  </div>
 
-  <dialog id="assignDialog">
-    <form class="modal" method="dialog" id="assignForm">
-      <h3>Assigner une ressource</h3>
-      <div class="formGrid">
-        <label>Événement
-          <select class="select" name="eventId"></select>
-        </label>
-        <label>Rôle
-          <select class="select" name="role"></select>
-        </label>
-        <label class="full">Ressource
-          <select class="select" name="personId"></select>
-        </label>
-      </div>
-      <div class="modalActions">
-        <button class="btn secondary" value="cancel">Annuler</button>
-        <button class="btn primary" value="default">Assigner</button>
-      </div>
-    </form>
-  </dialog>
+  <div class="card">
+    <h3>Compte actif</h3>
+    <pre id="accountBox">Aucun compte actif.</pre>
+  </div>
 
-  <script>
-    const STORAGE_KEY = 'crew_scheduler_v4_notifications';
-    const app = document.getElementById('app');
-    const eventDialog = document.getElementById('eventDialog');
-    const personDialog = document.getElementById('personDialog');
-    const assignDialog = document.getElementById('assignDialog');
-    const icsInput = document.getElementById('icsInput');
-    const uid = () => Math.random().toString(36).slice(2, 10);
-    const OUTLOOK_SCOPES = ['User.Read','Calendars.Read'];
-    let msalInstance = null;
-    let authState = { initialized:false, isAuthenticated:false, account:null, lastError:'' };
+  <div class="card">
+    <h3>Claims du token Graph</h3>
+    <pre id="claimsBox">Aucun token Graph récupéré.</pre>
+  </div>
 
-    function todayPlus(days){ const d = new Date(); d.setDate(d.getDate()+days); return d.toISOString().slice(0,10); }
-    function firstOfMonthIso(offset = 0){ const d = new Date(); d.setDate(1); d.setMonth(d.getMonth()+offset); return d.toISOString().slice(0,10); }
-    function escapeHtml(v){ return String(v ?? '').replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s])); }
+  <div class="card">
+    <h3>Réponse Graph</h3>
+    <pre id="graphBox">Aucune réponse Graph.</pre>
+  </div>
+</div>
 
-    function parseJwtPayload(token){
-      try{
-        const part = token.split('.')[1];
-        const base64 = part.replace(/-/g,'+').replace(/_/g,'/');
-        const json = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
-        return JSON.parse(json);
-      }catch(e){ return null; }
-    }
+<script>
+const clientId = "b71fb750-0c78-4903-9489-fd2d0fc18884";
+const tenantId = "b5e72da6-a727-4c1d-b80d-e381c3123448";
+const redirectUri = "https://gedlp.github.io/crew-scheduler/";
 
-    function msalConfigFromState(){
-      return {
-        auth:{
-          clientId: state?.settings?.outlookClientId || 'b71fb750-0c78-4903-9489-fd2d0fc18884',
-          authority: `https://login.microsoftonline.com/${state?.settings?.tenantId || 'b5e72da6-a727-4c1d-b80d-e381c3123448'}`,
-          redirectUri: state?.settings?.redirectUri || 'https://gedlp.github.io/crew-scheduler/'
-        },
-        cache:{ cacheLocation:'localStorage', storeAuthStateInCookie:false }
-      };
-    }
+const msalConfig = {
+  auth: {
+    clientId,
+    authority: `https://login.microsoftonline.com/${tenantId}`,
+    redirectUri
+  },
+  cache: {
+    cacheLocation: "localStorage",
+    storeAuthStateInCookie: false
+  }
+};
 
-    async function initAuth(){
-      if(authState.initialized) return;
-      if(!window.msal){ authState.lastError = 'Bibliothèque Microsoft non chargée.'; authState.initialized = true; return; }
-      try{
-        msalInstance = new msal.PublicClientApplication(msalConfigFromState());
-        if(msalInstance.initialize) await msalInstance.initialize();
-        if(msalInstance.handleRedirectPromise) {
-          const redirectResponse = await msalInstance.handleRedirectPromise();
-          if(redirectResponse?.account) msalInstance.setActiveAccount(redirectResponse.account);
-        }
-        const active = msalInstance.getActiveAccount() || msalInstance.getAllAccounts()[0] || null;
-        if(active) msalInstance.setActiveAccount(active);
-        authState = { initialized:true, isAuthenticated:!!active, account:active, lastError:'' };
-      }catch(err){
-        console.error(err);
-        authState = { initialized:true, isAuthenticated:false, account:null, lastError: err?.message || String(err) };
-      }
-    }
+const loginRequest = {
+  scopes: ["User.Read", "Calendars.Read"]
+};
 
-    async function signInMicrosoft(){
-      try{
-        await initAuth();
-        msalInstance = new msal.PublicClientApplication(msalConfigFromState());
-        if(msalInstance.initialize) await msalInstance.initialize();
-        const result = await msalInstance.loginPopup({ scopes: OUTLOOK_SCOPES, prompt:'select_account' });
-        const account = result?.account || msalInstance.getAllAccounts()[0] || null;
-        if(account) msalInstance.setActiveAccount(account);
-        authState = { initialized:true, isAuthenticated:!!account, account, lastError:'' };
-        render();
-      }catch(err){
-        console.error(err);
-        authState.lastError = err?.message || String(err);
-        alert('Connexion Microsoft échouée. Vérifie que le Redirect URI dans Entra correspond exactement à ton URL GitHub Pages.');
-        render();
-      }
-    }
+const pca = new msal.PublicClientApplication(msalConfig);
 
-    async function signOutMicrosoft(){
-      try{
-        await initAuth();
-        const account = msalInstance?.getActiveAccount() || msalInstance?.getAllAccounts?.()[0];
-        if(msalInstance && account){
-          await msalInstance.logoutPopup({ account });
-        }
-      }catch(err){
-        console.error(err);
-      }
-      authState = { initialized:true, isAuthenticated:false, account:null, lastError:'' };
-      render();
-    }
+function setStatus(msg, cls=""){
+  const el=document.getElementById("status");
+  el.className=cls;
+  el.textContent=msg;
+}
+function show(obj, id){
+  document.getElementById(id).textContent = typeof obj === "string" ? obj : JSON.stringify(obj, null, 2);
+}
+function parseJwt(token){
+  try{
+    const payload = token.split('.')[1];
+    const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const json = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00'+c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+    return JSON.parse(json);
+  }catch(e){
+    return {parse_error:String(e)};
+  }
+}
+function getActiveAccount(){
+  return pca.getActiveAccount() || pca.getAllAccounts()[0] || null;
+}
+function refreshAccountBox(){
+  const acct = getActiveAccount();
+  if(!acct){ show("Aucun compte actif.", "accountBox"); return; }
+  pca.setActiveAccount(acct);
+  show({
+    username: acct.username,
+    tenantId: acct.tenantId,
+    homeAccountId: acct.homeAccountId,
+    environment: acct.environment,
+    localAccountId: acct.localAccountId,
+    name: acct.name
+  }, "accountBox");
+}
+async function signIn(){
+  try{
+    setStatus("Connexion Microsoft en cours...");
+    const res = await pca.loginPopup(loginRequest);
+    pca.setActiveAccount(res.account);
+    refreshAccountBox();
+    setStatus("Connecté à Microsoft.", "ok");
+  }catch(e){
+    setStatus("Échec de connexion Microsoft.", "err");
+    show(String(e && e.message ? e.message : e), "graphBox");
+  }
+}
+async function getGraphToken(){
+  let account = getActiveAccount();
+  if(!account){
+    throw new Error("Aucun compte actif. Clique d'abord sur Se connecter à Microsoft.");
+  }
+  pca.setActiveAccount(account);
+  refreshAccountBox();
 
-    async function acquireGraphToken(){
-      await initAuth();
-      const account = msalInstance?.getActiveAccount() || msalInstance?.getAllAccounts?.()[0];
-      if(!account) throw new Error('Aucun compte Microsoft connecté.');
-      msalInstance.setActiveAccount(account);
-      try{
-        const silent = await msalInstance.acquireTokenSilent({ scopes: OUTLOOK_SCOPES, account });
-        const payload = parseJwtPayload(silent.accessToken);
-        console.log('GRAPH_TOKEN_CLAIMS', {username: account.username, aud: payload?.aud, scp: payload?.scp, tid: payload?.tid, iss: payload?.iss});
-        return silent.accessToken;
-      }catch(err){
-        const popup = await msalInstance.acquireTokenPopup({ scopes: OUTLOOK_SCOPES, account, prompt:'select_account' });
-        const payload = parseJwtPayload(popup.accessToken);
-        console.log('GRAPH_TOKEN_CLAIMS', {username: account.username, aud: payload?.aud, scp: payload?.scp, tid: payload?.tid, iss: payload?.iss});
-        return popup.accessToken;
-      }
-    }
+  try{
+    const tokenRes = await pca.acquireTokenSilent({...loginRequest, account});
+    return tokenRes.accessToken;
+  }catch(silentErr){
+    setStatus("Token silencieux indisponible, popup demandée...");
+    const tokenRes = await pca.acquireTokenPopup({...loginRequest, account, prompt: "select_account"});
+    return tokenRes.accessToken;
+  }
+}
+async function syncOutlook(){
+  try{
+    setStatus("Récupération du token Graph...");
+    const token = await getGraphToken();
+    const claims = parseJwt(token);
+    show(claims, "claimsBox");
 
-    async function syncOutlookCalendar(){
-      try{
-        const token = await acquireGraphToken();
-        const monthBase = new Date((state.calendarMonth || firstOfMonthIso(0)) + 'T00:00:00');
-        const start = new Date(monthBase.getFullYear(), monthBase.getMonth(), 1, 0, 0, 0);
-        const end = new Date(monthBase.getFullYear(), monthBase.getMonth()+2, 0, 23, 59, 59);
-        const url = new URL('https://graph.microsoft.com/v1.0/me/calendarView');
-        url.searchParams.set('startDateTime', start.toISOString());
-        url.searchParams.set('endDateTime', end.toISOString());
-        url.searchParams.set('$top', '200');
-        url.searchParams.set('$select', 'id,subject,start,end,location,bodyPreview,webLink');
-        url.searchParams.set('$orderby', 'start/dateTime');
-        const res = await fetch(url.toString(), {
-          headers:{
-            'Authorization': `Bearer ${token}`,
-            'Prefer': 'outlook.timezone="America/Montreal"'
-          }
-        });
-        if(!res.ok){
-          const text = await res.text();
-          throw new Error(`Graph ${res.status}: ${text}`);
-        }
-        const data = await res.json();
-        const mapped = (data.value || []).map(item => {
-          const startRaw = item.start?.dateTime || item.start || '';
-          const startDate = new Date(startRaw);
-          const isoDate = !isNaN(startDate) ? startDate.toISOString().slice(0,10) : '';
-          const time = !isNaN(startDate) ? startDate.toLocaleTimeString('fr-CA',{hour:'2-digit',minute:'2-digit',hour12:false}) : '';
-          return {
-            id: 'outlook_' + item.id,
-            source:'outlook',
-            outlookId:item.id,
-            name:item.subject || 'Sans titre',
-            date: isoDate,
-            time,
-            location:item.location?.displayName || '',
-            notes:item.bodyPreview || '',
-            webLink:item.webLink || '',
-            requiredRoles:{}
-          };
-        }).filter(ev => ev.date);
-        state.events = state.events.filter(e => e.source !== 'outlook').concat(mapped).sort((a,b) => `${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`));
-        if(mapped.length && !getEvent(state.selectedEventId)?.id){
-          state.selectedEventId = mapped[0].id;
-        } else if(mapped.length && !state.selectedEventId){
-          state.selectedEventId = mapped[0].id;
-        }
-        saveState();
-        render();
-        alert(`Synchronisation Outlook terminée : ${mapped.length} événement(s) importé(s).`);
-      }catch(err){
-        console.error(err);
-        authState.lastError = err?.message || String(err);
-        render();
-        alert("Impossible de synchroniser Outlook. Vérifie les permissions User.Read et Calendars.Read, ainsi que le Redirect URI SPA.");
-      }
-    }
+    const start = new Date(Date.UTC(2026,3,1,4,0,0)).toISOString();
+    const end = new Date(Date.UTC(2026,5,1,3,59,59)).toISOString();
+    const url = "https://graph.microsoft.com/v1.0/me/calendarView"
+      + `?startDateTime=${encodeURIComponent(start)}`
+      + `&endDateTime=${encodeURIComponent(end)}`
+      + `&$top=25`
+      + `&$select=id,subject,start,end,location,bodyPreview,webLink`
+      + `&$orderby=start/dateTime`;
 
-    function seedState(){
-      const e1=uid(),e2=uid(), p1=uid(),p2=uid(),p3=uid(),p4=uid(),p5=uid();
-      const a1=uid(),a2=uid(),a3=uid(),a4=uid();
-      return {
-        selectedEventId:e1,
-        calendarMonth:firstOfMonthIso(0),
-        settings:{
-          appUrl:'https://gedlp.github.io/crew-scheduler/',
-          outlookClientId:'b71fb750-0c78-4903-9489-fd2d0fc18884', tenantId:'b5e72da6-a727-4c1d-b80d-e381c3123448', redirectUri:'https://gedlp.github.io/crew-scheduler/',
-          emailWebhook:'', smsWebhook:'', liveMode:false
-        },
-        events:[
-          {id:e1, source:'manual', name:'Gala Fondation Lumière', date:todayPlus(2), time:'08:00', location:'Palais des congrès', notes:'Montage matin, prestation soir.', requiredRoles:{'Son':2,'Éclairage':1,'Vidéo':1}},
-          {id:e2, source:'manual', name:'Festival de quartier', date:todayPlus(4), time:'10:00', location:'Parc Maisonneuve', notes:'Scène mobile, besoin d\'une équipe flexible.', requiredRoles:{'Son':1,'Éclairage':1,'Stage':2}}
-        ],
-        people:[
-          {id:p1,name:'Alex Gagnon',type:'freelance',role:'Son',contactPreference:'both',email:'alex@demo.ca',phone:'514-555-1111'},
-          {id:p2,name:'Marc Gendron',type:'freelance',role:'Son',contactPreference:'sms',email:'',phone:'514-555-2222'},
-          {id:p3,name:'Julie Roy',type:'internal',role:'Éclairage',contactPreference:'email',email:'julie@demo.ca',phone:''},
-          {id:p4,name:'Kevin Bouchard',type:'freelance',role:'Vidéo',contactPreference:'email',email:'kevin@demo.ca',phone:''},
-          {id:p5,name:'Sébastien Fortin',type:'freelance',role:'Stage',contactPreference:'both',email:'seb@demo.ca',phone:'514-555-5555'}
-        ],
-        assignments:[
-          {id:a1,eventId:e1,personId:p1,role:'Son',status:'sent',token:uid()+uid(),sentChannels:['email','sms'],lastSentAt:new Date().toISOString()},
-          {id:a2,eventId:e1,personId:p2,role:'Son',status:'declined',token:uid()+uid(),sentChannels:['sms'],lastSentAt:new Date().toISOString()},
-          {id:a3,eventId:e1,personId:p3,role:'Éclairage',status:'confirmed',token:uid()+uid(),sentChannels:['email'],lastSentAt:new Date().toISOString()},
-          {id:a4,eventId:e1,personId:p4,role:'Vidéo',status:'waiting',token:uid()+uid(),sentChannels:[],lastSentAt:''}
-        ],
-        notificationQueue:[
-          {id:uid(),createdAt:new Date().toISOString(),status:'simulated',channels:['email','sms'],recipient:'Alex Gagnon',eventName:'Gala Fondation Lumière',note:'Démo locale — envoi simulé'},
-          {id:uid(),createdAt:new Date().toISOString(),status:'simulated',channels:['sms'],recipient:'Marc Gendron',eventName:'Gala Fondation Lumière',note:'Démo locale — envoi simulé'}
-        ]
-      };
-    }
-
-    function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
-    function loadState(){
-      try{
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if(!raw){ const seeded = seedState(); localStorage.setItem(STORAGE_KEY, JSON.stringify(seeded)); return seeded; }
-        const parsed = JSON.parse(raw);
-        parsed.calendarMonth ||= firstOfMonthIso(0);
-        parsed.settings ||= {appUrl:'https://gedlp.github.io/crew-scheduler/', outlookClientId:'b71fb750-0c78-4903-9489-fd2d0fc18884', tenantId:'b5e72da6-a727-4c1d-b80d-e381c3123448', redirectUri:'https://gedlp.github.io/crew-scheduler/', emailWebhook:'', smsWebhook:'', liveMode:false};
-        parsed.notificationQueue ||= [];
-        return parsed;
-      }catch(err){
-        console.error(err);
-        const seeded = seedState();
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(seeded));
-        return seeded;
-      }
-    }
-
-    let state = loadState();
-    const getEvent = id => state.events.find(e => e.id === id);
-    const getPerson = id => state.people.find(p => p.id === id);
-    const eventAssignments = eventId => state.assignments.filter(a => a.eventId === eventId);
-    const formatDate = d => new Date(d+'T00:00:00').toLocaleDateString('fr-CA',{weekday:'short',year:'numeric',month:'short',day:'numeric'});
-    const formatMonthLabel = d => new Date(d+'T00:00:00').toLocaleDateString('fr-CA',{month:'long',year:'numeric'});
-    const formatDateTime = iso => new Date(iso).toLocaleString('fr-CA',{dateStyle:'medium',timeStyle:'short'});
-
-    function roleLabel(role, qty){ return `${role} · ${qty}`; }
-    function buildConfirmLink(token){ const url = new URL(state.settings.appUrl || window.location.href); url.searchParams.set('token', token); return url.toString(); }
-
-    function contactTag(pref){ return `<span class="tag ${pref}">${pref==='both'?'Email + SMS':pref==='sms'?'SMS':pref==='email'?'Email':'Aucune'}</span>`; }
-    function typeTag(type){ return `<span class="tag ${type==='freelance'?'sms':'email'}">${type==='freelance'?'Pigiste':'Employé'}</span>`; }
-
-    function computeChannels(person){
-      const pref = person.contactPreference || 'none';
-      const channels = [];
-      if((pref === 'email' || pref === 'both') && person.email) channels.push('email');
-      if((pref === 'sms' || pref === 'both') && person.phone) channels.push('sms');
-      if(channels.length === 0){
-        if(person.email) channels.push('email');
-        else if(person.phone) channels.push('sms');
-      }
-      return channels;
-    }
-
-    function eventCoverage(event){
-      const assigns = eventAssignments(event.id);
-      let missing=0, pending=0;
-      for(const [role, qty] of Object.entries(event.requiredRoles || {})){
-        const roleAssignments = assigns.filter(a => a.role === role);
-        const confirmed = roleAssignments.filter(a => a.status === 'confirmed').length;
-        const waiting = roleAssignments.filter(a => a.status === 'sent' || a.status === 'waiting').length;
-        missing += Math.max(0, qty - confirmed - waiting);
-        pending += waiting;
-      }
-      if(missing === 0 && pending === 0) return {label:'Complet', cls:'complete'};
-      if(missing === 0 && pending > 0) return {label:'En attente', cls:'pending'};
-      return {label:'Incomplet', cls:'incomplete'};
-    }
-
-    function getAlerts(){
-      const alerts = [];
-      for(const ev of state.events){
-        const assigns = eventAssignments(ev.id);
-        assigns.filter(a => a.status === 'declined').forEach(a => {
-          const person = getPerson(a.personId);
-          alerts.push({type:'declined', eventId:ev.id, role:a.role, personId:a.personId, text:`${person?.name || 'Ressource'} a refusé ${ev.name}.`});
-        });
-        for(const [role, qty] of Object.entries(ev.requiredRoles || {})){
-          const roleAssigns = assigns.filter(a => a.role === role);
-          const active = roleAssigns.filter(a => ['confirmed','sent','waiting'].includes(a.status)).length;
-          if(active < qty){ alerts.push({type:'missing', eventId:ev.id, role, text:`${ev.name} manque ${qty - active} ressource(s) pour le rôle ${role}.`}); }
-        }
-      }
-      return alerts;
-    }
-
-    function counts(){
-      return {
-        events:state.events.length,
-        imported:state.events.filter(e => e.source === 'ics').length,
-        people:state.people.length,
-        pending:state.assignments.filter(a => a.status === 'sent' || a.status === 'waiting').length,
-        alerts:getAlerts().length
-      };
-    }
-
-    function render(){
-      const token = new URLSearchParams(window.location.search).get('token');
-      if(token) return renderConfirmPage(token);
-      renderDashboard();
-    }
-
-    function renderDashboard(){
-      const c = counts();
-      const alerts = getAlerts();
-      const selectedEvent = getEvent(state.selectedEventId) || state.events[0] || null;
-      app.innerHTML = `
-        <div class="app">
-          <aside class="sidebar">
-            <div class="brand">
-              <div class="logo">LD</div>
-              <h1>Loadout Crew</h1>
-              <p>V4 test rapide avec calendrier visible, préférences de contact et centre d'envoi prêt à brancher.</p>
-            </div>
-            <div class="nav">
-              <button class="active">Horaire crew</button>
-              <button disabled>Calendrier</button>
-              <button disabled>Ressources</button>
-              <button disabled>Notifications</button>
-              <button id="resetDemo">Réinitialiser démo</button>
-            </div>
-          </aside>
-          <main class="main">
-            <div class="topbar">
-              <div>
-                <h2>Horaire crew</h2>
-                <p>Cette version ajoute la connexion Microsoft réelle pour lire ton calendrier Outlook, tout en gardant l'import .ics et le centre d'envoi pour le crew.</p>
-              </div>
-              <div class="actions">
-                <button class="btn ghost" id="importIcsBtn">Importer .ics Outlook</button>
-                <button class="btn secondary" id="openAssignBtn">+ Assignation</button>
-                <button class="btn secondary" id="addPersonBtn">+ Ressource</button>
-                <button class="btn primary" id="addEventBtn">+ Événement</button>
-              </div>
-            </div>
-
-            <section class="hero">
-              <div class="heroGrid">
-                <div>
-                  <div class="sectionHead" style="margin-bottom:8px">
-                    <div>
-                      <h3>Connexion Outlook / Microsoft 365</h3>
-                      <p>Connexion réelle Microsoft Graph vers Outlook.</p>
-                    </div>
-                    <span class="tag outlook">Outlook ready</span>
-                  </div>
-                  <div class="heroHint">
-                    Connecte-toi avec Microsoft pour lire ton calendrier Outlook en direct, ou garde l'import <strong>.ics</strong> comme solution de secours.
-                  </div>
-                  <div class="actions" style="margin-top:12px">
-                    <button class="btn primary" id="connectMicrosoftBtn">Se connecter à Microsoft</button>
-                    <button class="btn secondary" id="syncOutlookBtn">Sync Outlook</button>
-                    <button class="btn secondary" id="disconnectMicrosoftBtn">Se déconnecter</button>
-                  </div>
-                  <div class="pills">
-                    <span class="tag outlook">HTTPS requis</span>
-                    <span class="tag outlook">App Entra ID</span>
-                    <span class="tag outlook">Graph API calendrier</span>
-                    <span class="tag ${authState.account ? 'both' : 'none'}">${authState.account ? 'Compte Microsoft connecté' : 'Aucun compte connecté'}</span>
-                    <span class="tag ${state.settings.liveMode ? 'both' : 'none'}">${state.settings.liveMode ? 'Mode live activé' : 'Mode démo local'}</span>
-                  </div>
-                  ${authState.lastSync ? `<div class="tiny" style="margin-top:8px">Dernière sync Outlook : ${escapeHtml(authState.lastSync)}</div>` : ''}
-                  ${authState.lastError ? `<div class="tiny" style="margin-top:6px;color:#b91c1c">${escapeHtml(authState.lastError)}</div>` : ''}
-                </div>
-                <div class="heroFields">
-                  <input class="input" id="appUrl" placeholder="URL publique de l'app" value="${escapeHtml(state.settings.appUrl)}" />
-                  <input class="input" id="emailWebhook" placeholder="Webhook email (plus tard)" value="${escapeHtml(state.settings.emailWebhook)}" />
-                  <input class="input" id="smsWebhook" placeholder="Webhook SMS (plus tard)" value="${escapeHtml(state.settings.smsWebhook)}" />
-                  <div class="actions">
-                    <button class="btn secondary" id="saveSettingsBtn">Sauvegarder la config</button>
-                    <button class="btn ghost" id="toggleLiveModeBtn">${state.settings.liveMode ? 'Passer en mode démo' : 'Activer le mode live'}</button>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <div class="stats">
-              <div class="stat"><div class="label">Événements</div><div class="value">${c.events}</div></div>
-              <div class="stat"><div class="label">Importés calendrier</div><div class="value">${c.imported}</div></div>
-              <div class="stat"><div class="label">Pigistes + employés</div><div class="value">${c.people}</div></div>
-              <div class="stat"><div class="label">Confirmations en attente</div><div class="value">${c.pending}</div></div>
-              <div class="stat"><div class="label">Alertes</div><div class="value">${c.alerts}</div></div>
-            </div>
-
-            <div class="layout">
-              <section class="stack">
-                ${renderCalendarSection()}
-                ${renderPeopleSection()}
-                ${renderQueueSection()}
-              </section>
-              <section class="stack">
-                ${renderSelectedEvent(selectedEvent)}
-                ${renderAlertsSection(alerts)}
-              </section>
-            </div>
-          </main>
-        </div>`;
-      bindDashboardEvents();
-    }
-
-    function renderCalendarSection(){
-      const monthStart = new Date(state.calendarMonth + 'T00:00:00');
-      const firstDay = new Date(monthStart); firstDay.setDate(1);
-      const start = new Date(firstDay); const offset = (start.getDay()+6)%7; start.setDate(start.getDate()-offset);
-      const today = new Date().toISOString().slice(0,10);
-      const cells = [];
-      for(let i=0;i<42;i++){
-        const d = new Date(start); d.setDate(start.getDate()+i);
-        const iso = d.toISOString().slice(0,10);
-        const dayEvents = state.events.filter(e => e.date === iso).sort((a,b) => `${a.time}`.localeCompare(`${b.time}`));
-        const cellCls = [d.getMonth() !== monthStart.getMonth() ? 'other' : '', iso === today ? 'today' : '', iso === selectedEventDate() ? 'active' : ''].filter(Boolean).join(' ');
-        cells.push(`
-          <div class="calendarCell ${cellCls}" data-day="${iso}">
-            <div class="calendarDate"><span>${d.getDate()}</span>${dayEvents.length ? `<span class="calendarBadge">${dayEvents.length}</span>` : ''}</div>
-            <div class="calendarEvents">
-              ${dayEvents.slice(0,3).map(ev => `<button class="calendarEvent" data-event-id="${ev.id}">${escapeHtml(ev.time || '—')} · ${escapeHtml(ev.name)}</button>`).join('')}
-            </div>
-          </div>`);
-      }
-      return `
-        <section class="frame">
-          <div class="calendarHead">
-            <div>
-              <h3 style="margin:0">Calendrier des événements</h3>
-              <p class="tiny" style="margin:3px 0 0">Vue calendrier directement dans la page, prête à recevoir Outlook plus tard.</p>
-            </div>
-            <div class="calendarNav">
-              <button class="btn secondary small" id="prevMonth">←</button>
-              <div class="calendarTitle">${escapeHtml(formatMonthLabel(state.calendarMonth))}</div>
-              <button class="btn secondary small" id="nextMonth">→</button>
-              <button class="btn secondary small" id="todayMonth">Aujourd'hui</button>
-            </div>
-          </div>
-          <div class="week">${['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'].map(d => `<div class="dow">${d}</div>`).join('')}</div>
-          <div class="calendarGrid">${cells.join('')}</div>
-        </section>`;
-    }
-
-    function renderPeopleSection(){
-      return `
-        <section class="frame">
-          <div class="sectionHead">
-            <div><h3>Ressources</h3><p>Chaque personne peut choisir Email, SMS ou les 2.</p></div>
-            <button class="btn secondary small" id="addPersonBtnInline">+ Ressource</button>
-          </div>
-          <div class="tableWrap">
-            <table>
-              <thead><tr><th>Nom</th><th>Rôle</th><th>Type</th><th>Préférence</th><th>Contact</th></tr></thead>
-              <tbody>
-                ${state.people.map(p => `
-                  <tr>
-                    <td><div class="personName">${escapeHtml(p.name)}</div></td>
-                    <td>${escapeHtml(p.role)}</td>
-                    <td>${p.type === 'freelance' ? 'Pigiste' : 'Employé'}</td>
-                    <td>${contactTag(p.contactPreference || 'none')}</td>
-                    <td><div class="tiny">${escapeHtml(p.email || '—')}<br>${escapeHtml(p.phone || '—')}</div></td>
-                  </tr>`).join('')}
-              </tbody>
-            </table>
-          </div>
-        </section>`;
-    }
-
-    function renderQueueSection(){
-      const items = [...state.notificationQueue].sort((a,b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
-      return `
-        <section class="frame">
-          <div class="sectionHead">
-            <div><h3>Centre d'envoi</h3><p>Journal des notifications simulées ou prêtes à partir en mode live.</p></div>
-            <button class="btn secondary small" id="clearQueueBtn">Vider le journal</button>
-          </div>
-          <div class="queueList">
-            ${items.length ? items.slice(0,8).map(item => `
-              <div class="queueRow">
-                <div class="agendaTop">
-                  <div>
-                    <div class="personName">${escapeHtml(item.recipient)}</div>
-                    <div class="tiny">${escapeHtml(item.eventName)} · ${escapeHtml(formatDateTime(item.createdAt))}</div>
-                  </div>
-                  <div class="pills">${(item.channels || []).map(ch => `<span class="tag ${ch}">${ch.toUpperCase()}</span>`).join('')}<span class="tag ${item.status === 'sent' ? 'both' : 'none'}">${item.status === 'sent' ? 'Live' : 'Simulé'}</span></div>
-                </div>
-                <div class="tiny" style="margin-top:8px">${escapeHtml(item.note || '')}</div>
-              </div>`).join('') : `<div class="empty">Aucune notification encore.</div>`}
-          </div>
-        </section>`;
-    }
-
-    function renderSelectedEvent(selectedEvent){
-      if(!selectedEvent) return `<section class="frame"><div class="empty">Aucun événement sélectionné.</div></section>`;
-      const assignments = eventAssignments(selectedEvent.id);
-      const coverage = eventCoverage(selectedEvent);
-      const roles = Object.entries(selectedEvent.requiredRoles || {});
-      return `
-        <section class="detailCard">
-          <div class="detailTop">
-            <div>
-              <div class="pill ${coverage.cls}">${coverage.label}</div>
-              <h3>${escapeHtml(selectedEvent.name)}</h3>
-              <div class="muted">${escapeHtml(formatDate(selectedEvent.date))} · ${escapeHtml(selectedEvent.time || '—')} · ${escapeHtml(selectedEvent.location || 'Lieu à confirmer')}</div>
-            </div>
-            <div class="actions">
-              <button class="btn secondary small" id="assignSelectedBtn">Assigner</button>
-              <button class="btn ghost small" id="sendAllSelectedBtn">Envoyer tout</button>
-            </div>
-          </div>
-          <div class="roleMatrix">
-            ${roles.map(([role, qty]) => {
-              const confirmed = assignments.filter(a => a.role === role && a.status === 'confirmed').length;
-              const pending = assignments.filter(a => a.role === role && (a.status === 'sent' || a.status === 'waiting')).length;
-              return `<div class="miniCard"><div class="tiny">${escapeHtml(roleLabel(role, qty))}</div><strong>${confirmed}/${qty}</strong><div class="tiny">Confirmés · ${pending} en attente</div></div>`;
-            }).join('')}
-          </div>
-          <div class="assignmentList">
-            ${assignments.length ? assignments.map(a => renderAssignmentRow(a)).join('') : `<div class="empty">Aucune ressource assignée pour cet événement.</div>`}
-          </div>
-        </section>`;
-    }
-
-    function renderAssignmentRow(a){
-      const person = getPerson(a.personId); if(!person) return '';
-      const link = buildConfirmLink(a.token);
-      const channels = computeChannels(person);
-      const statusCls = a.status === 'confirmed' ? 'confirmed' : a.status === 'declined' ? 'declined' : a.status === 'sent' ? 'sent' : 'waiting';
-      const statusLabel = a.status === 'confirmed' ? 'Confirmé' : a.status === 'declined' ? 'Refusé' : a.status === 'sent' ? 'Envoyé' : 'Prêt à envoyer';
-      return `
-        <div class="assignmentRow">
-          <div>
-            <div class="personName">${escapeHtml(person.name)}</div>
-            <div class="assignmentMeta">
-              <span class="tag ${person.type === 'freelance' ? 'sms' : 'email'}">${person.type === 'freelance' ? 'Pigiste' : 'Employé'}</span>
-              <span class="tag none">${escapeHtml(a.role)}</span>
-              ${contactTag(person.contactPreference || 'none')}
-            </div>
-            <div class="tiny" style="margin-top:6px">Email: ${escapeHtml(person.email || '—')} · Tél: ${escapeHtml(person.phone || '—')}</div>
-            <div class="linkBox"><span class="tiny">Lien confirmation</span><div class="linkValue">${escapeHtml(link)}</div><button class="btn secondary small copyLinkBtn" data-token="${a.token}">Copier</button></div>
-          </div>
-          <div class="pills"><span class="pill ${statusCls}">${statusLabel}</span></div>
-          <div class="tiny">Canal prévu: ${channels.length ? channels.map(ch => ch.toUpperCase()).join(' + ') : 'Aucun'}</div>
-          <div class="assignmentActions">
-            <button class="btn secondary small sendAssignmentBtn" data-assignment-id="${a.id}">Envoyer</button>
-            <button class="btn ghost small previewAssignmentBtn" data-assignment-id="${a.id}">Prévisualiser</button>
-          </div>
-        </div>`;
-    }
-
-    function renderAlertsSection(alerts){
-      return `
-        <section class="frame">
-          <div class="sectionHead">
-            <div><h3>Alertes et remplacements</h3><p>Quand quelqu'un refuse ou qu'un rôle manque, tu peux remplacer rapidement.</p></div>
-          </div>
-          <div class="noticeList">
-            ${alerts.length ? alerts.map(alert => renderAlertCard(alert)).join('') : `<div class="noticeCard good"><strong>Tout est sous contrôle</strong><div class="tiny">Aucune alerte active pour le moment.</div></div>`}
-          </div>
-        </section>`;
-    }
-
-    function renderAlertCard(alert){
-      const ev = getEvent(alert.eventId);
-      const suggestions = suggestPeople(alert.role, alert.eventId).slice(0,4);
-      return `
-        <div class="noticeCard ${alert.type === 'missing' ? '' : ''}">
-          <strong>${escapeHtml(alert.text)}</strong>
-          <div class="tiny">${escapeHtml(ev?.name || '')} · rôle ${escapeHtml(alert.role || '')}</div>
-          <div class="noticeActions">
-            ${suggestions.map(p => `<button class="btn secondary small quickAssignBtn" data-event-id="${alert.eventId}" data-person-id="${p.id}" data-role="${escapeHtml(alert.role)}">${escapeHtml(p.name)}</button>`).join('') || '<span class="tiny">Aucun remplaçant suggéré pour l’instant.</span>'}
-          </div>
-        </div>`;
-    }
-
-    function selectedEventDate(){ const ev = getEvent(state.selectedEventId); return ev ? ev.date : ''; }
-
-    function suggestPeople(role, eventId){
-      const already = new Set(eventAssignments(eventId).map(a => a.personId));
-      return state.people.filter(p => p.role === role && !already.has(p.id));
-    }
-
-    function bindDashboardEvents(){
-      const on = (id, fn) => { const el = document.getElementById(id); if(el) el.addEventListener('click', fn); };
-      on('addEventBtn', () => eventDialog.showModal());
-      on('addPersonBtn', () => personDialog.showModal());
-      on('addPersonBtnInline', () => personDialog.showModal());
-      on('openAssignBtn', openAssignDialog);
-      on('assignSelectedBtn', openAssignDialog);
-      on('importIcsBtn', () => icsInput.click());
-      on('prevMonth', () => { shiftMonth(-1); }); on('nextMonth', () => { shiftMonth(1); }); on('todayMonth', () => { state.calendarMonth = firstOfMonthIso(0); saveState(); render(); });
-      on('sendAllSelectedBtn', sendAllSelected);
-      on('resetDemo', () => { if(confirm('Réinitialiser la démo locale ?')){ state = seedState(); saveState(); render(); } });
-      on('connectMicrosoftBtn', signInMicrosoft);
-      on('disconnectMicrosoftBtn', signOutMicrosoft);
-      on('syncOutlookBtn', syncOutlookCalendar);
-      on('saveSettingsBtn', saveSettingsFromFields);
-      on('toggleLiveModeBtn', toggleLiveMode);
-      on('clearQueueBtn', () => { state.notificationQueue = []; saveState(); render(); });
-
-      app.querySelectorAll('[data-event-id]').forEach(btn => btn.addEventListener('click', () => { state.selectedEventId = btn.dataset.eventId; saveState(); render(); }));
-      app.querySelectorAll('.calendarCell[data-day]').forEach(cell => cell.addEventListener('click', () => {
-        const firstEvent = state.events.find(e => e.date === cell.dataset.day);
-        if(firstEvent){ state.selectedEventId = firstEvent.id; saveState(); render(); }
-      }));
-      app.querySelectorAll('.quickAssignBtn').forEach(btn => btn.addEventListener('click', () => quickAssign(btn.dataset.eventId, btn.dataset.personId, btn.dataset.role)));
-      app.querySelectorAll('.sendAssignmentBtn').forEach(btn => btn.addEventListener('click', () => sendAssignment(btn.dataset.assignmentId)));
-      app.querySelectorAll('.previewAssignmentBtn').forEach(btn => btn.addEventListener('click', () => previewAssignment(btn.dataset.assignmentId)));
-      app.querySelectorAll('.copyLinkBtn').forEach(btn => btn.addEventListener('click', async () => {
-        const assignment = state.assignments.find(a => a.token === btn.dataset.token);
-        if(!assignment) return;
-        const link = buildConfirmLink(assignment.token);
-        try{ await navigator.clipboard.writeText(link); btn.textContent = 'Copié'; setTimeout(() => { btn.textContent = 'Copier'; }, 1200); }
-        catch{ prompt('Copie ce lien :', link); }
-      }));
-    }
-
-    function shiftMonth(delta){
-      const d = new Date(state.calendarMonth + 'T00:00:00'); d.setMonth(d.getMonth()+delta); d.setDate(1); state.calendarMonth = d.toISOString().slice(0,10); saveState(); render();
-    }
-
-    function saveSettingsFromFields(){
-      state.settings.appUrl = document.getElementById('appUrl').value.trim() || window.location.href.split('?')[0];
-      state.settings.emailWebhook = document.getElementById('emailWebhook').value.trim();
-      state.settings.smsWebhook = document.getElementById('smsWebhook').value.trim();
-      state.settings.redirectUri = state.settings.appUrl;
-      saveState(); render();
-      alert('Configuration sauvegardée.');
-    }
-
-    function toggleLiveMode(){
-      state.settings.liveMode = !state.settings.liveMode; saveState(); render();
-      alert(state.settings.liveMode ? 'Mode live activé. Les boutons tenteront d’appeler les webhooks configurés.' : 'Mode démo réactivé.');
-    }
-
-    document.getElementById('eventForm').addEventListener('submit', ev => {
-      ev.preventDefault();
-      const fd = new FormData(ev.target);
-      const event = {
-        id:uid(), source:'manual', name:String(fd.get('name')||'').trim(), date:String(fd.get('date')||''), time:String(fd.get('time')||''),
-        location:String(fd.get('location')||'').trim(), notes:String(fd.get('notes')||'').trim(), requiredRoles:parseRoles(String(fd.get('required')||''))
-      };
-      state.events.push(event); state.selectedEventId = event.id; saveState(); eventDialog.close(); ev.target.reset(); render();
+    setStatus("Appel Graph en cours...");
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` }
     });
 
-    document.getElementById('personForm').addEventListener('submit', ev => {
-      ev.preventDefault();
-      const fd = new FormData(ev.target);
-      state.people.push({
-        id:uid(), name:String(fd.get('name')||'').trim(), type:String(fd.get('type')||'freelance'), role:String(fd.get('role')||'Général'),
-        contactPreference:String(fd.get('contactPreference')||'email'), email:String(fd.get('email')||'').trim(), phone:String(fd.get('phone')||'').trim()
-      });
-      saveState(); personDialog.close(); ev.target.reset(); render();
-    });
+    const text = await res.text();
+    let body = text;
+    try { body = JSON.parse(text); } catch(e) {}
 
-    function openAssignDialog(){
-      const form = document.getElementById('assignForm');
-      const eventSelect = form.elements.eventId; const roleSelect = form.elements.role; const personSelect = form.elements.personId;
-      eventSelect.innerHTML = state.events.map(e => `<option value="${e.id}" ${e.id===state.selectedEventId?'selected':''}>${escapeHtml(e.name)} · ${escapeHtml(formatDate(e.date))}</option>`).join('');
-      const event = getEvent(state.selectedEventId) || state.events[0];
-      roleSelect.innerHTML = Object.keys(event?.requiredRoles || {'Général':1}).map(role => `<option value="${escapeHtml(role)}">${escapeHtml(role)}</option>`).join('');
-      populateAssignPeople();
-      eventSelect.onchange = () => { state.selectedEventId = eventSelect.value; const ev = getEvent(eventSelect.value); roleSelect.innerHTML = Object.keys(ev?.requiredRoles || {'Général':1}).map(role => `<option value="${escapeHtml(role)}">${escapeHtml(role)}</option>`).join(''); populateAssignPeople(); };
-      roleSelect.onchange = populateAssignPeople;
-      assignDialog.showModal();
-      function populateAssignPeople(){
-        const role = roleSelect.value;
-        const evId = eventSelect.value;
-        const already = new Set(eventAssignments(evId).map(a => a.personId));
-        personSelect.innerHTML = state.people.filter(p => p.role === role && !already.has(p.id)).map(p => `<option value="${p.id}">${escapeHtml(p.name)} · ${escapeHtml(p.contactPreference || 'none')}</option>`).join('') || '<option value="">Aucune ressource disponible</option>';
-      }
+    show({
+      status: res.status,
+      ok: res.ok,
+      body
+    }, "graphBox");
+
+    if(res.ok){
+      setStatus("Graph OK.", "ok");
+    }else{
+      setStatus(`Graph ${res.status}.`, "err");
     }
+  }catch(e){
+    setStatus("Erreur durant la sync Outlook.", "err");
+    show(String(e && e.message ? e.message : e), "graphBox");
+  }
+}
+async function signOut(){
+  const acct = getActiveAccount();
+  try{
+    await pca.logoutPopup({ account: acct, postLogoutRedirectUri: redirectUri });
+  }catch(e){}
+  show("Aucun compte actif.", "accountBox");
+  show("Aucun token Graph récupéré.", "claimsBox");
+  show("Aucune réponse Graph.", "graphBox");
+  setStatus("Déconnecté.");
+}
 
-    document.getElementById('assignForm').addEventListener('submit', ev => {
-      ev.preventDefault();
-      const fd = new FormData(ev.target); const eventId = String(fd.get('eventId')||''); const role = String(fd.get('role')||''); const personId = String(fd.get('personId')||'');
-      if(!eventId || !role || !personId) return alert('Choisis un événement, un rôle et une ressource.');
-      state.assignments.push({id:uid(), eventId, personId, role, status:'waiting', token:uid()+uid(), sentChannels:[], lastSentAt:''});
-      state.selectedEventId = eventId; saveState(); assignDialog.close(); render();
-    });
+(async function init(){
+  try{
+    await pca.initialize();
+    await pca.handleRedirectPromise();
+  }catch(e){}
+  refreshAccountBox();
+})();
 
-    function quickAssign(eventId, personId, role){
-      state.assignments.push({id:uid(), eventId, personId, role, status:'waiting', token:uid()+uid(), sentChannels:[], lastSentAt:''});
-      state.selectedEventId = eventId; saveState(); render();
-    }
-
-    async function sendAssignment(assignmentId){
-      const assignment = state.assignments.find(a => a.id === assignmentId); if(!assignment) return;
-      const person = getPerson(assignment.personId); const event = getEvent(assignment.eventId); if(!person || !event) return;
-      const channels = computeChannels(person);
-      if(channels.length === 0) return alert(`Aucun canal disponible pour ${person.name}.`);
-      const payload = buildNotificationPayload(assignment, person, event, channels);
-      const liveRequested = state.settings.liveMode && ((channels.includes('email') && state.settings.emailWebhook) || (channels.includes('sms') && state.settings.smsWebhook));
-      let liveSent = false;
-      if(liveRequested){
-        try{
-          await sendViaWebhooks(payload, channels);
-          liveSent = true;
-        }catch(err){
-          console.error(err);
-          alert('Le mode live a échoué. L’envoi a été conservé en simulation dans le journal.');
-        }
-      }
-      assignment.status = 'sent';
-      assignment.sentChannels = channels;
-      assignment.lastSentAt = new Date().toISOString();
-      state.notificationQueue.unshift({id:uid(), createdAt:new Date().toISOString(), status:liveSent ? 'sent' : 'simulated', channels, recipient:person.name, eventName:event.name, note:liveSent ? 'Webhook appelé avec succès' : 'Démo locale — envoi simulé'});
-      saveState(); render();
-    }
-
-    async function sendViaWebhooks(payload, channels){
-      const jobs = [];
-      if(channels.includes('email') && state.settings.emailWebhook){
-        jobs.push(fetch(state.settings.emailWebhook,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...payload, channel:'email'})}));
-      }
-      if(channels.includes('sms') && state.settings.smsWebhook){
-        jobs.push(fetch(state.settings.smsWebhook,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...payload, channel:'sms'})}));
-      }
-      if(!jobs.length) return;
-      const results = await Promise.all(jobs);
-      results.forEach(r => { if(!r.ok) throw new Error('Webhook failed'); });
-    }
-
-    function buildNotificationPayload(assignment, person, event, channels){
-      return {
-        app:'Crew Scheduler v4', assignmentId:assignment.id, token:assignment.token, channels,
-        recipient:{name:person.name,email:person.email,phone:person.phone,contactPreference:person.contactPreference},
-        event:{id:event.id,name:event.name,date:event.date,time:event.time,location:event.location,role:assignment.role},
-        confirmLink:buildConfirmLink(assignment.token),
-        subject:`Confirmation demandée — ${event.name}`,
-        emailBody:`Bonjour ${person.name},\n\nPeux-tu confirmer ta présence pour ${event.name} le ${formatDate(event.date)} à ${event.time} ?\nLieu : ${event.location || 'À confirmer'}\nRôle : ${assignment.role}\n\nConfirmer / refuser : ${buildConfirmLink(assignment.token)}\n`,
-        smsBody:`${event.name} · ${event.date} ${event.time} · rôle ${assignment.role}. Confirme ici : ${buildConfirmLink(assignment.token)}`
-      };
-    }
-
-    function previewAssignment(assignmentId){
-      const assignment = state.assignments.find(a => a.id === assignmentId); if(!assignment) return;
-      const person = getPerson(assignment.personId); const event = getEvent(assignment.eventId); if(!person || !event) return;
-      const channels = computeChannels(person); const payload = buildNotificationPayload(assignment, person, event, channels);
-      alert(`Prévisualisation pour ${person.name}\n\nCanaux: ${channels.join(' + ') || 'aucun'}\n\nEmail:\n${payload.emailBody}\n\nSMS:\n${payload.smsBody}`);
-    }
-
-    function sendAllSelected(){
-      const selected = state.selectedEventId; if(!selected) return;
-      const ids = state.assignments.filter(a => a.eventId === selected && a.status !== 'confirmed').map(a => a.id);
-      if(!ids.length) return alert('Aucune assignation à envoyer.');
-      ids.forEach(id => sendAssignment(id));
-    }
-
-    function parseRoles(text){
-      const result = {}; String(text||'').split(',').map(s => s.trim()).filter(Boolean).forEach(part => {
-        const [role, qty] = part.split(':').map(v => v.trim());
-        const n = Number(qty || 1); if(role) result[role] = Number.isFinite(n) && n > 0 ? n : 1;
-      });
-      return Object.keys(result).length ? result : {'Son':1};
-    }
-
-    icsInput.addEventListener('change', async ev => {
-      const file = ev.target.files?.[0]; if(!file) return;
-      const text = await file.text();
-      const imported = parseICS(text);
-      if(!imported.length) return alert('Aucun événement trouvé dans ce fichier .ics');
-      for(const item of imported){
-        state.events.push({id:uid(), source:'ics', name:item.name, date:item.date, time:item.time, location:item.location, notes:item.notes, requiredRoles:{'Son':1}});
-      }
-      state.selectedEventId = state.events[state.events.length - imported.length].id;
-      saveState(); render(); ev.target.value = '';
-      alert(`${imported.length} événement(s) importé(s).`);
-    });
-
-    function parseICS(text){
-      const lines = text.replace(/\r/g,'').split('\n');
-      const events = []; let current = null;
-      for(const line of lines){
-        if(line.startsWith('BEGIN:VEVENT')) current = {};
-        else if(line.startsWith('END:VEVENT') && current){
-          if(current.date) events.push({name:current.summary || 'Événement importé', date:current.date, time:current.time || '08:00', location:current.location || '', notes:current.description || ''});
-          current = null;
-        }else if(current){
-          if(line.startsWith('SUMMARY:')) current.summary = line.slice(8).trim();
-          else if(line.startsWith('LOCATION:')) current.location = line.slice(9).trim();
-          else if(line.startsWith('DESCRIPTION:')) current.description = line.slice(12).trim();
-          else if(line.startsWith('DTSTART')){
-            const value = line.split(':')[1]?.trim() || '';
-            if(/^\d{8}T\d{6}Z?$/.test(value) || /^\d{8}T\d{4}/.test(value)){
-              current.date = `${value.slice(0,4)}-${value.slice(4,6)}-${value.slice(6,8)}`;
-              current.time = `${value.slice(9,11) || '08'}:${value.slice(11,13) || '00'}`;
-            }else if(/^\d{8}$/.test(value)){
-              current.date = `${value.slice(0,4)}-${value.slice(4,6)}-${value.slice(6,8)}`;
-              current.time = '08:00';
-            }
-          }
-        }
-      }
-      return events;
-    }
-
-    function renderConfirmPage(token){
-      const assignment = state.assignments.find(a => a.token === token);
-      if(!assignment){
-        app.innerHTML = `<div class="confirmPage"><div class="confirmCard"><span class="tag none">Lien invalide</span><h1>Ce lien n'est plus valide.</h1><p>Le token de confirmation n'a pas été trouvé dans ce prototype local.</p></div></div>`;
-        return;
-      }
-      const event = getEvent(assignment.eventId); const person = getPerson(assignment.personId);
-      app.innerHTML = `
-        <div class="confirmPage">
-          <div class="confirmCard">
-            <span class="tag outlook">Confirmation d'événement</span>
-            <h1>${escapeHtml(person?.name || 'Ressource')}</h1>
-            <p>Réponds à cette demande pour confirmer ta présence à l'événement.</p>
-            <div class="confirmInfo">
-              <div class="row"><strong>Événement</strong><div>${escapeHtml(event?.name || '')}</div></div>
-              <div class="row"><strong>Date</strong><div>${escapeHtml(event ? formatDate(event.date) : '')} · ${escapeHtml(event?.time || '')}</div></div>
-              <div class="row"><strong>Lieu</strong><div>${escapeHtml(event?.location || 'À confirmer')}</div></div>
-              <div class="row"><strong>Rôle</strong><div>${escapeHtml(assignment.role)}</div></div>
-            </div>
-            <div class="confirmActions">
-              <button class="btn primary" id="confirmYes">Je confirme</button>
-              <button class="btn danger" id="confirmNo">Je refuse</button>
-              <button class="btn secondary" id="backHome">Retour</button>
-            </div>
-          </div>
-        </div>`;
-      document.getElementById('confirmYes').addEventListener('click', () => { assignment.status = 'confirmed'; saveState(); alert('Merci — présence confirmée.'); goHome(); });
-      document.getElementById('confirmNo').addEventListener('click', () => { assignment.status = 'declined'; saveState(); alert('Refus enregistré.'); goHome(); });
-      document.getElementById('backHome').addEventListener('click', goHome);
-    }
-
-    function goHome(){ const url = new URL(window.location.href); url.searchParams.delete('token'); window.location.href = url.toString(); }
-
-    initAuth().then(render);
-  </script>
+document.getElementById("btnLogin").addEventListener("click", signIn);
+document.getElementById("btnSync").addEventListener("click", syncOutlook);
+document.getElementById("btnLogout").addEventListener("click", signOut);
+</script>
 </body>
 </html>
