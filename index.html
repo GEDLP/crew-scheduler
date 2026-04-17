@@ -3,202 +3,261 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Crew Scheduler v6.2 Debug</title>
-  <style>
-    body{font-family:Arial,sans-serif;background:#f6f8fb;color:#0f172a;margin:0}
-    .wrap{max-width:1100px;margin:0 auto;padding:24px}
-    .bar{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px}
-    button{border:none;border-radius:10px;padding:10px 14px;background:#2563eb;color:#fff;font-weight:600;cursor:pointer}
-    button.secondary{background:#334155}
-    .card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:16px;margin-bottom:16px}
-    pre{white-space:pre-wrap;word-break:break-word;background:#0b1220;color:#dbeafe;padding:14px;border-radius:12px;max-height:360px;overflow:auto}
-    .muted{color:#64748b}
-    .ok{color:#047857;font-weight:700}
-    .err{color:#b91c1c;font-weight:700}
-  </style>
+  <title>Crew Scheduler Outlook Debug</title>
   <script src="https://alcdn.msauth.net/browser/2.39.0/js/msal-browser.min.js"></script>
+  <style>
+    :root{
+      --bg:#f5f7fb; --card:#fff; --text:#0f172a; --muted:#64748b; --line:#e5e7eb;
+      --blue:#2563eb; --blue2:#1d4ed8; --green:#059669; --red:#dc2626;
+      --shadow:0 14px 34px rgba(15,23,42,.08); --radius:18px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif}
+    .wrap{max-width:1120px;margin:0 auto;padding:24px}
+    h1{margin:0 0 6px;font-size:32px;letter-spacing:-.02em}
+    .sub{color:var(--muted);margin-bottom:18px}
+    .bar{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:18px}
+    button{
+      appearance:none;border:none;border-radius:14px;padding:12px 16px;cursor:pointer;
+      font-weight:700;background:var(--blue);color:#fff;box-shadow:0 10px 20px rgba(37,99,235,.18)
+    }
+    button:hover{background:var(--blue2)}
+    button.secondary{background:#e2e8f0;color:#0f172a;box-shadow:none}
+    .pill{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;font-weight:700}
+    .dot{width:8px;height:8px;border-radius:999px;background:#60a5fa}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);padding:18px}
+    .card h3{margin:0 0 12px;font-size:18px}
+    pre{
+      margin:0;white-space:pre-wrap;word-break:break-word;
+      background:#0b1220;color:#dbeafe;padding:14px;border-radius:14px;min-height:150px;overflow:auto
+    }
+    .note{padding:12px 14px;background:#fff;border:1px dashed #cbd5e1;border-radius:14px;color:#475569;margin-bottom:18px}
+    .ok{color:var(--green)!important}.err{color:var(--red)!important}
+    .small{font-size:12px;color:var(--muted)}
+    @media (max-width:900px){.grid{grid-template-columns:1fr}}
+  </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>Crew Scheduler v6.2 Debug Outlook</h1>
-  <p class="muted">Cette version affiche les détails utiles directement dans la page.</p>
+  <h1>Outlook Debug</h1>
+  <div class="sub">Page autonome pour diagnostiquer la connexion Microsoft et l’appel Graph.</div>
 
   <div class="bar">
-    <button id="btnLogin">Se connecter à Microsoft</button>
-    <button id="btnSync">Sync Outlook</button>
-    <button id="btnLogout" class="secondary">Se déconnecter</button>
+    <button id="btnLogin" type="button">Se connecter à Microsoft</button>
+    <button id="btnSync" type="button">Sync Outlook</button>
+    <button id="btnLogout" type="button" class="secondary">Se déconnecter</button>
+    <span class="pill"><span class="dot"></span><span id="statusText">Prêt</span></span>
   </div>
 
-  <div class="card">
-    <h3>État</h3>
-    <div id="status">Prêt.</div>
+  <div class="note">
+    Si cette page est bien chargée, tu dois voir quatre panneaux et les trois boutons ci-dessus doivent réagir.
   </div>
 
-  <div class="card">
-    <h3>Compte actif</h3>
-    <pre id="accountBox">Aucun compte actif.</pre>
-  </div>
-
-  <div class="card">
-    <h3>Claims du token Graph</h3>
-    <pre id="claimsBox">Aucun token Graph récupéré.</pre>
-  </div>
-
-  <div class="card">
-    <h3>Réponse Graph</h3>
-    <pre id="graphBox">Aucune réponse Graph.</pre>
+  <div class="grid">
+    <section class="card">
+      <h3>Compte actif</h3>
+      <pre id="accountBox">Aucun compte actif.</pre>
+    </section>
+    <section class="card">
+      <h3>Claims du token Graph</h3>
+      <pre id="claimsBox">Aucun token Graph récupéré.</pre>
+    </section>
+    <section class="card">
+      <h3>Réponse Graph</h3>
+      <pre id="graphBox">Aucune réponse Graph.</pre>
+    </section>
+    <section class="card">
+      <h3>Configuration</h3>
+      <pre id="configBox"></pre>
+      <div class="small" style="margin-top:10px">
+        Cherche surtout dans les claims: <code>aud</code>, <code>scp</code>, <code>tid</code>, <code>preferred_username</code>.
+      </div>
+    </section>
   </div>
 </div>
 
 <script>
-const clientId = "b71fb750-0c78-4903-9489-fd2d0fc18884";
-const tenantId = "b5e72da6-a727-4c1d-b80d-e381c3123448";
-const redirectUri = "https://gedlp.github.io/crew-scheduler/";
+(() => {
+  const clientId = "b71fb750-0c78-4903-9489-fd2d0fc18884";
+  const tenantId = "b5e72da6-a727-4c1d-b80d-e381c3123448";
+  const redirectUri = "https://gedlp.github.io/crew-scheduler/";
 
-const msalConfig = {
-  auth: {
-    clientId,
-    authority: `https://login.microsoftonline.com/${tenantId}`,
-    redirectUri
-  },
-  cache: {
-    cacheLocation: "localStorage",
-    storeAuthStateInCookie: false
+  const configBox = document.getElementById("configBox");
+  const accountBox = document.getElementById("accountBox");
+  const claimsBox = document.getElementById("claimsBox");
+  const graphBox = document.getElementById("graphBox");
+  const statusText = document.getElementById("statusText");
+
+  function setStatus(msg, cls=""){
+    statusText.textContent = msg;
+    statusText.className = cls;
   }
-};
-
-const loginRequest = {
-  scopes: ["User.Read", "Calendars.Read"]
-};
-
-const pca = new msal.PublicClientApplication(msalConfig);
-
-function setStatus(msg, cls=""){
-  const el=document.getElementById("status");
-  el.className=cls;
-  el.textContent=msg;
-}
-function show(obj, id){
-  document.getElementById(id).textContent = typeof obj === "string" ? obj : JSON.stringify(obj, null, 2);
-}
-function parseJwt(token){
-  try{
-    const payload = token.split('.')[1];
-    const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
-    const json = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00'+c.charCodeAt(0).toString(16)).slice(-2)).join(''));
-    return JSON.parse(json);
-  }catch(e){
-    return {parse_error:String(e)};
+  function show(el, value){
+    el.textContent = typeof value === "string" ? value : JSON.stringify(value, null, 2);
   }
-}
-function getActiveAccount(){
-  return pca.getActiveAccount() || pca.getAllAccounts()[0] || null;
-}
-function refreshAccountBox(){
-  const acct = getActiveAccount();
-  if(!acct){ show("Aucun compte actif.", "accountBox"); return; }
-  pca.setActiveAccount(acct);
-  show({
-    username: acct.username,
-    tenantId: acct.tenantId,
-    homeAccountId: acct.homeAccountId,
-    environment: acct.environment,
-    localAccountId: acct.localAccountId,
-    name: acct.name
-  }, "accountBox");
-}
-async function signIn(){
-  try{
-    setStatus("Connexion Microsoft en cours...");
-    const res = await pca.loginPopup(loginRequest);
-    pca.setActiveAccount(res.account);
-    refreshAccountBox();
-    setStatus("Connecté à Microsoft.", "ok");
-  }catch(e){
-    setStatus("Échec de connexion Microsoft.", "err");
-    show(String(e && e.message ? e.message : e), "graphBox");
-  }
-}
-async function getGraphToken(){
-  let account = getActiveAccount();
-  if(!account){
-    throw new Error("Aucun compte actif. Clique d'abord sur Se connecter à Microsoft.");
-  }
-  pca.setActiveAccount(account);
-  refreshAccountBox();
-
-  try{
-    const tokenRes = await pca.acquireTokenSilent({...loginRequest, account});
-    return tokenRes.accessToken;
-  }catch(silentErr){
-    setStatus("Token silencieux indisponible, popup demandée...");
-    const tokenRes = await pca.acquireTokenPopup({...loginRequest, account, prompt: "select_account"});
-    return tokenRes.accessToken;
-  }
-}
-async function syncOutlook(){
-  try{
-    setStatus("Récupération du token Graph...");
-    const token = await getGraphToken();
-    const claims = parseJwt(token);
-    show(claims, "claimsBox");
-
-    const start = new Date(Date.UTC(2026,3,1,4,0,0)).toISOString();
-    const end = new Date(Date.UTC(2026,5,1,3,59,59)).toISOString();
-    const url = "https://graph.microsoft.com/v1.0/me/calendarView"
-      + `?startDateTime=${encodeURIComponent(start)}`
-      + `&endDateTime=${encodeURIComponent(end)}`
-      + `&$top=25`
-      + `&$select=id,subject,start,end,location,bodyPreview,webLink`
-      + `&$orderby=start/dateTime`;
-
-    setStatus("Appel Graph en cours...");
-    const res = await fetch(url, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-
-    const text = await res.text();
-    let body = text;
-    try { body = JSON.parse(text); } catch(e) {}
-
-    show({
-      status: res.status,
-      ok: res.ok,
-      body
-    }, "graphBox");
-
-    if(res.ok){
-      setStatus("Graph OK.", "ok");
-    }else{
-      setStatus(`Graph ${res.status}.`, "err");
+  function parseJwt(token){
+    try{
+      const base64Url = token.split(".")[1];
+      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+      const json = decodeURIComponent(atob(base64).split("").map(c =>
+        "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2)
+      ).join(""));
+      return JSON.parse(json);
+    }catch(e){
+      return { parse_error: String(e) };
     }
-  }catch(e){
-    setStatus("Erreur durant la sync Outlook.", "err");
-    show(String(e && e.message ? e.message : e), "graphBox");
   }
-}
-async function signOut(){
-  const acct = getActiveAccount();
-  try{
-    await pca.logoutPopup({ account: acct, postLogoutRedirectUri: redirectUri });
-  }catch(e){}
-  show("Aucun compte actif.", "accountBox");
-  show("Aucun token Graph récupéré.", "claimsBox");
-  show("Aucune réponse Graph.", "graphBox");
-  setStatus("Déconnecté.");
-}
 
-(async function init(){
-  try{
-    await pca.initialize();
-    await pca.handleRedirectPromise();
-  }catch(e){}
-  refreshAccountBox();
+  show(configBox, {
+    clientId,
+    tenantId,
+    redirectUri,
+    authority: `https://login.microsoftonline.com/${tenantId}`,
+    scopes: ["User.Read", "Calendars.Read"]
+  });
+
+  if (!window.msal || !window.msal.PublicClientApplication) {
+    setStatus("MSAL non chargé", "err");
+    show(graphBox, "Le script MSAL n'a pas été chargé.");
+    return;
+  }
+
+  const pca = new msal.PublicClientApplication({
+    auth: {
+      clientId,
+      authority: `https://login.microsoftonline.com/${tenantId}`,
+      redirectUri
+    },
+    cache: {
+      cacheLocation: "localStorage",
+      storeAuthStateInCookie: false
+    }
+  });
+
+  const loginRequest = { scopes: ["User.Read", "Calendars.Read"] };
+
+  function getActiveAccount() {
+    return pca.getActiveAccount() || pca.getAllAccounts()[0] || null;
+  }
+
+  function refreshAccount() {
+    const acct = getActiveAccount();
+    if (!acct) {
+      show(accountBox, "Aucun compte actif.");
+      return null;
+    }
+    pca.setActiveAccount(acct);
+    show(accountBox, {
+      username: acct.username,
+      tenantId: acct.tenantId,
+      name: acct.name,
+      homeAccountId: acct.homeAccountId,
+      localAccountId: acct.localAccountId,
+      environment: acct.environment
+    });
+    return acct;
+  }
+
+  async function initialize() {
+    try {
+      await pca.initialize();
+      await pca.handleRedirectPromise();
+      refreshAccount();
+      setStatus("Prêt");
+      console.log("DEBUG_READY");
+    } catch (e) {
+      setStatus("Init échouée", "err");
+      show(graphBox, String(e && e.message ? e.message : e));
+      console.error("INIT_ERROR", e);
+    }
+  }
+
+  async function signIn() {
+    try {
+      setStatus("Connexion...");
+      const result = await pca.loginPopup({ ...loginRequest, prompt: "select_account" });
+      if (result && result.account) {
+        pca.setActiveAccount(result.account);
+      }
+      refreshAccount();
+      setStatus("Connecté", "ok");
+    } catch (e) {
+      setStatus("Connexion échouée", "err");
+      show(graphBox, String(e && e.message ? e.message : e));
+      console.error("LOGIN_ERROR", e);
+    }
+  }
+
+  async function getGraphToken() {
+    const acct = refreshAccount();
+    if (!acct) throw new Error("Aucun compte actif.");
+    try {
+      const res = await pca.acquireTokenSilent({ ...loginRequest, account: acct });
+      return res.accessToken;
+    } catch (e) {
+      console.warn("SILENT_TOKEN_ERROR", e);
+      const res = await pca.acquireTokenPopup({ ...loginRequest, account: acct, prompt: "select_account" });
+      return res.accessToken;
+    }
+  }
+
+  async function syncOutlook() {
+    try {
+      setStatus("Token Graph...");
+      claimsBox.textContent = "Récupération du token...";
+      graphBox.textContent = "Appel Graph en cours...";
+
+      const token = await getGraphToken();
+      const claims = parseJwt(token);
+      show(claimsBox, claims);
+      console.log("GRAPH_TOKEN_CLAIMS", claims);
+
+      const start = new Date(Date.UTC(2026,3,1,4,0,0)).toISOString();
+      const end = new Date(Date.UTC(2026,5,1,3,59,59)).toISOString();
+      const url = "https://graph.microsoft.com/v1.0/me/calendarView"
+        + `?startDateTime=${encodeURIComponent(start)}`
+        + `&endDateTime=${encodeURIComponent(end)}`
+        + `&$top=25`
+        + `&$select=id,subject,start,end,location,bodyPreview,webLink`
+        + `&$orderby=start/dateTime`;
+
+      const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+      const raw = await res.text();
+      let body = raw;
+      try { body = JSON.parse(raw); } catch(e) {}
+
+      show(graphBox, { status: res.status, ok: res.ok, body });
+      console.log("GRAPH_RESPONSE", { status: res.status, ok: res.ok, body });
+
+      if (res.ok) setStatus("Graph OK", "ok");
+      else setStatus(`Graph ${res.status}`, "err");
+    } catch (e) {
+      setStatus("Sync échouée", "err");
+      show(graphBox, String(e && e.message ? e.message : e));
+      console.error("SYNC_ERROR", e);
+    }
+  }
+
+  async function signOut() {
+    try {
+      const acct = getActiveAccount();
+      await pca.logoutPopup({ account: acct, postLogoutRedirectUri: redirectUri });
+    } catch (e) {
+      console.warn("LOGOUT_WARN", e);
+    }
+    show(accountBox, "Aucun compte actif.");
+    show(claimsBox, "Aucun token Graph récupéré.");
+    show(graphBox, "Aucune réponse Graph.");
+    setStatus("Déconnecté");
+  }
+
+  document.getElementById("btnLogin").addEventListener("click", signIn);
+  document.getElementById("btnSync").addEventListener("click", syncOutlook);
+  document.getElementById("btnLogout").addEventListener("click", signOut);
+
+  initialize();
 })();
-
-document.getElementById("btnLogin").addEventListener("click", signIn);
-document.getElementById("btnSync").addEventListener("click", syncOutlook);
-document.getElementById("btnLogout").addEventListener("click", signOut);
 </script>
 </body>
 </html>
