@@ -6,97 +6,40 @@
   <title>Crew Scheduler - Debug Outlook</title>
   <style>
     :root{
-      --bg:#f5f7fb;
-      --card:#ffffff;
-      --text:#132033;
-      --muted:#6b7280;
-      --line:#e5e7eb;
-      --blue:#2563eb;
-      --blue2:#1d4ed8;
-      --green:#059669;
-      --orange:#d97706;
-      --red:#dc2626;
-      --shadow:0 18px 45px rgba(15,23,42,.08);
-      --radius:18px;
+      --bg:#f5f7fb;--card:#ffffff;--text:#132033;--muted:#6b7280;--line:#e5e7eb;
+      --blue:#2563eb;--blue2:#1d4ed8;--green:#059669;--orange:#d97706;--red:#dc2626;
+      --shadow:0 18px 45px rgba(15,23,42,.08);--radius:18px;
     }
     *{box-sizing:border-box}
     html,body{margin:0;padding:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
     .wrap{max-width:1050px;margin:0 auto;padding:28px}
-    .top{
-      background:var(--card);
-      border:1px solid var(--line);
-      border-radius:24px;
-      padding:24px;
-      box-shadow:var(--shadow);
-      margin-bottom:18px;
-    }
+    .top{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:24px;box-shadow:var(--shadow);margin-bottom:18px}
     h1{margin:0 0 8px;font-size:32px;line-height:1.05}
     .sub{color:var(--muted);line-height:1.55}
     .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
     @media (max-width:900px){.grid{grid-template-columns:1fr}}
-    .card{
-      background:var(--card);
-      border:1px solid var(--line);
-      border-radius:var(--radius);
-      box-shadow:var(--shadow);
-      overflow:hidden;
-    }
-    .head{
-      padding:16px 18px;
-      border-bottom:1px solid var(--line);
-      font-weight:800;
-    }
+    .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+    .head{padding:16px 18px;border-bottom:1px solid var(--line);font-weight:800}
     .body{padding:18px}
     label{display:block;margin:0 0 6px;font-size:13px;color:var(--muted);font-weight:600}
-    input{
-      width:100%;
-      padding:12px 13px;
-      border:1px solid #d7dce5;
-      border-radius:12px;
-      font:inherit;
-      background:#fff;
-      color:var(--text);
-      margin-bottom:12px;
-    }
+    input{width:100%;padding:12px 13px;border:1px solid #d7dce5;border-radius:12px;font:inherit;background:#fff;color:var(--text);margin-bottom:12px}
     .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
     @media (max-width:700px){.row{grid-template-columns:1fr}}
     .btns{display:flex;flex-wrap:wrap;gap:10px}
-    button{
-      appearance:none;border:0;border-radius:12px;
-      padding:12px 16px;font:inherit;font-weight:800;cursor:pointer;
-      color:white;background:var(--blue);
-      box-shadow:0 10px 22px rgba(37,99,235,.18);
-    }
+    button{appearance:none;border:0;border-radius:12px;padding:12px 16px;font:inherit;font-weight:800;cursor:pointer;color:white;background:var(--blue);box-shadow:0 10px 22px rgba(37,99,235,.18)}
     button:hover{background:var(--blue2)}
     button.secondary{background:#334155;box-shadow:none}
     button.green{background:var(--green);box-shadow:none}
     button.orange{background:var(--orange);box-shadow:none}
     button.red{background:var(--red);box-shadow:none}
-    .status{
-      display:flex;flex-wrap:wrap;gap:10px;margin-top:8px
-    }
-    .pill{
-      background:#f8fafc;border:1px solid var(--line);border-radius:999px;
-      padding:8px 12px;font-size:13px;color:var(--muted);font-weight:700
-    }
+    .status{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}
+    .pill{background:#f8fafc;border:1px solid var(--line);border-radius:999px;padding:8px 12px;font-size:13px;color:var(--muted);font-weight:700}
     .ok{color:#065f46;background:#ecfdf5;border-color:#a7f3d0}
     .warn{color:#92400e;background:#fffbeb;border-color:#fde68a}
     .bad{color:#991b1b;background:#fef2f2;border-color:#fecaca}
-    .log{
-      min-height:370px;max-height:640px;overflow:auto;
-      background:#0f172a;color:#dbeafe;border-radius:14px;
-      padding:14px;font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-      white-space:pre-wrap;
-    }
-    .help{
-      margin-top:14px;
-      background:#f8fafc;border:1px dashed #cbd5e1;border-radius:12px;
-      padding:12px;color:var(--muted);line-height:1.5;font-size:13px;
-    }
-    .small{font-size:12px;color:var(--muted)}
-    .live{
-      display:grid;grid-template-columns:160px 1fr;gap:8px;font-size:13px;line-height:1.5
-    }
+    .log{min-height:370px;max-height:640px;overflow:auto;background:#0f172a;color:#dbeafe;border-radius:14px;padding:14px;font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;white-space:pre-wrap}
+    .help{margin-top:14px;background:#f8fafc;border:1px dashed #cbd5e1;border-radius:12px;padding:12px;color:var(--muted);line-height:1.5;font-size:13px}
+    .live{display:grid;grid-template-columns:160px 1fr;gap:8px;font-size:13px;line-height:1.5}
     .live div:nth-child(odd){color:var(--muted);font-weight:700}
   </style>
 </head>
@@ -105,9 +48,7 @@
     <div class="top">
       <h1>Crew Scheduler – Debug Outlook</h1>
       <div class="sub">
-        Version corrigée pour continuer le debug du chat précédent. Le but ici est simple :
-        garder une petite page de test avec les <strong>boutons de connexion Microsoft / Outlook</strong>,
-        corriger le chargement MSAL, et ajouter un <strong>fallback</strong> si le CDN principal échoue.
+        Version mise à jour avec le vrai Client ID prérempli et sans fallback vers un faux identifiant d’application.
       </div>
       <div class="status">
         <div id="stLib" class="pill">MSAL non chargé</div>
@@ -124,7 +65,7 @@
           <div class="row">
             <div>
               <label for="clientId">Client ID</label>
-              <input id="clientId" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+              <input id="clientId" value="b71fb750-0c78-4903-9489-fd2d0fc18884">
             </div>
             <div>
               <label for="tenantId">Tenant</label>
@@ -158,14 +99,7 @@
           </div>
 
           <div class="help">
-            <strong>Note :</strong> les boutons <em>Se connecter à Microsoft</em> et <em>Se connecter à Outlook</em>
-            lancent le même login MSAL. Le deuxième est là pour rester fidèle à ton test visuel.
-            Si les CDN MSAL ne chargent pas, la page passe en mode fallback et le log l’indique clairement.
-          </div>
-
-          <div class="help">
-            Pour un vrai test OAuth, le plus fiable reste d’ouvrir ce fichier via <strong>http://localhost</strong>
-            et d’avoir exactement le même <strong>redirect URI</strong> configuré dans Microsoft Entra.
+            Cette version bloque la connexion si le Client ID est vide, au lieu d’envoyer un faux identifiant à Microsoft.
           </div>
 
           <div class="card" style="margin-top:14px;box-shadow:none">
@@ -186,13 +120,6 @@
         <div class="head">Journal debug</div>
         <div class="body">
           <div id="log" class="log"></div>
-          <div class="small" style="margin-top:10px">
-            CDN principal :
-            https://alcdn.msauth.net/browser/2.35.0/js/msal-browser.min.js
-            <br>
-            Fallback :
-            https://alcdn.msftauth.net/browser/2.35.0/js/msal-browser.min.js
-          </div>
         </div>
       </div>
     </div>
@@ -213,8 +140,7 @@ const logBox = $("log");
 
 function log(msg, type="info"){
   const t = new Date().toLocaleTimeString();
-  const line = `[${t}] ${msg}\n`;
-  logBox.textContent += line;
+  logBox.textContent += `[${t}] ${msg}\n`;
   logBox.scrollTop = logBox.scrollHeight;
   console[type === "bad" ? "error" : type === "warn" ? "warn" : "log"](msg);
 }
@@ -245,7 +171,7 @@ function saveCfg(){
 function loadCfg(){
   let cfg = {};
   try{ cfg = JSON.parse(localStorage.getItem("crewSchedulerOutlookDebugCfg") || "{}"); }catch(e){}
-  $("clientId").value = cfg.clientId || "";
+  $("clientId").value = cfg.clientId || "b71fb750-0c78-4903-9489-fd2d0fc18884";
   $("tenantId").value = cfg.tenantId || "common";
   $("redirectUri").value = cfg.redirectUri || (window.location.origin + window.location.pathname);
   $("scopes").value = cfg.scopes || "User.Read Calendars.Read";
@@ -341,8 +267,12 @@ async function ensureMsalLoaded(){
 
 function getConfig(){
   saveCfg();
+  const clientId = $("clientId").value.trim();
+  if (!clientId) {
+    throw new Error("Client ID manquant.");
+  }
   return {
-    clientId: $("clientId").value.trim() || "00000000-0000-0000-0000-000000000000",
+    clientId,
     authority: $("authority").value.trim(),
     redirectUri: $("redirectUri").value.trim(),
     scopes: $("scopes").value.trim().split(/\s+/).filter(Boolean)
@@ -494,9 +424,9 @@ function bind(){
   bind();
   updateLive();
   log("Page debug prête.");
-  log("Cette version remet bien les boutons de connexion Microsoft / Outlook.");
+  log("Client ID prérempli : b71fb750-0c78-4903-9489-fd2d0fc18884");
   if (window.location.protocol === "file:"){
-    log("Attention : tu es possiblement en file://. Pour OAuth, http://localhost est souvent plus fiable.", "warn");
+    log("Attention : pour OAuth, http://localhost est souvent plus fiable que file://", "warn");
   }
 })();
 </script>
