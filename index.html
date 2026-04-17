@@ -3,254 +3,85 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Crew Scheduler – Outlook intégré</title>
+  <title>Crew Scheduler – Outlook calendrier corrigé</title>
   <style>
     :root {
-      --bg:#f5f7fb;
-      --panel:#ffffff;
-      --panel2:#f8fafc;
-      --text:#0f172a;
-      --muted:#6b7280;
-      --line:#e5e7eb;
-      --blue:#2563eb;
-      --blue2:#1d4ed8;
-      --green:#059669;
-      --orange:#d97706;
-      --red:#dc2626;
-      --shadow:0 18px 45px rgba(15,23,42,.08);
-      --radius:20px;
-      --sidebar:260px;
+      --bg:#f5f7fb; --panel:#fff; --panel2:#f8fafc; --text:#0f172a; --muted:#6b7280; --line:#e5e7eb;
+      --blue:#2563eb; --blue2:#1d4ed8; --green:#059669; --orange:#d97706; --red:#dc2626;
+      --shadow:0 18px 45px rgba(15,23,42,.08); --radius:20px; --sidebar:260px;
     }
     * { box-sizing:border-box; }
     html,body { margin:0; padding:0; background:var(--bg); color:var(--text); font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; }
     .app { min-height:100vh; display:grid; grid-template-columns:var(--sidebar) 1fr; }
     .sidebar {
-      background:#0f172a;
-      color:#fff;
-      padding:20px 16px;
-      display:flex;
-      flex-direction:column;
-      gap:16px;
-      position:sticky;
-      top:0;
-      height:100vh;
+      background:#0f172a; color:#fff; padding:20px 16px; display:flex; flex-direction:column; gap:16px;
+      position:sticky; top:0; height:100vh;
     }
-    .brand {
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.08);
-      border-radius:20px;
-      padding:16px;
-    }
-    .brand h1 {
-      margin:0;
-      font-size:22px;
-      line-height:1.05;
-    }
-    .brand p {
-      margin:8px 0 0;
-      color:#cbd5e1;
-      font-size:13px;
-      line-height:1.5;
-    }
-    .nav {
-      display:grid;
-      gap:8px;
-    }
+    .brand { background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.08); border-radius:20px; padding:16px; }
+    .brand h1 { margin:0; font-size:22px; line-height:1.05; }
+    .brand p { margin:8px 0 0; color:#cbd5e1; font-size:13px; line-height:1.5; }
+    .nav { display:grid; gap:8px; }
     .nav button {
-      width:100%;
-      text-align:left;
-      border:0;
-      background:transparent;
-      color:#e5e7eb;
-      padding:12px 14px;
-      border-radius:14px;
-      font:inherit;
-      cursor:pointer;
+      width:100%; text-align:left; border:0; background:transparent; color:#e5e7eb;
+      padding:12px 14px; border-radius:14px; font:inherit; cursor:pointer;
     }
-    .nav button.active {
-      background:rgba(37,99,235,.24);
-      color:#fff;
-      font-weight:800;
-    }
-    .main {
-      padding:24px;
-    }
+    .nav button.active { background:rgba(37,99,235,.24); color:#fff; font-weight:800; }
+    .main { padding:24px; }
     .hero {
-      background:var(--panel);
-      border:1px solid var(--line);
-      border-radius:28px;
-      box-shadow:var(--shadow);
-      padding:24px;
-      margin-bottom:18px;
+      background:var(--panel); border:1px solid var(--line); border-radius:28px; box-shadow:var(--shadow);
+      padding:24px; margin-bottom:18px;
     }
-    .hero h2 {
-      margin:0 0 8px;
-      font-size:34px;
-      line-height:1.04;
-    }
-    .hero p {
-      margin:0;
-      color:var(--muted);
-      max-width:900px;
-      line-height:1.6;
-    }
-    .status {
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-      margin-top:14px;
-    }
-    .pill {
-      border:1px solid var(--line);
-      background:var(--panel2);
-      padding:8px 12px;
-      border-radius:999px;
-      font-size:13px;
-      font-weight:700;
-      color:var(--muted);
-    }
+    .hero h2 { margin:0 0 8px; font-size:34px; line-height:1.04; }
+    .hero p { margin:0; color:var(--muted); max-width:920px; line-height:1.6; }
+    .status { display:flex; flex-wrap:wrap; gap:10px; margin-top:14px; }
+    .pill { border:1px solid var(--line); background:var(--panel2); padding:8px 12px; border-radius:999px; font-size:13px; font-weight:700; color:var(--muted); }
     .pill.ok { background:#ecfdf5; border-color:#a7f3d0; color:#065f46; }
     .pill.warn { background:#fffbeb; border-color:#fde68a; color:#92400e; }
     .pill.bad { background:#fef2f2; border-color:#fecaca; color:#991b1b; }
-
-    .grid {
-      display:grid;
-      grid-template-columns: 1.1fr .9fr;
-      gap:18px;
-    }
+    .grid { display:grid; grid-template-columns: 1.08fr .92fr; gap:18px; }
     @media (max-width: 1100px) {
       .app { grid-template-columns:1fr; }
       .sidebar { position:relative; height:auto; }
       .grid { grid-template-columns:1fr; }
     }
-
-    .card {
-      background:var(--panel);
-      border:1px solid var(--line);
-      border-radius:24px;
-      box-shadow:var(--shadow);
-      overflow:hidden;
-    }
+    .card { background:var(--panel); border:1px solid var(--line); border-radius:24px; box-shadow:var(--shadow); overflow:hidden; }
     .card-head {
-      padding:18px 20px;
-      border-bottom:1px solid var(--line);
-      font-weight:800;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
+      padding:18px 20px; border-bottom:1px solid var(--line); font-weight:800;
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
     }
-    .card-body {
-      padding:20px;
-    }
-    .row {
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:12px;
-    }
-    @media (max-width: 760px) {
-      .row { grid-template-columns:1fr; }
-    }
-    label {
-      display:block;
-      margin:0 0 6px;
-      color:var(--muted);
-      font-size:13px;
-      font-weight:700;
-    }
+    .card-body { padding:20px; }
+    .row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    @media (max-width: 760px) { .row { grid-template-columns:1fr; } }
+    label { display:block; margin:0 0 6px; color:var(--muted); font-size:13px; font-weight:700; }
     input, select {
-      width:100%;
-      padding:12px 13px;
-      border:1px solid #d7dce5;
-      border-radius:14px;
-      background:#fff;
-      color:var(--text);
-      font:inherit;
+      width:100%; padding:12px 13px; border:1px solid #d7dce5; border-radius:14px; background:#fff; color:var(--text); font:inherit;
     }
-    .buttons {
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-      margin-top:14px;
-    }
+    .buttons { display:flex; flex-wrap:wrap; gap:10px; margin-top:14px; }
     button.action {
-      border:0;
-      border-radius:14px;
-      padding:12px 16px;
-      font:inherit;
-      font-weight:800;
-      cursor:pointer;
-      color:#fff;
-      background:var(--blue);
-      box-shadow:0 10px 22px rgba(37,99,235,.18);
+      border:0; border-radius:14px; padding:12px 16px; font:inherit; font-weight:800; cursor:pointer;
+      color:#fff; background:var(--blue); box-shadow:0 10px 22px rgba(37,99,235,.18);
     }
     button.action:hover { background:var(--blue2); }
     .secondary { background:#334155 !important; box-shadow:none !important; }
     .green { background:var(--green) !important; box-shadow:none !important; }
     .orange { background:var(--orange) !important; box-shadow:none !important; }
     .red { background:var(--red) !important; box-shadow:none !important; }
-
-    .kv {
-      display:grid;
-      grid-template-columns:160px 1fr;
-      gap:8px;
-      font-size:13px;
-      line-height:1.5;
-    }
-    .kv div:nth-child(odd) {
-      color:var(--muted);
-      font-weight:700;
-    }
-
+    .kv { display:grid; grid-template-columns:160px 1fr; gap:8px; font-size:13px; line-height:1.5; }
+    .kv div:nth-child(odd) { color:var(--muted); font-weight:700; }
     .log {
-      min-height:240px;
-      max-height:420px;
-      overflow:auto;
-      background:#0f172a;
-      color:#dbeafe;
-      border-radius:16px;
-      padding:14px;
-      font:13px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      white-space:pre-wrap;
+      min-height:280px; max-height:460px; overflow:auto; background:#0f172a; color:#dbeafe;
+      border-radius:16px; padding:14px; font:13px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space:pre-wrap;
     }
-
-    .events {
-      display:grid;
-      gap:10px;
-    }
-    .event {
-      border:1px solid var(--line);
-      background:var(--panel2);
-      border-radius:18px;
-      padding:14px;
-    }
-    .event h4 {
-      margin:0 0 6px;
-      font-size:16px;
-      line-height:1.3;
-    }
-    .event .meta {
-      color:var(--muted);
-      font-size:13px;
-      line-height:1.5;
-    }
+    .events { display:grid; gap:10px; }
+    .event { border:1px solid var(--line); background:var(--panel2); border-radius:18px; padding:14px; }
+    .event h4 { margin:0 0 6px; font-size:16px; line-height:1.3; }
+    .event .meta { color:var(--muted); font-size:13px; line-height:1.5; }
     .empty {
-      color:var(--muted);
-      border:1px dashed #cbd5e1;
-      background:var(--panel2);
-      border-radius:18px;
-      padding:18px;
-      text-align:center;
+      color:var(--muted); border:1px dashed #cbd5e1; background:var(--panel2); border-radius:18px; padding:18px; text-align:center;
     }
     .note {
-      margin-top:14px;
-      color:var(--muted);
-      font-size:13px;
-      line-height:1.6;
-      background:#f8fafc;
-      border:1px dashed #cbd5e1;
-      border-radius:16px;
-      padding:14px;
+      margin-top:14px; color:var(--muted); font-size:13px; line-height:1.6;
+      background:#f8fafc; border:1px dashed #cbd5e1; border-radius:16px; padding:14px;
     }
   </style>
 </head>
@@ -259,9 +90,8 @@
     <aside class="sidebar">
       <div class="brand">
         <h1>Crew Scheduler</h1>
-        <p>Connexion Outlook intégrée avec Microsoft Graph.</p>
+        <p>Connexion Outlook intégrée avec lecture du calendrier sur plage de dates.</p>
       </div>
-
       <div class="nav">
         <button class="active" type="button">Outlook</button>
         <button type="button">Crew</button>
@@ -275,8 +105,8 @@
       <section class="hero">
         <h2>Outlook connecté au Crew Scheduler</h2>
         <p>
-          Cette version reprend la configuration validée au debug et l’intègre dans une page plus proche d’un vrai module.
-          Tu peux te connecter à Microsoft, récupérer ton profil, lire les événements Outlook et vérifier le flux complet.
+          Cette version va chercher les événements avec <strong>calendarView</strong> sur une plage de dates,
+          ce qui est beaucoup plus fiable pour voir tes événements à venir qu’un simple appel générique à <strong>/me/events</strong>.
         </p>
         <div class="status">
           <div id="stLib" class="pill">MSAL non chargé</div>
@@ -288,9 +118,7 @@
 
       <section class="grid">
         <div class="card">
-          <div class="card-head">
-            <span>Connexion Microsoft</span>
-          </div>
+          <div class="card-head"><span>Connexion Microsoft & plage du calendrier</span></div>
           <div class="card-body">
             <div class="row">
               <div>
@@ -314,6 +142,17 @@
               </div>
             </div>
 
+            <div class="row" style="margin-top:12px">
+              <div>
+                <label for="startDays">Jours en arrière</label>
+                <input id="startDays" type="number" value="7" min="0" max="365" />
+              </div>
+              <div>
+                <label for="endDays">Jours en avant</label>
+                <input id="endDays" type="number" value="60" min="1" max="365" />
+              </div>
+            </div>
+
             <div style="margin-top:12px">
               <label for="authority">Authority</label>
               <input id="authority" readonly value="https://login.microsoftonline.com/b5e72da6-a727-4c1d-b80d-e381c3123448" />
@@ -329,16 +168,14 @@
             </div>
 
             <div class="note">
-              La configuration qui a fonctionné au debug est déjà intégrée. Pour un test OAuth plus fiable,
-              ouvre idéalement ce fichier via <strong>http://localhost</strong> plutôt que <strong>file://</strong>.
+              La lecture du calendrier se fait maintenant via <strong>/me/calendarView</strong> avec une plage de dates,
+              triée chronologiquement. C’est beaucoup mieux pour afficher les événements Outlook à venir.
             </div>
           </div>
         </div>
 
         <div class="card">
-          <div class="card-head">
-            <span>Session active</span>
-          </div>
+          <div class="card-head"><span>Session active</span></div>
           <div class="card-body">
             <div class="kv">
               <div>Version MSAL</div><div id="liveVersion">—</div>
@@ -351,9 +188,7 @@
         </div>
 
         <div class="card">
-          <div class="card-head">
-            <span>Journal</span>
-          </div>
+          <div class="card-head"><span>Journal</span></div>
           <div class="card-body">
             <div id="log" class="log"></div>
           </div>
@@ -407,22 +242,26 @@
         clientId: $("clientId").value.trim(),
         tenantId: $("tenantId").value.trim(),
         redirectUri: $("redirectUri").value.trim(),
-        scopes: $("scopes").value.trim()
+        scopes: $("scopes").value.trim(),
+        startDays: $("startDays").value.trim(),
+        endDays: $("endDays").value.trim()
       };
-      localStorage.setItem("crewSchedulerOutlookIntegratedCfg", JSON.stringify(cfg));
+      localStorage.setItem("crewSchedulerOutlookIntegratedCfgV2", JSON.stringify(cfg));
       updateAuthority();
     }
 
     function loadConfig() {
       let saved = null;
       try {
-        saved = JSON.parse(localStorage.getItem("crewSchedulerOutlookIntegratedCfg") || "null");
+        saved = JSON.parse(localStorage.getItem("crewSchedulerOutlookIntegratedCfgV2") || "null");
       } catch (e) {}
 
       $("clientId").value = saved?.clientId || CONFIG.clientId;
       $("tenantId").value = saved?.tenantId || CONFIG.tenantId;
       $("redirectUri").value = saved?.redirectUri || (window.location.origin + window.location.pathname);
       $("scopes").value = saved?.scopes || "User.Read Calendars.Read";
+      $("startDays").value = saved?.startDays || "7";
+      $("endDays").value = saved?.endDays || "60";
       updateAuthority();
     }
 
@@ -516,9 +355,7 @@
     }
 
     async function login() {
-      if (!pca) {
-        await initMsal();
-      }
+      if (!pca) await initMsal();
       if (!pca) return;
 
       try {
@@ -537,15 +374,11 @@
     }
 
     async function acquireToken() {
-      if (!pca) {
-        await initMsal();
-      }
+      if (!pca) await initMsal();
       if (!pca) return null;
 
       const account = pca.getActiveAccount?.() || activeAccount || pca.getAllAccounts?.()[0];
-      if (!account) {
-        throw new Error("Aucun compte actif. Connecte-toi d'abord.");
-      }
+      if (!account) throw new Error("Aucun compte actif. Connecte-toi d'abord.");
 
       const result = await pca.acquireTokenSilent({
         account,
@@ -565,7 +398,8 @@
         const token = accessToken || await acquireToken();
         const res = await fetch("https://graph.microsoft.com/v1.0" + path, {
           headers: {
-            Authorization: "Bearer " + token
+            Authorization: "Bearer " + token,
+            Prefer: 'outlook.timezone="America/Montreal"'
           }
         });
 
@@ -590,35 +424,6 @@
       }
     }
 
-    function renderEvents(items) {
-      const box = $("events");
-      const count = Array.isArray(items) ? items.length : 0;
-      $("eventsCount").textContent = String(count);
-
-      if (!count) {
-        box.innerHTML = '<div class="empty">Aucun événement trouvé.</div>';
-        return;
-      }
-
-      box.innerHTML = items.map(ev => {
-        const subject = ev.subject || "(Sans titre)";
-        const start = ev.start?.dateTime || "";
-        const end = ev.end?.dateTime || "";
-        const location = ev.location?.displayName || "—";
-        const organizer = ev.organizer?.emailAddress?.address || "—";
-
-        return `
-          <div class="event">
-            <h4>${escapeHtml(subject)}</h4>
-            <div class="meta"><strong>Début :</strong> ${escapeHtml(start)}</div>
-            <div class="meta"><strong>Fin :</strong> ${escapeHtml(end)}</div>
-            <div class="meta"><strong>Lieu :</strong> ${escapeHtml(location)}</div>
-            <div class="meta"><strong>Organisateur :</strong> ${escapeHtml(organizer)}</div>
-          </div>
-        `;
-      }).join("");
-    }
-
     function escapeHtml(str) {
       return String(str)
         .replaceAll("&","&amp;")
@@ -628,6 +433,55 @@
         .replaceAll("'","&#039;");
     }
 
+    function renderEvents(items) {
+      const box = $("events");
+      const count = Array.isArray(items) ? items.length : 0;
+      $("eventsCount").textContent = String(count);
+
+      if (!count) {
+        box.innerHTML = '<div class="empty">Aucun événement trouvé dans la plage sélectionnée.</div>';
+        return;
+      }
+
+      box.innerHTML = items.map(ev => {
+        const subject = ev.subject || "(Sans titre)";
+        const start = ev.start?.dateTime || "";
+        const end = ev.end?.dateTime || "";
+        const location = ev.location?.displayName || "—";
+        const organizer = ev.organizer?.emailAddress?.address || "—";
+        const isAllDay = ev.isAllDay ? "Oui" : "Non";
+
+        return `
+          <div class="event">
+            <h4>${escapeHtml(subject)}</h4>
+            <div class="meta"><strong>Début :</strong> ${escapeHtml(start)}</div>
+            <div class="meta"><strong>Fin :</strong> ${escapeHtml(end)}</div>
+            <div class="meta"><strong>Toute la journée :</strong> ${escapeHtml(isAllDay)}</div>
+            <div class="meta"><strong>Lieu :</strong> ${escapeHtml(location)}</div>
+            <div class="meta"><strong>Organisateur :</strong> ${escapeHtml(organizer)}</div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function buildCalendarViewPath() {
+      const back = Math.max(0, parseInt($("startDays").value || "7", 10));
+      const ahead = Math.max(1, parseInt($("endDays").value || "60", 10));
+
+      const start = new Date();
+      start.setDate(start.getDate() - back);
+      start.setHours(0,0,0,0);
+
+      const end = new Date();
+      end.setDate(end.getDate() + ahead);
+      end.setHours(23,59,59,999);
+
+      const startIso = start.toISOString();
+      const endIso = end.toISOString();
+
+      return `/me/calendarView?startDateTime=${encodeURIComponent(startIso)}&endDateTime=${encodeURIComponent(endIso)}&$top=50&$orderby=start/dateTime&$select=subject,start,end,location,organizer,isAllDay`;
+    }
+
     async function loadProfile() {
       const data = await graphGet("/me");
       if (!data) return;
@@ -635,9 +489,13 @@
     }
 
     async function loadEvents() {
-      const data = await graphGet("/me/events?$top=12&$select=subject,start,end,location,organizer");
+      const path = buildCalendarViewPath();
+      log("Lecture calendrier via: " + path);
+      const data = await graphGet(path);
       if (!data) return;
-      renderEvents(data.value || []);
+      const items = data.value || [];
+      log(`Nombre d'événements reçus: ${items.length}`);
+      renderEvents(items);
     }
 
     async function logout() {
@@ -650,7 +508,8 @@
         accessToken = null;
         pill("stAuth", "Non connecté");
         pill("stGraph", "Graph inactif");
-        renderEvents([]);
+        $("eventsCount").textContent = "0";
+        $("events").innerHTML = '<div class="empty">Aucun événement chargé pour le moment.</div>';
         log("Déconnexion effectuée.", "warn");
         updateLive();
       } catch (err) {
@@ -659,7 +518,7 @@
     }
 
     function bind() {
-      ["clientId", "tenantId", "redirectUri", "scopes"].forEach(id => {
+      ["clientId", "tenantId", "redirectUri", "scopes", "startDays", "endDays"].forEach(id => {
         $(id).addEventListener("input", saveConfig);
         $(id).addEventListener("change", saveConfig);
       });
@@ -676,9 +535,8 @@
       loadConfig();
       bind();
       updateLive();
-      renderEvents([]);
       log("Page Crew Scheduler Outlook prête.");
-      log("Config validée chargée.");
+      log("Version calendrier corrigée: lecture via calendarView.");
       if (window.location.protocol === "file:") {
         log("Attention: http://localhost est souvent plus fiable que file:// pour OAuth.", "warn");
       }
