@@ -1,38 +1,688 @@
-
 <!doctype html>
-<html>
-<head><meta charset="utf-8"><title>Final Debug</title></head>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Crew Scheduler – Outlook intégré</title>
+  <style>
+    :root {
+      --bg:#f5f7fb;
+      --panel:#ffffff;
+      --panel2:#f8fafc;
+      --text:#0f172a;
+      --muted:#6b7280;
+      --line:#e5e7eb;
+      --blue:#2563eb;
+      --blue2:#1d4ed8;
+      --green:#059669;
+      --orange:#d97706;
+      --red:#dc2626;
+      --shadow:0 18px 45px rgba(15,23,42,.08);
+      --radius:20px;
+      --sidebar:260px;
+    }
+    * { box-sizing:border-box; }
+    html,body { margin:0; padding:0; background:var(--bg); color:var(--text); font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; }
+    .app { min-height:100vh; display:grid; grid-template-columns:var(--sidebar) 1fr; }
+    .sidebar {
+      background:#0f172a;
+      color:#fff;
+      padding:20px 16px;
+      display:flex;
+      flex-direction:column;
+      gap:16px;
+      position:sticky;
+      top:0;
+      height:100vh;
+    }
+    .brand {
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:20px;
+      padding:16px;
+    }
+    .brand h1 {
+      margin:0;
+      font-size:22px;
+      line-height:1.05;
+    }
+    .brand p {
+      margin:8px 0 0;
+      color:#cbd5e1;
+      font-size:13px;
+      line-height:1.5;
+    }
+    .nav {
+      display:grid;
+      gap:8px;
+    }
+    .nav button {
+      width:100%;
+      text-align:left;
+      border:0;
+      background:transparent;
+      color:#e5e7eb;
+      padding:12px 14px;
+      border-radius:14px;
+      font:inherit;
+      cursor:pointer;
+    }
+    .nav button.active {
+      background:rgba(37,99,235,.24);
+      color:#fff;
+      font-weight:800;
+    }
+    .main {
+      padding:24px;
+    }
+    .hero {
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:28px;
+      box-shadow:var(--shadow);
+      padding:24px;
+      margin-bottom:18px;
+    }
+    .hero h2 {
+      margin:0 0 8px;
+      font-size:34px;
+      line-height:1.04;
+    }
+    .hero p {
+      margin:0;
+      color:var(--muted);
+      max-width:900px;
+      line-height:1.6;
+    }
+    .status {
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:14px;
+    }
+    .pill {
+      border:1px solid var(--line);
+      background:var(--panel2);
+      padding:8px 12px;
+      border-radius:999px;
+      font-size:13px;
+      font-weight:700;
+      color:var(--muted);
+    }
+    .pill.ok { background:#ecfdf5; border-color:#a7f3d0; color:#065f46; }
+    .pill.warn { background:#fffbeb; border-color:#fde68a; color:#92400e; }
+    .pill.bad { background:#fef2f2; border-color:#fecaca; color:#991b1b; }
+
+    .grid {
+      display:grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap:18px;
+    }
+    @media (max-width: 1100px) {
+      .app { grid-template-columns:1fr; }
+      .sidebar { position:relative; height:auto; }
+      .grid { grid-template-columns:1fr; }
+    }
+
+    .card {
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:24px;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .card-head {
+      padding:18px 20px;
+      border-bottom:1px solid var(--line);
+      font-weight:800;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .card-body {
+      padding:20px;
+    }
+    .row {
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+    }
+    @media (max-width: 760px) {
+      .row { grid-template-columns:1fr; }
+    }
+    label {
+      display:block;
+      margin:0 0 6px;
+      color:var(--muted);
+      font-size:13px;
+      font-weight:700;
+    }
+    input, select {
+      width:100%;
+      padding:12px 13px;
+      border:1px solid #d7dce5;
+      border-radius:14px;
+      background:#fff;
+      color:var(--text);
+      font:inherit;
+    }
+    .buttons {
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:14px;
+    }
+    button.action {
+      border:0;
+      border-radius:14px;
+      padding:12px 16px;
+      font:inherit;
+      font-weight:800;
+      cursor:pointer;
+      color:#fff;
+      background:var(--blue);
+      box-shadow:0 10px 22px rgba(37,99,235,.18);
+    }
+    button.action:hover { background:var(--blue2); }
+    .secondary { background:#334155 !important; box-shadow:none !important; }
+    .green { background:var(--green) !important; box-shadow:none !important; }
+    .orange { background:var(--orange) !important; box-shadow:none !important; }
+    .red { background:var(--red) !important; box-shadow:none !important; }
+
+    .kv {
+      display:grid;
+      grid-template-columns:160px 1fr;
+      gap:8px;
+      font-size:13px;
+      line-height:1.5;
+    }
+    .kv div:nth-child(odd) {
+      color:var(--muted);
+      font-weight:700;
+    }
+
+    .log {
+      min-height:240px;
+      max-height:420px;
+      overflow:auto;
+      background:#0f172a;
+      color:#dbeafe;
+      border-radius:16px;
+      padding:14px;
+      font:13px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      white-space:pre-wrap;
+    }
+
+    .events {
+      display:grid;
+      gap:10px;
+    }
+    .event {
+      border:1px solid var(--line);
+      background:var(--panel2);
+      border-radius:18px;
+      padding:14px;
+    }
+    .event h4 {
+      margin:0 0 6px;
+      font-size:16px;
+      line-height:1.3;
+    }
+    .event .meta {
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.5;
+    }
+    .empty {
+      color:var(--muted);
+      border:1px dashed #cbd5e1;
+      background:var(--panel2);
+      border-radius:18px;
+      padding:18px;
+      text-align:center;
+    }
+    .note {
+      margin-top:14px;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.6;
+      background:#f8fafc;
+      border:1px dashed #cbd5e1;
+      border-radius:16px;
+      padding:14px;
+    }
+  </style>
+</head>
 <body>
-<h2>Crew Scheduler Debug FINAL</h2>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <h1>Crew Scheduler</h1>
+        <p>Connexion Outlook intégrée avec Microsoft Graph.</p>
+      </div>
 
-<p><b>Client ID:</b> b71fb750-0c78-4903-9489-fd2d0fc18884</p>
-<p><b>Tenant ID:</b> b5e72da6-a727-4c1d-b80d-e381c3123448</p>
-<p><b>Authority:</b> https://login.microsoftonline.com/b5e72da6-a727-4c1d-b80d-e381c3123448</p>
+      <div class="nav">
+        <button class="active" type="button">Outlook</button>
+        <button type="button">Crew</button>
+        <button type="button">Disponibilités</button>
+        <button type="button">Événements</button>
+        <button type="button">Paramètres</button>
+      </div>
+    </aside>
 
-<button onclick="login()">Se connecter</button>
+    <main class="main">
+      <section class="hero">
+        <h2>Outlook connecté au Crew Scheduler</h2>
+        <p>
+          Cette version reprend la configuration validée au debug et l’intègre dans une page plus proche d’un vrai module.
+          Tu peux te connecter à Microsoft, récupérer ton profil, lire les événements Outlook et vérifier le flux complet.
+        </p>
+        <div class="status">
+          <div id="stLib" class="pill">MSAL non chargé</div>
+          <div id="stInit" class="pill">MSAL non initialisé</div>
+          <div id="stAuth" class="pill">Non connecté</div>
+          <div id="stGraph" class="pill">Graph inactif</div>
+        </div>
+      </section>
 
-<script src="https://alcdn.msauth.net/browser/2.35.0/js/msal-browser.min.js"></script>
-<script>
-const msalInstance = new msal.PublicClientApplication({
-    auth: {
-        clientId: "b71fb750-0c78-4903-9489-fd2d0fc18884",
-        authority: "https://login.microsoftonline.com/b5e72da6-a727-4c1d-b80d-e381c3123448",
-        redirectUri: window.location.origin + window.location.pathname
+      <section class="grid">
+        <div class="card">
+          <div class="card-head">
+            <span>Connexion Microsoft</span>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div>
+                <label for="clientId">Client ID</label>
+                <input id="clientId" value="b71fb750-0c78-4903-9489-fd2d0fc18884" />
+              </div>
+              <div>
+                <label for="tenantId">Tenant ID</label>
+                <input id="tenantId" value="b5e72da6-a727-4c1d-b80d-e381c3123448" />
+              </div>
+            </div>
+
+            <div class="row" style="margin-top:12px">
+              <div>
+                <label for="redirectUri">Redirect URI</label>
+                <input id="redirectUri" />
+              </div>
+              <div>
+                <label for="scopes">Scopes</label>
+                <input id="scopes" value="User.Read Calendars.Read" />
+              </div>
+            </div>
+
+            <div style="margin-top:12px">
+              <label for="authority">Authority</label>
+              <input id="authority" readonly value="https://login.microsoftonline.com/b5e72da6-a727-4c1d-b80d-e381c3123448" />
+            </div>
+
+            <div class="buttons">
+              <button class="action secondary" id="btnLoad" type="button">Charger MSAL</button>
+              <button class="action secondary" id="btnInit" type="button">Initialiser</button>
+              <button class="action green" id="btnLogin" type="button">Se connecter à Microsoft</button>
+              <button class="action orange" id="btnProfile" type="button">Charger le profil</button>
+              <button class="action" id="btnEvents" type="button">Charger les événements</button>
+              <button class="action red" id="btnLogout" type="button">Déconnexion</button>
+            </div>
+
+            <div class="note">
+              La configuration qui a fonctionné au debug est déjà intégrée. Pour un test OAuth plus fiable,
+              ouvre idéalement ce fichier via <strong>http://localhost</strong> plutôt que <strong>file://</strong>.
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <span>Session active</span>
+          </div>
+          <div class="card-body">
+            <div class="kv">
+              <div>Version MSAL</div><div id="liveVersion">—</div>
+              <div>Compte</div><div id="liveAccount">—</div>
+              <div>Nom</div><div id="liveName">—</div>
+              <div>Authority</div><div id="liveAuthority">https://login.microsoftonline.com/b5e72da6-a727-4c1d-b80d-e381c3123448</div>
+              <div>Dernier token</div><div id="liveToken">—</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <span>Journal</span>
+          </div>
+          <div class="card-body">
+            <div id="log" class="log"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <span>Événements Outlook</span>
+            <span id="eventsCount" style="color:var(--muted);font-size:13px;font-weight:700">0</span>
+          </div>
+          <div class="card-body">
+            <div id="events" class="events">
+              <div class="empty">Aucun événement chargé pour le moment.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="https://alcdn.msauth.net/browser/2.35.0/js/msal-browser.min.js"></script>
+  <script>
+    const CONFIG = {
+      clientId: "b71fb750-0c78-4903-9489-fd2d0fc18884",
+      tenantId: "b5e72da6-a727-4c1d-b80d-e381c3123448",
+      authority: "https://login.microsoftonline.com/b5e72da6-a727-4c1d-b80d-e381c3123448",
+      scopes: ["User.Read", "Calendars.Read"]
+    };
+
+    let pca = null;
+    let activeAccount = null;
+    let accessToken = null;
+
+    const $ = (id) => document.getElementById(id);
+
+    function log(msg, type="info") {
+      const t = new Date().toLocaleTimeString();
+      $("log").textContent += `[${t}] ${msg}\n`;
+      $("log").scrollTop = $("log").scrollHeight;
+      console[type === "bad" ? "error" : type === "warn" ? "warn" : "log"](msg);
     }
-});
 
-async function login() {
-    try {
-        const result = await msalInstance.loginPopup({
-            scopes: ["User.Read","Calendars.Read"]
+    function pill(id, text, cls="") {
+      const el = $(id);
+      el.className = "pill " + cls;
+      el.textContent = text;
+    }
+
+    function saveConfig() {
+      const cfg = {
+        clientId: $("clientId").value.trim(),
+        tenantId: $("tenantId").value.trim(),
+        redirectUri: $("redirectUri").value.trim(),
+        scopes: $("scopes").value.trim()
+      };
+      localStorage.setItem("crewSchedulerOutlookIntegratedCfg", JSON.stringify(cfg));
+      updateAuthority();
+    }
+
+    function loadConfig() {
+      let saved = null;
+      try {
+        saved = JSON.parse(localStorage.getItem("crewSchedulerOutlookIntegratedCfg") || "null");
+      } catch (e) {}
+
+      $("clientId").value = saved?.clientId || CONFIG.clientId;
+      $("tenantId").value = saved?.tenantId || CONFIG.tenantId;
+      $("redirectUri").value = saved?.redirectUri || (window.location.origin + window.location.pathname);
+      $("scopes").value = saved?.scopes || "User.Read Calendars.Read";
+      updateAuthority();
+    }
+
+    function updateAuthority() {
+      const tenant = $("tenantId").value.trim();
+      $("authority").value = `https://login.microsoftonline.com/${tenant}`;
+      $("liveAuthority").textContent = $("authority").value;
+    }
+
+    function updateLive() {
+      $("liveVersion").textContent = window.msal?.version || "non chargé";
+      $("liveAccount").textContent = activeAccount?.username || "aucun";
+      $("liveName").textContent = activeAccount?.name || "—";
+      $("liveToken").textContent = accessToken ? accessToken.slice(0, 32) + "…" : "aucun";
+    }
+
+    function getScopesArray() {
+      return $("scopes").value.trim().split(/\s+/).filter(Boolean);
+    }
+
+    function buildPca() {
+      const clientId = $("clientId").value.trim();
+      const authority = $("authority").value.trim();
+      const redirectUri = $("redirectUri").value.trim();
+
+      if (!clientId) throw new Error("Client ID manquant.");
+      if (!authority) throw new Error("Authority manquante.");
+      if (!redirectUri) throw new Error("Redirect URI manquant.");
+
+      pca = new msal.PublicClientApplication({
+        auth: {
+          clientId,
+          authority,
+          redirectUri,
+          navigateToLoginRequestUrl: false
+        },
+        cache: {
+          cacheLocation: msal.BrowserCacheLocation.SessionStorage,
+          storeAuthStateInCookie: false
+        }
+      });
+    }
+
+    async function ensureLoaded() {
+      if (window.msal?.PublicClientApplication) {
+        pill("stLib", "MSAL chargé", "ok");
+        log("MSAL déjà chargé.");
+        updateLive();
+        return true;
+      }
+      pill("stLib", "MSAL absent", "bad");
+      log("MSAL n'est pas disponible dans la page.", "bad");
+      return false;
+    }
+
+    async function initMsal() {
+      saveConfig();
+      const ok = await ensureLoaded();
+      if (!ok) return;
+
+      try {
+        buildPca();
+        if (typeof pca.initialize === "function") {
+          await pca.initialize();
+        }
+
+        const result = await pca.handleRedirectPromise();
+        if (result?.account) {
+          activeAccount = result.account;
+          accessToken = result.accessToken || accessToken;
+          pca.setActiveAccount?.(activeAccount);
+          pill("stAuth", "Connecté", "ok");
+          log("Résultat redirect détecté: " + (activeAccount.username || "compte"));
+        }
+
+        const accounts = pca.getAllAccounts ? pca.getAllAccounts() : [];
+        if (!activeAccount && accounts.length) {
+          activeAccount = accounts[0];
+          pca.setActiveAccount?.(activeAccount);
+          pill("stAuth", "Compte détecté", "ok");
+          log("Compte déjà présent: " + (activeAccount.username || "compte"));
+        }
+
+        pill("stInit", "MSAL initialisé", "ok");
+        log("Instance MSAL initialisée.", "ok");
+        updateLive();
+      } catch (err) {
+        pill("stInit", "Échec initialisation", "bad");
+        log("Erreur initialisation: " + (err.message || err), "bad");
+      }
+    }
+
+    async function login() {
+      if (!pca) {
+        await initMsal();
+      }
+      if (!pca) return;
+
+      try {
+        const result = await pca.loginPopup({
+          scopes: getScopesArray()
         });
-        console.log(result);
-        alert("Connecté: " + result.account.username);
-    } catch(e) {
-        console.error(e);
-        alert("Erreur: " + e);
+        activeAccount = result.account || null;
+        accessToken = result.accessToken || null;
+        pca.setActiveAccount?.(activeAccount);
+        pill("stAuth", "Connecté", "ok");
+        log("Connexion réussie: " + (activeAccount?.username || "compte"), "ok");
+        updateLive();
+      } catch (err) {
+        log("Erreur connexion: " + (err.message || err), "bad");
+      }
     }
-}
-</script>
+
+    async function acquireToken() {
+      if (!pca) {
+        await initMsal();
+      }
+      if (!pca) return null;
+
+      const account = pca.getActiveAccount?.() || activeAccount || pca.getAllAccounts?.()[0];
+      if (!account) {
+        throw new Error("Aucun compte actif. Connecte-toi d'abord.");
+      }
+
+      const result = await pca.acquireTokenSilent({
+        account,
+        scopes: getScopesArray()
+      });
+
+      activeAccount = result.account || account;
+      accessToken = result.accessToken || null;
+      pca.setActiveAccount?.(activeAccount);
+      pill("stAuth", "Connecté", "ok");
+      updateLive();
+      return accessToken;
+    }
+
+    async function graphGet(path) {
+      try {
+        const token = accessToken || await acquireToken();
+        const res = await fetch("https://graph.microsoft.com/v1.0" + path, {
+          headers: {
+            Authorization: "Bearer " + token
+          }
+        });
+
+        const text = await res.text();
+        let data = text;
+        try { data = JSON.parse(text); } catch (e) {}
+
+        if (!res.ok) {
+          pill("stGraph", "Erreur Graph", "bad");
+          log(`Graph ${path} -> ${res.status} ${res.statusText}`, "bad");
+          log(typeof data === "string" ? data : JSON.stringify(data, null, 2), "bad");
+          return null;
+        }
+
+        pill("stGraph", "Graph actif", "ok");
+        log(`Graph ${path} OK`, "ok");
+        return data;
+      } catch (err) {
+        pill("stGraph", "Erreur Graph", "bad");
+        log("Erreur Graph: " + (err.message || err), "bad");
+        return null;
+      }
+    }
+
+    function renderEvents(items) {
+      const box = $("events");
+      const count = Array.isArray(items) ? items.length : 0;
+      $("eventsCount").textContent = String(count);
+
+      if (!count) {
+        box.innerHTML = '<div class="empty">Aucun événement trouvé.</div>';
+        return;
+      }
+
+      box.innerHTML = items.map(ev => {
+        const subject = ev.subject || "(Sans titre)";
+        const start = ev.start?.dateTime || "";
+        const end = ev.end?.dateTime || "";
+        const location = ev.location?.displayName || "—";
+        const organizer = ev.organizer?.emailAddress?.address || "—";
+
+        return `
+          <div class="event">
+            <h4>${escapeHtml(subject)}</h4>
+            <div class="meta"><strong>Début :</strong> ${escapeHtml(start)}</div>
+            <div class="meta"><strong>Fin :</strong> ${escapeHtml(end)}</div>
+            <div class="meta"><strong>Lieu :</strong> ${escapeHtml(location)}</div>
+            <div class="meta"><strong>Organisateur :</strong> ${escapeHtml(organizer)}</div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    async function loadProfile() {
+      const data = await graphGet("/me");
+      if (!data) return;
+      log("Profil chargé: " + (data.userPrincipalName || data.mail || data.displayName || "utilisateur"), "ok");
+    }
+
+    async function loadEvents() {
+      const data = await graphGet("/me/events?$top=12&$select=subject,start,end,location,organizer");
+      if (!data) return;
+      renderEvents(data.value || []);
+    }
+
+    async function logout() {
+      if (!pca) return;
+      try {
+        if (typeof pca.logoutPopup === "function") {
+          await pca.logoutPopup();
+        }
+        activeAccount = null;
+        accessToken = null;
+        pill("stAuth", "Non connecté");
+        pill("stGraph", "Graph inactif");
+        renderEvents([]);
+        log("Déconnexion effectuée.", "warn");
+        updateLive();
+      } catch (err) {
+        log("Erreur déconnexion: " + (err.message || err), "bad");
+      }
+    }
+
+    function bind() {
+      ["clientId", "tenantId", "redirectUri", "scopes"].forEach(id => {
+        $(id).addEventListener("input", saveConfig);
+        $(id).addEventListener("change", saveConfig);
+      });
+
+      $("btnLoad").addEventListener("click", ensureLoaded);
+      $("btnInit").addEventListener("click", initMsal);
+      $("btnLogin").addEventListener("click", login);
+      $("btnProfile").addEventListener("click", loadProfile);
+      $("btnEvents").addEventListener("click", loadEvents);
+      $("btnLogout").addEventListener("click", logout);
+    }
+
+    (function boot() {
+      loadConfig();
+      bind();
+      updateLive();
+      renderEvents([]);
+      log("Page Crew Scheduler Outlook prête.");
+      log("Config validée chargée.");
+      if (window.location.protocol === "file:") {
+        log("Attention: http://localhost est souvent plus fiable que file:// pour OAuth.", "warn");
+      }
+    })();
+  </script>
 </body>
 </html>
