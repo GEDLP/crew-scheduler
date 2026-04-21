@@ -1,99 +1,1394 @@
 <!doctype html>
-<html>
+<html lang="fr">
 <head>
-<meta charset="utf-8">
-<title>Calendars Debug</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Crew Scheduler – Calendrier + Équipe</title>
 <style>
-body{font-family:Arial;padding:20px;background:#f5f7fb}
-button{margin:5px;padding:10px 14px;font-weight:bold}
-.card{background:#fff;border:1px solid #ddd;border-radius:10px;padding:10px;margin:5px;cursor:pointer}
+:root{
+  --bg:#f4f7fb; --panel:#ffffff; --panel2:#f8fafc; --text:#0f172a; --muted:#64748b;
+  --line:#e5e7eb; --line2:#dbe3ee; --blue:#2563eb; --blue2:#1d4ed8; --red:#dc2626;
+  --green:#059669; --shadow:0 22px 50px rgba(15,23,42,.08); --radius-xl:28px; --radius-lg:22px; --sidebar:262px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+body{min-height:100vh}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.app{min-height:100vh;display:grid;grid-template-columns:var(--sidebar) 1fr}
+.sidebar{position:sticky;top:0;height:100vh;background:#0f172a;color:#fff;padding:18px 16px;display:flex;flex-direction:column;gap:16px}
+.brand{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);border-radius:24px;padding:18px 16px;box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+.brand h1{margin:0;font-size:26px;line-height:1.02;letter-spacing:-.03em}
+.brand p{margin:8px 0 0;color:#cbd5e1;font-size:13px;line-height:1.45}
+.nav{display:grid;gap:8px}
+.nav button{text-align:left;border:0;border-radius:16px;background:transparent;color:#e2e8f0;padding:12px 14px;transition:.18s ease}
+.nav button:hover{background:rgba(255,255,255,.06)}
+.nav button.active{background:rgba(37,99,235,.23);color:#fff;font-weight:800}
+.sidebar-card{margin-top:auto;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:22px;padding:14px}
+.sidebar-card .title{font-size:13px;color:#cbd5e1;margin-bottom:8px;font-weight:700}
+.sidebar-card .small{font-size:12px;color:#94a3b8;line-height:1.45}
+
+.main{padding:24px;display:grid;gap:18px;align-content:start}
+.hero{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-xl);box-shadow:var(--shadow);padding:24px}
+.hero-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.hero h2{margin:0 0 8px;font-size:38px;line-height:1.02;letter-spacing:-.04em}
+.hero p{margin:0;max-width:920px;color:var(--muted);line-height:1.6}
+.hero-actions{display:flex;gap:10px;flex-wrap:wrap}
+.status-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.pill{border-radius:999px;border:1px solid var(--line);background:#fff;padding:8px 12px;font-size:13px;font-weight:700;color:var(--muted)}
+
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-lg);box-shadow:var(--shadow);overflow:hidden}
+.card-head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:18px 20px;border-bottom:1px solid var(--line)}
+.card-head h3{margin:0;font-size:20px;letter-spacing:-.02em}
+.card-head .sub{color:var(--muted);font-size:13px;margin-top:4px}
+.card-body{padding:20px}
+.btn{border:0;border-radius:14px;padding:11px 14px;font-weight:800;transition:.18s ease}
+.btn.primary{background:var(--blue);color:#fff;box-shadow:0 10px 24px rgba(37,99,235,.2)}
+.btn.primary:hover{background:var(--blue2)}
+.btn.secondary{background:var(--panel2);color:var(--text);border:1px solid var(--line)}
+.btn.secondary.active{background:#eaf2ff;border-color:#bfdbfe;color:#1d4ed8}
+.btn.danger{background:#fff1f2;color:#b91c1c;border:1px solid #fecdd3}
+.btn.small{padding:9px 12px;border-radius:12px;font-size:13px}
+
+.filters{display:grid;grid-template-columns:1.15fr .8fr .8fr auto;gap:12px}
+.field label{display:block;margin:0 0 7px;font-size:13px;font-weight:700;color:var(--muted)}
+.field input,.field select,.field textarea{width:100%;border:1px solid var(--line2);background:#fff;color:var(--text);border-radius:14px;padding:12px 13px;outline:none}
+.field textarea{min-height:92px;resize:vertical}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:#93c5fd;box-shadow:0 0 0 4px rgba(59,130,246,.12)}
+
+.view-switch{display:flex;flex-wrap:wrap;gap:8px;background:var(--panel2);padding:6px;border:1px solid var(--line);border-radius:16px}
+.view-switch button{border:0;border-radius:14px;padding:11px 14px;font-weight:800;background:transparent;color:var(--muted);min-width:74px}
+.view-switch button.active{background:#fff;color:var(--text);box-shadow:0 6px 18px rgba(15,23,42,.08)}
+.toolbar-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.month-nav{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.title-big{font-size:28px;font-weight:900;letter-spacing:-.04em;margin:0}
+.muted{color:var(--muted)}
+
+.layout{display:grid;grid-template-columns:1.08fr .92fr;gap:18px}
+.side-stack{display:grid;gap:18px}
+
+.month-grid-wrapper{position:relative}
+.month-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;position:relative;z-index:1}
+.month-bars-layer{position:absolute;left:0;right:0;top:44px;bottom:0;z-index:2;pointer-events:none}
+.month-bar{position:absolute;height:22px;border-radius:8px;color:#fff;font-size:11px;font-weight:800;padding:2px 8px;display:flex;align-items:center;pointer-events:auto;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;box-shadow:0 8px 18px rgba(15,23,42,.15)}
+.month-bar.start{box-shadow:inset 4px 0 0 rgba(255,255,255,.85),0 8px 18px rgba(15,23,42,.15)}
+.month-bar.mid{outline:1px dashed rgba(255,255,255,.5);box-shadow:0 8px 18px rgba(15,23,42,.15)}
+.month-bar.end{box-shadow:inset -4px 0 0 rgba(255,255,255,.85),0 8px 18px rgba(15,23,42,.15)}
+.dow{background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:10px 12px;color:var(--muted);font-weight:800;font-size:13px;text-transform:uppercase;letter-spacing:.06em;text-align:center}
+.day-cell{min-height:132px;border:1px solid var(--line);background:#fff;border-radius:18px;padding:12px;display:grid;gap:10px;align-content:start;transition:.18s ease;overflow:hidden}
+.day-cell:hover{transform:translateY(-1px);box-shadow:0 10px 22px rgba(15,23,42,.06);border-color:#cbd5e1}
+.day-cell.outside{background:#f8fafc;color:#94a3b8}
+.day-cell.today{border-color:#93c5fd;box-shadow:0 0 0 4px rgba(59,130,246,.1)}
+.day-cell.selected{border-color:#2563eb;box-shadow:0 0 0 4px rgba(37,99,235,.12)}
+.day-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.day-num{font-weight:900;font-size:18px;letter-spacing:-.03em}
+.badge-count{font-size:12px;border-radius:999px;padding:5px 8px;background:#eff6ff;color:#1d4ed8;font-weight:800}
+
+.week-view,.day-view{display:none}
+.week-grid{overflow:hidden;width:100%;border-radius:18px}
+.week-grid-inner{display:grid;grid-template-columns:68px repeat(7,minmax(0,1fr));border:1px solid var(--line);border-radius:18px;overflow:hidden;background:#fff;width:100%;min-width:0}
+.week-grid-inner>div{border-right:1px solid var(--line);border-bottom:1px solid var(--line);min-height:58px}
+.week-grid-inner>div:last-child{border-right:0}
+.time-head{background:var(--panel2);padding:10px 8px;font-size:12px;color:var(--muted);font-weight:800;text-align:center}
+.day-head{background:var(--panel2);padding:10px;text-align:center;font-size:13px;font-weight:800}
+.day-head .num{display:block;margin-top:4px;color:var(--text);font-size:19px}
+.time-cell{padding:8px;background:#fafcff;font-size:12px;color:var(--muted);font-weight:700;text-align:right}
+.week-slot{position:relative;min-height:58px;background:#fff}
+.slot-events{position:relative;height:58px;overflow:visible}
+.week-event{position:absolute;left:4px;padding:8px 6px;border-radius:12px;color:#fff;font-size:12px;font-weight:800;line-height:1.2;overflow:hidden;box-shadow:0 8px 18px rgba(15,23,42,.15);z-index:5}
+.week-event.continuous{display:flex;flex-direction:column;justify-content:space-between;align-items:center;top:4px}
+.week-event .week-title{writing-mode:vertical-rl;text-orientation:mixed;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-height:100%;font-weight:900;letter-spacing:.02em}
+.week-event .segment-note{writing-mode:vertical-rl;text-orientation:mixed;font-size:10px;opacity:.9;text-align:center;line-height:1.05;white-space:nowrap}
+.week-event.start-seg{box-shadow:inset 4px 0 0 rgba(255,255,255,.85),0 8px 18px rgba(15,23,42,.15)}
+.week-event.mid-seg{outline:1px dashed rgba(255,255,255,.45);box-shadow:0 8px 18px rgba(15,23,42,.15)}
+.week-event.end-seg{box-shadow:inset -4px 0 0 rgba(255,255,255,.85),0 8px 18px rgba(15,23,42,.15)}
+
+.day-layout{display:grid;gap:12px}
+.day-header-big{border:1px solid var(--line);border-radius:18px;padding:16px 18px;background:var(--panel2)}
+.day-header-big .small{color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:12px}
+.day-header-big .big{margin-top:6px;font-size:28px;font-weight:900;letter-spacing:-.04em}
+.timeline{display:grid;gap:10px}
+.timeline-row{display:grid;grid-template-columns:90px 1fr;gap:12px;align-items:start}
+.timeline-time{border:1px solid var(--line);border-radius:14px;background:var(--panel2);padding:10px 12px;text-align:center;color:var(--muted);font-weight:800;font-size:13px}
+.timeline-block{min-height:64px;border:1px dashed var(--line2);border-radius:16px;padding:0;background:#fff;position:relative;overflow:visible}
+.timeline-card{position:absolute;left:8px;right:8px;padding:12px 12px;border-radius:14px;color:#fff;font-weight:800;display:grid;gap:4px;box-shadow:0 8px 18px rgba(15,23,42,.15);z-index:5}
+.timeline-card.start-seg{box-shadow:inset 4px 0 0 rgba(255,255,255,.9),0 8px 18px rgba(15,23,42,.15)}
+.timeline-card.mid-seg{outline:1px dashed rgba(255,255,255,.45);box-shadow:0 8px 18px rgba(15,23,42,.15)}
+.timeline-card.end-seg{box-shadow:inset -4px 0 0 rgba(255,255,255,.9),0 8px 18px rgba(15,23,42,.15)}
+.timeline-card .meta{opacity:.92;font-size:12px;font-weight:700}
+
+.selected-date-box{display:grid;gap:8px;padding:16px;border-radius:18px;background:var(--panel2);border:1px solid var(--line)}
+.selected-date-box .label{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em;font-weight:800}
+.selected-date-box .value{font-size:25px;font-weight:900;letter-spacing:-.04em}
+.event-list{display:grid;gap:12px}
+.event-card{border:1px solid var(--line);background:#fff;border-radius:18px;padding:14px;display:grid;gap:10px;box-shadow:0 10px 20px rgba(15,23,42,.04)}
+.event-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.event-title{font-size:17px;font-weight:900;letter-spacing:-.02em;line-height:1.25}
+.event-meta{color:var(--muted);font-size:13px;line-height:1.55}
+.color-dot{width:12px;height:12px;border-radius:999px;display:inline-block;margin-right:7px;vertical-align:middle}
+.row-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.chip-wrap{display:flex;gap:8px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:8px;padding:7px 10px;border-radius:999px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font-size:12px;font-weight:800}
+.chip.role{background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8}
+.chip.contact{background:#fff7ed;border-color:#fed7aa;color:#c2410c}
+.empty{border:1px dashed var(--line2);background:var(--panel2);border-radius:18px;padding:18px;text-align:center;color:var(--muted);line-height:1.6}
+.hint{margin-top:14px;padding:14px 16px;border-radius:16px;background:var(--panel2);border:1px dashed var(--line2);color:var(--muted);font-size:13px;line-height:1.6}
+
+.compact-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.roles-drawer{display:none;border:1px solid #bfdbfe;background:#f8fbff;border-radius:18px;padding:14px;margin-bottom:16px}
+.roles-drawer.open{display:block}
+.roles-drawer-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.roles-manager-list{display:grid;gap:8px;margin-top:10px}
+.roles-manager-item{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:10px 12px;border-radius:14px;background:#fff;border:1px solid var(--line)}
+.list{display:grid;gap:10px}
+.employee-row{display:grid;grid-template-columns:1.2fr 1fr .8fr auto;gap:12px;align-items:center;padding:12px 16px;border:1px solid var(--line);border-radius:18px;background:#fff;box-shadow:0 10px 20px rgba(15,23,42,.04)}
+.name-block .name{font-size:17px;font-weight:900;letter-spacing:-.02em;line-height:1.15}
+.meta{color:var(--muted);font-size:13px;line-height:1.45}
+.roles-box{display:grid;gap:10px;padding:14px;border:1px solid var(--line);border-radius:18px;background:var(--panel2)}
+.roles-list{display:grid;gap:8px}
+.role-entry{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}
+.small{font-size:12px;color:var(--muted);line-height:1.45}
+
+.modal-wrap,.team-modal-wrap{position:fixed;inset:0;background:rgba(15,23,42,.42);display:none;align-items:center;justify-content:center;padding:20px;z-index:40;backdrop-filter:blur(5px)}
+.modal{width:min(900px,100%);max-height:90vh;background:#0f172a;color:#fff;border:1px solid #334155;border-radius:28px;box-shadow:0 30px 70px rgba(15,23,42,.2);overflow:hidden;display:flex;flex-direction:column}
+.modal-head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:18px 22px;border-bottom:1px solid #334155;flex:0 0 auto}
+.modal-head h3{margin:0;font-size:24px;letter-spacing:-.03em;color:#fff}
+.modal-body{padding:22px;display:grid;gap:14px;overflow-y:auto;max-height:calc(90vh - 150px);flex:1 1 auto}
+.modal-actions{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:0 22px 22px;flex:0 0 auto}
+.modal .field label{color:#cbd5e1}
+.modal .field input,.modal .field select,.modal .field textarea{background:#fff;color:#0f172a;border:1px solid #cbd5e1}
+.color-row{display:flex;gap:10px;flex-wrap:wrap}
+.color-btn{width:34px;height:34px;border-radius:999px;border:3px solid transparent;cursor:pointer;box-shadow:0 5px 12px rgba(15,23,42,.12)}
+.color-btn.active{border-color:#fff;transform:scale(1.06)}
+
+.block-list{display:grid;gap:16px}
+.block-card{border:1px solid #cbd5e1;background:#fff;border-radius:22px;padding:14px;display:grid;gap:10px;box-shadow:0 12px 24px rgba(37,99,235,.08)}
+.block-head{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:12px 40px 12px 12px;position:relative}
+.block-delete{position:absolute;right:10px;top:10px;background:transparent;border:0;color:#94a3b8;font-size:16px}
+.block-delete:hover{color:#dc2626}
+.block-title-wrap{display:grid;gap:6px;justify-items:center;text-align:center;width:100%}
+.block-title-input{display:block;width:100%;max-width:520px;background:#fff;color:#0f172a;border:0;outline:none;box-shadow:none;text-align:center;font-size:22px;font-weight:900;line-height:1.2;padding:2px 8px;margin:0 auto}
+.block-meta{color:#475569;font-size:12px;line-height:1.2}
+.block-section{display:grid;gap:8px;padding:10px;border:1px dashed #cbd5e1;border-radius:16px;background:#fff}
+.block-section-title{font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:#64748b}
+.block-compact-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;align-items:end}
+.role-item-row{padding:8px;border:1px solid var(--line);border-radius:14px;background:var(--panel2)}
+
+.team-view{display:none}
+.team-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:18px}
+.team-list{display:grid;gap:12px}
+.employee-card{border:1px solid var(--line);background:#fff;border-radius:18px;padding:14px;display:grid;gap:10px;box-shadow:0 10px 20px rgba(15,23,42,.04)}
+.employee-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.employee-name{font-size:18px;font-weight:900;letter-spacing:-.02em}
+.employee-meta{color:var(--muted);font-size:13px;line-height:1.5}
+.employee-roles{display:flex;flex-wrap:wrap;gap:8px}
+.employee-role-chip{display:inline-flex;align-items:center;padding:7px 10px;border-radius:999px;background:#eff6ff;border:1px solid #bfdbfe;font-size:12px;font-weight:800;color:#1d4ed8}
+.team-empty{border:1px dashed var(--line2);background:var(--panel2);border-radius:18px;padding:18px;text-align:center;color:var(--muted)}
+.team-modal{width:min(760px,100%);max-height:88vh;background:#0f172a;color:#fff;border:1px solid #334155;border-radius:28px;box-shadow:0 30px 70px rgba(15,23,42,.2);overflow:hidden;display:flex;flex-direction:column}
+.team-modal-head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:18px 22px;border-bottom:1px solid #334155}
+.team-modal-head h3{margin:0;font-size:24px;letter-spacing:-.03em;color:#fff}
+.team-modal-body{padding:22px;display:grid;gap:14px;overflow-y:auto;max-height:calc(88vh - 140px);flex:1 1 auto}
+.team-modal-actions{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:0 22px 22px;flex:0 0 auto}
+.team-modal .field label{color:#cbd5e1}
+.team-modal .field input,.team-modal .field select,.team-modal .field textarea{background:#fff;color:#0f172a;border:1px solid #cbd5e1}
+.team-role-adder{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end}
+.team-role-list{display:flex;flex-wrap:wrap;gap:8px}
+.team-role-chip{display:inline-flex;align-items:center;gap:8px;padding:7px 10px;border-radius:999px;background:#fff;border:1px solid #cbd5e1;font-size:12px;font-weight:800;color:#0f172a}
+.team-role-chip button{border:0;background:transparent;color:#64748b;cursor:pointer;font-weight:900}
+.role-catalog-row{display:flex;flex-wrap:wrap;gap:8px}
+.role-catalog-chip{display:inline-flex;align-items:center;gap:8px;padding:7px 10px;border-radius:999px;background:#fff;border:1px solid #cbd5e1;font-size:12px;font-weight:800;color:#0f172a}
+.role-catalog-chip button{border:0;background:transparent;color:#64748b;cursor:pointer;font-weight:900}
+
+#searchInput,#roleFilter,#employeeFilter,#evtTitle,#evtStartDate,#evtEndDate,#evtTime,#evtEndTime,#evtLocation,#evtNotes,#newBlockName{background:#fff;color:#0f172a;border:1px solid #cbd5e1}
+#evtTitle{text-align:center;font-size:20px;font-weight:900}
+#searchInput::placeholder,#evtTitle::placeholder,#evtLocation::placeholder,#evtNotes::placeholder,#newBlockName::placeholder{color:#64748b}
+.modal .block-card .block-head,.modal .block-card .block-title-input,.modal .block-card .block-meta,.modal .block-card input[type="date"],.modal .block-card input[type="time"],.modal .block-card select{background:#fff;color:#0f172a;border:1px solid #cbd5e1}
+.modal .block-card .block-title-input{border:0}
+.modal .block-card select option{color:#0f172a}
+
+
+.status-pill{display:inline-flex;align-items:center;gap:8px;padding:7px 10px;border-radius:999px;font-size:12px;font-weight:900;border:1px solid transparent}
+.status-pill.green{background:#ecfdf5;border-color:#a7f3d0;color:#047857}
+.status-pill.orange{background:#fff7ed;border-color:#fdba74;color:#c2410c}
+.status-pill.red{background:#fef2f2;border-color:#fecaca;color:#b91c1c}
+.status-pill.gray{background:#f8fafc;border-color:#cbd5e1;color:#475569}
+.status-pill.blue{background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8}
+.assignment-list{display:grid;gap:12px}
+.assignment-card{border:1px solid var(--line);background:#fff;border-radius:18px;padding:14px;display:grid;gap:12px;box-shadow:0 10px 20px rgba(15,23,42,.04)}
+.assignment-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.assignment-title{font-size:17px;font-weight:900;letter-spacing:-.02em}
+.assignment-sub{color:var(--muted);font-size:13px;line-height:1.55}
+.assignment-actions{display:flex;gap:8px;flex-wrap:wrap}
+.assignment-suggestions{display:flex;gap:8px;flex-wrap:wrap}
+.preview-card{border:1px solid var(--line);background:linear-gradient(180deg,#ffffff,#f8fbff);border-radius:22px;padding:18px;display:grid;gap:14px;box-shadow:0 14px 30px rgba(37,99,235,.08)}
+.preview-title{font-size:24px;font-weight:900;letter-spacing:-.03em;margin:0}
+.preview-meta{color:var(--muted);line-height:1.6}
+.preview-actions{display:flex;gap:10px;flex-wrap:wrap}
+.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.setting-box{padding:16px;border:1px solid var(--line);border-radius:18px;background:#fff;display:grid;gap:10px;box-shadow:0 10px 20px rgba(15,23,42,.04)}
+.small-note{font-size:12px;color:var(--muted);line-height:1.55}
+.conflict-box{padding:10px 12px;border-radius:14px;background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;font-size:12px;font-weight:800}
+.good-box{padding:10px 12px;border-radius:14px;background:#ecfdf5;border:1px solid #a7f3d0;color:#047857;font-size:12px;font-weight:800}
+.sync-banner{margin-bottom:12px;padding:12px 14px;border-radius:16px;background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;font-size:13px;font-weight:800}
+.portal-shell{min-height:100vh;background:var(--bg);padding:28px;display:grid;place-items:center}
+.portal-card{width:min(760px,100%);background:#fff;border:1px solid var(--line);border-radius:28px;box-shadow:var(--shadow);padding:24px;display:grid;gap:16px}
+.portal-kicker{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:900}
+.portal-title{margin:0;font-size:34px;line-height:1.02;letter-spacing:-.04em}
+.portal-meta{color:var(--muted);line-height:1.7}
+.portal-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.portal-stat{padding:14px;border-radius:18px;background:var(--panel2);border:1px solid var(--line);display:grid;gap:6px}
+.portal-stat .label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:800}
+.portal-stat .value{font-size:18px;font-weight:900;letter-spacing:-.02em}
+.portal-actions{display:flex;gap:10px;flex-wrap:wrap}
+.copy-row{display:grid;gap:8px}
+.link-box{width:100%;border:1px solid var(--line2);background:#f8fafc;color:#0f172a;border-radius:14px;padding:12px 13px;font-size:13px;word-break:break-all}
+.portal-note{font-size:13px;color:var(--muted);line-height:1.6}
+@media (max-width:980px){.settings-grid,.portal-grid{grid-template-columns:1fr}}
+
+@media (max-width:1220px){.layout,.team-grid{grid-template-columns:1fr}}
+@media (max-width:980px){.app{grid-template-columns:1fr}.sidebar{position:relative;height:auto}.filters{grid-template-columns:1fr 1fr}.employee-row{grid-template-columns:1fr;align-items:start}.row-actions{justify-content:flex-start}}
+@media (max-width:720px){.main{padding:16px}.hero{padding:18px}.hero h2{font-size:30px}.filters,.role-entry,.block-compact-grid{grid-template-columns:1fr}.week-grid{overflow-x:auto}.week-grid-inner{min-width:840px}.team-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
+<div id="portalMount" style="display:none"></div>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <h1>Crew Scheduler</h1>
+      <p>Planifier une équipe par événement avec des profils employés clairs, premium et prêts pour GitHub.</p>
+    </div>
+    <div class="nav">
+      <button class="active" data-tab="calendar" type="button">Calendrier</button>
+      <button data-tab="team" type="button">Équipe</button>
+      <button data-tab="availability" type="button">Disponibilités</button>
+      <button data-tab="settings" type="button">Paramètres</button>
+    </div>
+    <div class="sidebar-card">
+      <div class="title">Base commune</div>
+      <div class="small">L’onglet Équipe sert de base de données. Le calendrier lit cette base pour assigner les travailleurs aux blocs.</div>
+    </div>
+  </aside>
 
-<h2>Calendriers disponibles</h2>
+  <main class="main">
+    <div id="calendarView">
+      <section class="hero">
+        <div class="hero-top">
+          <div>
+            <h2>Calendrier Crew Scheduler</h2>
+            <p>Événements multi-jours, blocs de travail, assignation d’employés par poste, le tout relié à la base Équipe.</p>
+          </div>
+          <div class="hero-actions">
+            <button class="btn primary" id="btnAddTop" type="button">+ Nouvel événement</button>
+            <button class="btn secondary" id="btnToday" type="button">Aujourd’hui</button>
+          </div>
+        </div>
+        <div class="status-row">
+          <div class="pill">Vue mois continue</div>
+          <div class="pill">Vue semaine continue</div>
+          <div class="pill">Blocs</div>
+          <div class="pill">Équipe liée</div>
+        </div>
+      </section>
 
-<button onclick="init()">Init</button>
-<button onclick="login()">Login</button>
-<button onclick="loadCalendars()">Lister les calendriers</button>
+      <section class="layout">
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <h3>Planning</h3>
+              <div class="sub">Crée l’événement, ajoute des blocs, puis assigne les bonnes personnes.</div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="toolbar-top">
+              <div class="month-nav">
+                <button class="btn secondary small" id="btnPrev" type="button">←</button>
+                <div>
+                  <div class="title-big" id="rangeTitle">—</div>
+                  <div class="muted" id="rangeSubtitle">—</div>
+                </div>
+                <button class="btn secondary small" id="btnNext" type="button">→</button>
+              </div>
+              <div class="view-switch">
+                <button class="active" data-view="month" type="button">Mois</button>
+                <button data-view="week" type="button">Semaine</button>
+                <button data-view="day" type="button">Jour</button>
+              </div>
+            </div>
 
-<div id="calendars"></div>
-<h3>Événements</h3>
-<div id="events"></div>
+            <div style="height:16px"></div>
 
-<script src="https://alcdn.msauth.net/browser/2.35.0/js/msal-browser.min.js"></script>
+            <div class="filters">
+              <div class="field"><label for="searchInput">Recherche</label><input id="searchInput" type="text" placeholder="Titre, lieu, notes..."/></div>
+              <div class="field"><label for="roleFilter">Poste demandé</label><select id="roleFilter"></select></div>
+              <div class="field"><label for="employeeFilter">Employé assigné</label><select id="employeeFilter"></select></div>
+              <div class="field" style="display:flex;align-items:end"><button class="btn secondary" id="btnClearFilters" type="button" style="width:100%">Réinitialiser</button></div>
+            </div>
+
+            <div style="height:16px"></div>
+            <div id="monthView"></div>
+            <div id="weekView" class="week-view"></div>
+            <div id="dayView" class="day-view"></div>
+          </div>
+        </div>
+
+        <div class="side-stack">
+          <div class="card">
+            <div class="card-head"><div><h3>Détails de la date</h3><div class="sub">Événements, blocs et assignations pour la date sélectionnée.</div></div></div>
+            <div class="card-body">
+              <div class="selected-date-box"><div class="label">Date sélectionnée</div><div class="value" id="selectedDateTitle">—</div><div class="muted" id="selectedDateSub">—</div></div>
+              <div style="height:14px"></div>
+              <div class="event-list" id="selectedEventsList"></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head"><div><h3>Résumé rapide</h3><div class="sub">Événements, postes et assignations.</div></div></div>
+            <div class="card-body">
+              <div class="event-list">
+                <div class="selected-date-box"><div class="label">Événements filtrés</div><div class="value" id="statEvents">0</div><div class="muted">Selon les filtres actuels.</div></div>
+                <div class="selected-date-box"><div class="label">Postes ouverts</div><div class="value" id="statOpenRoles">0</div><div class="muted">Postes sans employé assigné.</div></div>
+                <div class="selected-date-box"><div class="label">Assignations</div><div class="value" id="statAssignments">0</div><div class="muted">Postes déjà comblés.</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <section id="teamView" class="team-view">
+      <section class="hero">
+        <div class="hero-top">
+          <div>
+            <h2>Équipe Crew Scheduler</h2>
+            <p>Cette section garde le style de ta version préférée. Les postes et employés créés ici alimentent directement le calendrier.</p>
+          </div>
+          <div class="hero-actions">
+            <button class="btn primary" id="btnAddEmployeeTop" type="button">+ Nouvel employé</button>
+          </div>
+        </div>
+        <div class="status-row">
+          <div class="pill">Menu gauche fixe</div>
+          <div class="pill">Liste compacte</div>
+          <div class="pill">Postes dynamiques</div>
+          <div class="pill">Gestion discrète</div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head">
+          <div>
+            <h3>Liste des employés</h3>
+            <div class="sub">Navigation simple au quotidien, avec la gestion des postes cachée derrière un bouton.</div>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <div class="compact-toolbar">
+            <div class="small">Les postes servent aux employés maintenant, puis servent aussi aux événements du calendrier.</div>
+            <button class="btn secondary" id="btnToggleRolesAdmin" type="button">Gérer la liste de postes</button>
+          </div>
+
+          <div class="roles-drawer" id="rolesDrawer">
+            <div class="roles-drawer-head">
+              <div class="small">Ajoute, modifie ou supprime les postes de la liste déroulante. Exemple : Serveuse.</div>
+              <button class="btn secondary small" id="btnCloseRolesAdmin" type="button">Fermer</button>
+            </div>
+            <div class="role-entry">
+              <input id="newCatalogRole" type="text" placeholder="Ex: Serveuse, Concierge, Chef machiniste..." />
+              <button class="btn secondary" id="btnAddCatalogRole" type="button">Ajouter</button>
+            </div>
+            <div class="roles-manager-list" id="roleCatalogList"></div>
+          </div>
+
+          <div class="filters">
+            <div class="field"><label for="teamSearchInput">Recherche</label><input id="teamSearchInput" type="text" placeholder="Nom, courriel, téléphone..." /></div>
+            <div class="field"><label for="teamRoleFilter">Voir seulement le poste</label><select id="teamRoleFilter"></select></div>
+            <div class="field"><label for="teamContactFilter">Préférence de contact</label><select id="teamContactFilter"><option value="all">Toutes</option><option value="sms">Texto</option><option value="call">Appel</option><option value="email">Courriel</option><option value="none">Aucune préférence</option></select></div>
+            <div class="field" style="display:flex;align-items:end"><button class="btn secondary" id="btnClearTeamFilters" type="button" style="width:100%">Réinitialiser</button></div>
+          </div>
+
+          <div style="height:16px"></div>
+          <div class="list" id="teamEmployeeList"></div>
+
+          <div class="hint">Le bouton de gestion des postes est volontairement discret, parce que tu ne retourneras pas souvent là-dedans après les premiers événements.</div>
+        </div>
+      </section>
+    </section>
+  
+
+    <section id="availabilityView" class="team-view">
+      <section class="hero">
+        <div class="hero-top">
+          <div>
+            <h2>Demandes & confirmations</h2>
+            <p>Envoie une demande de travail par courriel ou SMS, suis les réponses, vois les conflits automatiquement et propose un remplacement.</p>
+          </div>
+          <div class="hero-actions">
+            <button class="btn primary" id="btnRefreshAvailability" type="button">Actualiser</button>
+          </div>
+        </div>
+        <div class="status-row">
+          <div class="pill">Gris = non envoyé</div>
+          <div class="pill">Orange = en attente / peut-être</div>
+          <div class="pill">Vert = confirmé</div>
+          <div class="pill">Rouge = refusé / conflit</div>
+        </div>
+      </section>
+
+      <section class="layout">
+        <div class="card">
+          <div class="card-head"><div><h3>Postes à confirmer</h3><div class="sub">Chaque assignation devient une demande individuelle à envoyer au travailleur.</div></div></div>
+          <div class="card-body">
+            <div class="assignment-list" id="availabilityList"></div>
+          </div>
+        </div>
+        <div class="side-stack">
+          <div class="card">
+            <div class="card-head"><div><h3>Résumé des confirmations</h3><div class="sub">Lecture rapide de l'état de ton équipe.</div></div></div>
+            <div class="card-body">
+              <div class="event-list">
+                <div class="selected-date-box"><div class="label">Confirmés</div><div class="value" id="availStatConfirmed">0</div><div class="muted">Réponse positive reçue.</div></div>
+                <div class="selected-date-box"><div class="label">En attente</div><div class="value" id="availStatPending">0</div><div class="muted">Demandes envoyées ou peut-être.</div></div>
+                <div class="selected-date-box"><div class="label">Refus / conflits</div><div class="value" id="availStatProblems">0</div><div class="muted">À corriger ou remplacer.</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div><h3>Prévisualisation côté employé</h3><div class="sub">Pour tester avec ton propre courriel ou téléphone avant l'envoi réel.</div></div></div>
+            <div class="card-body" id="requestPreview"></div>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <section id="settingsView" class="team-view">
+      <section class="hero">
+        <div class="hero-top">
+          <div>
+            <h2>Paramètres Crew Scheduler</h2>
+            <p>Règles globales pour les demandes, les conflits et le comportement du prototype GitHub.</p>
+          </div>
+        </div>
+        <div class="status-row">
+          <div class="pill">Prototype statique</div>
+          <div class="pill">Courriel / SMS test</div>
+          <div class="pill">Conflits automatiques</div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><div><h3>Réglages globaux</h3><div class="sub">Ces options servent immédiatement dans l'onglet demandes.</div></div></div>
+        <div class="card-body">
+          <div class="settings-grid">
+            <div class="setting-box">
+              <div class="field"><label for="settingDefaultChannel">Canal d'envoi par défaut</label><select id="settingDefaultChannel"><option value="email">Courriel</option><option value="sms">SMS</option></select></div>
+              <div class="small-note">Le bouton d'envoi rapide utilisera ce canal par défaut. Tu pourras toujours choisir l'autre canal sur une ligne précise.</div>
+            </div>
+            <div class="setting-box">
+              <div class="field"><label for="settingConflictMode">Gestion des conflits</label><select id="settingConflictMode"><option value="warn">Avertir seulement</option><option value="block">Bloquer le remplacement conflictuel</option></select></div>
+              <div class="small-note">En mode blocage, les remplaçants en conflit ne seront pas proposés comme choix principal.</div>
+            </div>
+            <div class="setting-box">
+              <div class="field"><label for="settingCompanyName">Nom affiché de l'équipe</label><input id="settingCompanyName" type="text" placeholder="Ex: Crew Scheduler / Nom de compagnie"/></div>
+              <div class="small-note">Utilisé dans le texte généré pour les courriels et SMS de demande de travail.</div>
+            </div>
+            <div class="setting-box" style="align-content:end">
+              <button class="btn primary" id="btnSaveSettings" type="button">Enregistrer les paramètres</button>
+              <div class="small-note" id="settingsSavedMsg">Aucun changement récent.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </section>
+
+  </main>
+</div>
+
+<div class="modal-wrap" id="modalWrap">
+  <div class="modal">
+    <div class="modal-head"><h3 id="modalTitle">Nouvel événement</h3><button class="btn secondary small" id="btnCloseModal" type="button">Fermer</button></div>
+    <div class="modal-body">
+      <div class="field" style="text-align:center"><label for="evtTitle">Titre de l’événement</label><input id="evtTitle" type="text" placeholder="Ex: Mariage / Festival / Corporate"/></div>
+      <div class="filters" style="grid-template-columns:1fr 1fr 1fr 1fr">
+        <div class="field"><label for="evtStartDate">Date de début</label><input id="evtStartDate" type="date"/></div>
+        <div class="field"><label for="evtEndDate">Date de fin</label><input id="evtEndDate" type="date"/></div>
+        <div class="field"><label for="evtTime">Heure de début</label><input id="evtTime" type="time" step="900" value="09:00"/></div>
+        <div class="field"><label for="evtEndTime">Heure de fin</label><input id="evtEndTime" type="time" step="900" value="12:00"/></div>
+      </div>
+      <div class="filters" style="grid-template-columns:1fr 1fr">
+        <div class="field"><label for="evtLocation">Lieu</label><input id="evtLocation" type="text" placeholder="Ex: Théâtre / entrepôt / salle X"/></div>
+        <div class="field"><label for="evtNotes">Notes</label><input id="evtNotes" type="text" placeholder="Info rapide ou remarque"/></div>
+      </div>
+
+      <div class="field">
+        <label>Blocs de travail</label>
+        <div class="block-meta" style="margin-bottom:6px;color:#cbd5e1">Chaque <strong>bloc</strong> représente une phase distincte de l’événement, comme Montage, Show ou Démontage. Les <strong>postes</strong> sont à l’intérieur du bloc.</div>
+        <div class="block-list" id="blockList"></div>
+        <div class="role-entry" style="grid-template-columns:1fr auto">
+          <input id="newBlockName" type="text" placeholder="Ex: Montage, Show, Démontage"/>
+          <button class="btn secondary" id="btnAddBlock" type="button">Ajouter bloc</button>
+        </div>
+      </div>
+
+      <div class="field"><label>Couleur</label><div class="color-row" id="colorRow"></div></div>
+    </div>
+    <div class="modal-actions"><div><button class="btn danger" id="btnDeleteEvent" type="button" style="display:none">Supprimer</button></div><div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn secondary" id="btnCancelModal" type="button">Annuler</button><button class="btn primary" id="btnSaveEvent" type="button">Enregistrer</button></div></div>
+  </div>
+</div>
+
+<div class="team-modal-wrap" id="teamModalWrap">
+  <div class="team-modal">
+    <div class="team-modal-head"><h3 id="teamModalTitle">Nouvel employé</h3><button class="btn secondary small" id="btnCloseTeamModal" type="button">Fermer</button></div>
+    <div class="team-modal-body">
+      <div class="filters" style="grid-template-columns:1fr 1fr">
+        <div class="field"><label for="empName">Nom complet</label><input id="empName" type="text" placeholder="Ex: Marc-André Tremblay"/></div>
+        <div class="field"><label for="empContactPref">Préférence de contact</label><select id="empContactPref"><option value="sms">Texto</option><option value="call">Appel</option><option value="email">Courriel</option><option value="none">Aucune préférence</option></select></div>
+      </div>
+      <div class="filters" style="grid-template-columns:1fr 1fr">
+        <div class="field"><label for="empEmail">Courriel</label><input id="empEmail" type="email" placeholder="nom@entreprise.com"/></div>
+        <div class="field"><label for="empPhone">Téléphone</label><input id="empPhone" type="text" placeholder="514-555-1234"/></div>
+      </div>
+      <div class="field"><label for="empNotes">Notes</label><textarea id="empNotes" placeholder="Infos utiles, disponibilités typiques, remarques..."></textarea></div>
+      <div class="field">
+        <label>Postes de l’employé</label>
+        <div class="team-role-adder">
+          <select id="empRoleSelect"></select>
+          <button class="btn secondary" id="btnAddEmpRole" type="button">Ajouter</button>
+        </div>
+        <div style="height:10px"></div>
+        <div class="team-role-list" id="empRoleList"></div>
+      </div>
+    </div>
+    <div class="team-modal-actions"><div><button class="btn danger" id="btnDeleteEmployee" type="button" style="display:none">Supprimer</button></div><div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn secondary" id="btnCancelTeamModal" type="button">Annuler</button><button class="btn primary" id="btnSaveEmployee" type="button">Enregistrer</button></div></div>
+  </div>
+</div>
+
 <script>
+const EVENTS_KEY="crewSchedulerCalendarEventsMergedV1";
+const EMPLOYEES_KEY="crewSchedulerEmployeesV5";
+const ROLES_KEY="crewSchedulerRolesV2";
+const SETTINGS_KEY="crewSchedulerSettingsV1";
+const COLORS=["#2563eb","#7c3aed","#059669","#d97706","#dc2626","#0f766e","#ea580c","#475569"];
 
-let pca;
-let account;
-let token;
+const state={
+  activeTab:"calendar",
+  currentView:"month",
+  anchorDate:startOfDay(new Date()),
+  selectedDate:startOfDay(new Date()),
+  events:loadEvents(),
+  employees:loadEmployees(),
+  rolesCatalog:loadRolesCatalog(),
+  editingId:null,
+  selectedColor:COLORS[0],
+  currentBlocks:[],
+  editingEmployeeId:null,
+  currentEmployeeRoles:[""],
+  rolesDrawerOpen:false,
+  settings:loadSettings(),
+  activeRequestKey:"",
+  syncBanner:""
+};
 
-function init(){
-    pca = new msal.PublicClientApplication({
-        auth:{
-            clientId:"b71fb750-0c78-4903-9489-fd2d0fc18884",
-            authority:"https://login.microsoftonline.com/b5e72da6-a727-4c1d-b80d-e381c3123448",
-            redirectUri: window.location.origin + window.location.pathname
-        }
-    });
+const els={
+  calendarView:document.getElementById("calendarView"),
+  teamView:document.getElementById("teamView"),
+  availabilityView:document.getElementById("availabilityView"),
+  settingsView:document.getElementById("settingsView"),
+  rangeTitle:document.getElementById("rangeTitle"),
+  rangeSubtitle:document.getElementById("rangeSubtitle"),
+  monthView:document.getElementById("monthView"),
+  weekView:document.getElementById("weekView"),
+  dayView:document.getElementById("dayView"),
+  selectedDateTitle:document.getElementById("selectedDateTitle"),
+  selectedDateSub:document.getElementById("selectedDateSub"),
+  selectedEventsList:document.getElementById("selectedEventsList"),
+  statEvents:document.getElementById("statEvents"),
+  statOpenRoles:document.getElementById("statOpenRoles"),
+  statAssignments:document.getElementById("statAssignments"),
+  searchInput:document.getElementById("searchInput"),
+  roleFilter:document.getElementById("roleFilter"),
+  employeeFilter:document.getElementById("employeeFilter"),
+  modalWrap:document.getElementById("modalWrap"),
+  modalTitle:document.getElementById("modalTitle"),
+  evtTitle:document.getElementById("evtTitle"),
+  evtStartDate:document.getElementById("evtStartDate"),
+  evtEndDate:document.getElementById("evtEndDate"),
+  evtTime:document.getElementById("evtTime"),
+  evtEndTime:document.getElementById("evtEndTime"),
+  evtLocation:document.getElementById("evtLocation"),
+  evtNotes:document.getElementById("evtNotes"),
+  blockList:document.getElementById("blockList"),
+  newBlockName:document.getElementById("newBlockName"),
+  colorRow:document.getElementById("colorRow"),
+  btnDeleteEvent:document.getElementById("btnDeleteEvent"),
+
+  teamSearchInput:document.getElementById("teamSearchInput"),
+  teamRoleFilter:document.getElementById("teamRoleFilter"),
+  teamContactFilter:document.getElementById("teamContactFilter"),
+  teamEmployeeList:document.getElementById("teamEmployeeList"),
+  newCatalogRole:document.getElementById("newCatalogRole"),
+  roleCatalogList:document.getElementById("roleCatalogList"),
+  rolesDrawer:document.getElementById("rolesDrawer"),
+  btnToggleRolesAdmin:document.getElementById("btnToggleRolesAdmin"),
+
+  teamModalWrap:document.getElementById("teamModalWrap"),
+  teamModalTitle:document.getElementById("teamModalTitle"),
+  empName:document.getElementById("empName"),
+  empContactPref:document.getElementById("empContactPref"),
+  empEmail:document.getElementById("empEmail"),
+  empPhone:document.getElementById("empPhone"),
+  empNotes:document.getElementById("empNotes"),
+  empRoleSelect:document.getElementById("empRoleSelect"),
+  empRoleList:document.getElementById("empRoleList"),
+  btnDeleteEmployee:document.getElementById("btnDeleteEmployee"),
+  availabilityList:document.getElementById("availabilityList"),
+  availStatConfirmed:document.getElementById("availStatConfirmed"),
+  availStatPending:document.getElementById("availStatPending"),
+  availStatProblems:document.getElementById("availStatProblems"),
+  requestPreview:document.getElementById("requestPreview"),
+  settingDefaultChannel:document.getElementById("settingDefaultChannel"),
+  settingConflictMode:document.getElementById("settingConflictMode"),
+  settingCompanyName:document.getElementById("settingCompanyName"),
+  settingsSavedMsg:document.getElementById("settingsSavedMsg")
+};
+
+function defaultSettings(){ return {defaultChannel:"email",conflictMode:"warn",companyName:"Crew Scheduler"}; }
+function loadSettings(){ try{ const raw=JSON.parse(localStorage.getItem(SETTINGS_KEY)||"null"); return {...defaultSettings(), ...(raw||{})}; }catch{return defaultSettings();} }
+function saveSettings(){ localStorage.setItem(SETTINGS_KEY, JSON.stringify(state.settings)); }
+function normalizeRoleRequest(item){
+  return {role:String(item?.role||""),employeeId:String(item?.employeeId||""),requestStatus:String(item?.requestStatus||"draft"),responseStatus:String(item?.responseStatus||"pending"),sentAt:String(item?.sentAt||""),respondedAt:String(item?.respondedAt||""),lastChannel:String(item?.lastChannel||""),lastMessage:String(item?.lastMessage||"")};
+}
+function normalizeLoadedEvent(evt){
+  const blocks=normalizeEventBlocks(evt).map(block=>({
+    ...block,
+    id:block.id||cryptoRandomId(),
+    name:block.name||"Bloc",
+    startDate:block.startDate||evt.startDate||evt.date||toDateInput(new Date()),
+    endDate:block.endDate||evt.endDate||evt.date||toDateInput(new Date()),
+    startTime:to24h(block.startTime||evt.time||"09:00"),
+    endTime:to24h(block.endTime||evt.endTime||"17:00"),
+    roles:Array.isArray(block.roles)?block.roles.map(normalizeRoleRequest):[]
+  }));
+  return {...evt, blocks, startDate:evt.startDate||evt.date||blocks[0]?.startDate||toDateInput(new Date()), endDate:evt.endDate||evt.date||blocks[0]?.endDate||toDateInput(new Date()), time:to24h(evt.time||blocks[0]?.startTime||"09:00"), endTime:to24h(evt.endTime||blocks[0]?.endTime||"17:00")};
+}
+function loadRolesCatalog(){ try{ const raw=JSON.parse(localStorage.getItem(ROLES_KEY)||"[]"); return Array.isArray(raw)?normalizeRoles(raw):[]; }catch{return [];} }
+function saveRolesCatalog(){ localStorage.setItem(ROLES_KEY, JSON.stringify(normalizeRoles(state.rolesCatalog))); }
+function loadEmployees(){ try{ const raw=JSON.parse(localStorage.getItem(EMPLOYEES_KEY)||"[]"); return Array.isArray(raw)?raw:[]; }catch{return [];} }
+function saveEmployees(){ localStorage.setItem(EMPLOYEES_KEY, JSON.stringify(state.employees)); }
+function loadEvents(){ try{ const raw=JSON.parse(localStorage.getItem(EVENTS_KEY)||"[]"); return Array.isArray(raw)&&raw.length?raw.map(normalizeLoadedEvent):seedEvents().map(normalizeLoadedEvent); }catch{return seedEvents().map(normalizeLoadedEvent);} }
+function saveEvents(){ localStorage.setItem(EVENTS_KEY, JSON.stringify(state.events)); }
+function seedEvents(){ const today=startOfDay(new Date()); return [{id:cryptoRandomId(),title:"Préparation kit DJ",startDate:toDateInput(today),endDate:toDateInput(addDays(today,2)),time:"09:00",endTime:"22:00",color:"#2563eb",location:"Entrepôt",notes:"Prévoir vérification complète",blocks:[{id:cryptoRandomId(),name:"Montage",startDate:toDateInput(today),endDate:toDateInput(today),startTime:"09:00",endTime:"17:00",roles:[]},{id:cryptoRandomId(),name:"Show",startDate:toDateInput(addDays(today,1)),endDate:toDateInput(addDays(today,1)),startTime:"18:00",endTime:"23:00",roles:[]},{id:cryptoRandomId(),name:"Démontage",startDate:toDateInput(addDays(today,2)),endDate:toDateInput(addDays(today,2)),startTime:"18:00",endTime:"22:00",roles:[]}]}];}
+function cryptoRandomId(){ return (window.crypto&&crypto.randomUUID)?crypto.randomUUID():"id_"+Math.random().toString(36).slice(2)+Date.now(); }
+function startOfDay(d){ const x=new Date(d); x.setHours(0,0,0,0); return x; }
+function addDays(d,n){ const x=new Date(d); x.setDate(x.getDate()+n); return x; }
+function sameDay(a,b){ return startOfDay(a).getTime()===startOfDay(b).getTime(); }
+function toDateInput(d){ const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,"0"),day=String(d.getDate()).padStart(2,"0"); return `${y}-${m}-${day}`; }
+function parseLocalDate(str){ const [y,m,d]=String(str).split("-").map(Number); return new Date(y,m-1,d); }
+function formatLongDate(d){ return new Intl.DateTimeFormat("fr-CA",{weekday:"long",day:"numeric",month:"long",year:"numeric"}).format(d); }
+function formatShortMonth(d){ return new Intl.DateTimeFormat("fr-CA",{month:"long",year:"numeric"}).format(d); }
+function formatWeekLabel(start){ const end=addDays(start,6); const a=new Intl.DateTimeFormat("fr-CA",{day:"numeric",month:"short"}).format(start); const b=new Intl.DateTimeFormat("fr-CA",{day:"numeric",month:"short",year:"numeric"}).format(end); return `${a} → ${b}`; }
+function startOfWeek(d){ const x=startOfDay(d); const day=x.getDay(); const diff=day===0?-6:1-day; return addDays(x,diff); }
+function startOfMonthGrid(d){ return startOfWeek(new Date(d.getFullYear(),d.getMonth(),1)); }
+function capitalize(str){ return str.charAt(0).toUpperCase()+str.slice(1); }
+function normalizeRoles(list){ if(!Array.isArray(list)) return []; return [...new Set(list.map(x=>String(x||"").trim()).filter(Boolean))]; }
+function escapeHtml(str){ return String(str).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;"); }
+function contactLabel(value){ return {sms:"Texto",call:"Appel",email:"Courriel",none:"Aucune préférence"}[value]||value; }
+function employeeNameById(id){ const emp=state.employees.find(x=>x.id===id); return emp?emp.name:""; }
+function employeesForRole(role){ return state.employees.filter(emp=>normalizeRoles(emp.roles||[]).includes(role)).sort((a,b)=>(a.name||"").localeCompare((b.name||""),"fr-CA")); }
+function eventStartDate(evt){ return parseLocalDate(evt.startDate||evt.date); }
+function eventEndDate(evt){ return parseLocalDate(evt.endDate||evt.date||evt.startDate); }
+function spansDate(evt,date){ const d=startOfDay(date).getTime(); return d>=startOfDay(eventStartDate(evt)).getTime()&&d<=startOfDay(eventEndDate(evt)).getTime(); }
+function eventStartsOnDate(evt,date){ return sameDay(eventStartDate(evt),date); }
+function eventEndsOnDate(evt,date){ return sameDay(eventEndDate(evt),date); }
+function parseHour(timeStr,fallback){ const parts=String(timeStr||"").split(":"); const h=Number(parts[0]); return Number.isFinite(h)?h:fallback; }
+function to24h(timeStr){ const parts=String(timeStr||"").split(":"); const h=String(parts[0]||"00").padStart(2,"0"); const m=String(parts[1]||"00").padStart(2,"0"); return `${h}:${m}`; }
+function compareDateTimes(dateA,timeA,dateB,timeB){ return `${dateA} ${to24h(timeA)}`.localeCompare(`${dateB} ${to24h(timeB)}`); }
+function timeRangeLabel(evt){ const start=evt.startDate&&evt.endDate&&evt.startDate!==evt.endDate?`${evt.startDate} ${to24h(evt.time)} → ${evt.endDate} ${to24h(evt.endTime||"")}`:`${to24h(evt.time)} → ${to24h(evt.endTime||"")}`; return start.trim(); }
+function normalizeEventBlocks(evt){ if(Array.isArray(evt.blocks)) return evt.blocks; const legacy=Array.isArray(evt.teamRoles)?evt.teamRoles:[]; return [{id:cryptoRandomId(),name:"Bloc principal",startDate:evt.startDate||evt.date||toDateInput(new Date()),endDate:evt.endDate||evt.date||toDateInput(new Date()),startTime:evt.time||"09:00",endTime:evt.endTime||"17:00",roles:legacy}]; }
+function blockRolesSummary(block){ const roles=Array.isArray(block.roles)?block.roles:[]; if(!roles.length) return "Aucun poste"; return roles.map(item=>{ const emp=employeeNameById(item.employeeId); return emp?`${item.role} → ${emp}`:`${item.role} → à combler`; }).join(" · "); }
+function eventAssignmentsSummary(evt){ return normalizeEventBlocks(evt).map(b=>`${b.name}: ${blockRolesSummary(b)}`).join(" · "); }
+
+function segmentTypeForDate(evt,date){ const start=eventStartDate(evt); const end=eventEndDate(evt); if(sameDay(start,end)) return "single"; if(sameDay(date,start)) return "start"; if(sameDay(date,end)) return "end"; return "middle"; }
+function segmentLabel(type){ if(type==="start") return "Début"; if(type==="middle") return "Milieu"; if(type==="end") return "Fin"; return ""; }
+function segmentClass(type){ if(type==="start") return "start-seg"; if(type==="middle") return "mid-seg"; if(type==="end") return "end-seg"; return ""; }
+
+function assignmentKey(evtId,blockId,roleIdx){ return `${evtId}__${blockId}__${roleIdx}`; }
+function allAssignments(){
+  const list=[];
+  state.events.forEach(evt=>normalizeEventBlocks(evt).forEach(block=>(block.roles||[]).forEach((roleItem,roleIdx)=>{
+    list.push({key:assignmentKey(evt.id,block.id,roleIdx),evtId:evt.id,blockId:block.id,roleIdx,evt,block,roleItem});
+  })));
+  return list;
+}
+function getAssignmentByKey(key){ return allAssignments().find(x=>x.key===key)||null; }
+function getRoleItemRef(evtId,blockId,roleIdx){
+  const evt=state.events.find(x=>x.id===evtId); if(!evt) return null;
+  const block=normalizeEventBlocks(evt).find(x=>x.id===blockId); if(!block) return null;
+  const roleItem=(block.roles||[])[roleIdx]; if(!roleItem) return null;
+  return {evt,block,roleItem};
+}
+function getRoleTiming(evt,block){ return {startDate:block.startDate||evt.startDate,startTime:to24h(block.startTime||evt.time||"09:00"),endDate:block.endDate||evt.endDate,endTime:to24h(block.endTime||evt.endTime||"17:00")}; }
+function rangeOverlaps(aStartDate,aStartTime,aEndDate,aEndTime,bStartDate,bStartTime,bEndDate,bEndTime){
+  const a1=`${aStartDate}T${to24h(aStartTime)}`, a2=`${aEndDate}T${to24h(aEndTime)}`, b1=`${bStartDate}T${to24h(bStartTime)}`, b2=`${bEndDate}T${to24h(bEndTime)}`;
+  return a1 < b2 && b1 < a2;
+}
+function findEmployeeConflicts(employeeId,evtId,blockId,roleIdx){
+  if(!employeeId) return [];
+  const current=getRoleItemRef(evtId,blockId,roleIdx); if(!current) return [];
+  const timing=getRoleTiming(current.evt,current.block);
+  return allAssignments().filter(item=>{
+    if(item.evtId===evtId && item.blockId===blockId && item.roleIdx===roleIdx) return false;
+    if(item.roleItem.employeeId!==employeeId) return false;
+    if(item.roleItem.responseStatus==="unavailable") return false;
+    const other=getRoleTiming(item.evt,item.block);
+    return rangeOverlaps(timing.startDate,timing.startTime,timing.endDate,timing.endTime,other.startDate,other.startTime,other.endDate,other.endTime);
+  });
+}
+function roleVisualState(item){
+  if(!item.employeeId) return {label:"À combler", cls:"gray"};
+  if(item.responseStatus==="available") return {label:"Confirmé", cls:"green"};
+  if(item.responseStatus==="unavailable") return {label:"Refusé", cls:"red"};
+  if(item.responseStatus==="maybe") return {label:"Peut-être", cls:"orange"};
+  if(item.requestStatus==="sent" || item.requestStatus==="answered") return {label:"En attente", cls:"orange"};
+  return {label:"Non envoyé", cls:"gray"};
+}
+function currentAppBaseUrl(){ return `${window.location.origin}${window.location.pathname}`; }
+function encodePortalPayload(obj){ try{return btoa(unescape(encodeURIComponent(JSON.stringify(obj))));}catch(e){return "";} }
+function decodePortalPayload(str){ try{return JSON.parse(decodeURIComponent(escape(atob(str))));}catch(e){return null;} }
+function portalPayloadFromItem(item){
+  const emp=state.employees.find(x=>x.id===item.roleItem.employeeId);
+  const timing=getRoleTiming(item.evt,item.block);
+  return {
+    key:item.key,
+    employeeName:emp?.name||'travailleur',
+    employeeEmail:emp?.email||'',
+    employeePhone:emp?.phone||'',
+    role:item.roleItem.role||'Poste',
+    eventTitle:item.evt.title||'Événement',
+    blockName:item.block.name||'Bloc',
+    startDate:timing.startDate,
+    startTime:timing.startTime,
+    endDate:timing.endDate,
+    endTime:timing.endTime,
+    location:item.evt.location||'Lieu à confirmer',
+    companyName:state.settings.companyName||'Crew Scheduler'
+  };
+}
+function portalPayloadByKey(key){ const item=getAssignmentByKey(key); return item?portalPayloadFromItem(item):null; }
+function buildPortalUrl(key,responseStatus=''){
+  const payload=portalPayloadByKey(key);
+  const url=new URL(currentAppBaseUrl());
+  url.searchParams.set('portal','1');
+  url.searchParams.set('key',key);
+  if(payload) url.searchParams.set('payload',encodePortalPayload(payload));
+  if(responseStatus) url.searchParams.set('response',responseStatus);
+  return url.toString();
+}
+function buildSyncUrl(key,responseStatus,payloadEncoded=''){
+  const url=new URL(currentAppBaseUrl());
+  url.searchParams.set('syncResponse','1');
+  url.searchParams.set('key',key);
+  url.searchParams.set('status',responseStatus);
+  if(payloadEncoded) url.searchParams.set('payload',payloadEncoded);
+  return url.toString();
+}
+async function copyText(text){
+  try{ await navigator.clipboard.writeText(text); alert('Lien copié.'); }
+  catch(err){ const tmp=document.createElement('textarea'); tmp.value=text; document.body.appendChild(tmp); tmp.select(); document.execCommand('copy'); tmp.remove(); alert('Lien copié.'); }
+}
+function applyResponseToAssignment(key,responseStatus){
+  const item=getAssignmentByKey(key); if(!item) return false;
+  const ref=getRoleItemRef(item.evtId,item.blockId,item.roleIdx); if(!ref) return false;
+  ref.roleItem.requestStatus='answered';
+  ref.roleItem.responseStatus=responseStatus;
+  ref.roleItem.respondedAt=new Date().toISOString();
+  saveEvents();
+  return true;
+}
+function handleSyncResponseFromUrl(){
+  const params=new URLSearchParams(window.location.search);
+  if(params.get('syncResponse')!=='1') return false;
+  const key=params.get('key')||'';
+  const status=params.get('status')||'pending';
+  const payload=decodePortalPayload(params.get('payload')||'');
+  const ok=applyResponseToAssignment(key,status);
+  const who=payload?.employeeName||'Le travailleur';
+  const evt=payload?.eventTitle||'cet événement';
+  state.syncBanner = ok ? `${who} a répondu « ${status==='available'?'Disponible':status==='maybe'?'Peut-être':'Non disponible'} » pour ${evt}.` : `Réponse reçue par lien web pour ${who}, mais cette machine n'a pas retrouvé l'assignation locale à mettre à jour automatiquement.`;
+  state.activeTab='availability';
+  const clean=currentAppBaseUrl();
+  window.history.replaceState({},'',clean);
+  return true;
+}
+function renderPortalMode(){
+  const params=new URLSearchParams(window.location.search);
+  if(params.get('portal')!=='1') return false;
+  const mount=document.getElementById('portalMount');
+  const app=document.querySelector('.app');
+  const key=params.get('key')||'';
+  const payloadEncoded=params.get('payload')||'';
+  const payload=decodePortalPayload(payloadEncoded) || portalPayloadByKey(key);
+  const response=params.get('response')||'';
+  if(app) app.style.display='none';
+  mount.style.display='block';
+  if(!payload){
+    mount.innerHTML=`<div class="portal-shell"><div class="portal-card"><div class="portal-kicker">Crew Scheduler</div><h2 class="portal-title">Lien de demande invalide</h2><div class="portal-meta">La demande ne peut pas être affichée depuis ce navigateur. Sur GitHub avec un vrai lien public, il faut ouvrir le lien complet envoyé au travailleur.</div><div class="portal-actions"><a class="btn secondary" href="${currentAppBaseUrl()}">Retour à l'application</a></div></div></div>`;
+    return true;
+  }
+  const responseLabel=response==='available'?'Disponible':response==='maybe'?'Peut-être':response==='unavailable'?'Non disponible':'';
+  const responseCls=response==='available'?'green':response==='maybe'?'orange':response==='unavailable'?'red':'gray';
+  const syncUrl=response?buildSyncUrl(key||payload.key||'',response,payloadEncoded):'';
+  const answerButtons=!response?`<div class="portal-actions"><a class="btn primary" href="${buildPortalUrl(key||payload.key||'','available')}">Je suis disponible</a><a class="btn secondary" href="${buildPortalUrl(key||payload.key||'','maybe')}">Peut-être</a><a class="btn danger" href="${buildPortalUrl(key||payload.key||'','unavailable')}">Je ne suis pas disponible</a></div>`:'';
+  const responseBox=response?`<div class="status-pill ${responseCls}" style="width:max-content">Réponse envoyée: ${responseLabel}</div><div class="portal-note">Sans serveur, ce lien ne peut pas synchroniser la réponse automatiquement partout. Pour ton test, ouvre le lien de retour ci-dessous sur l'instance scheduler, ou sur la même machine.</div><div class="copy-row"><div class="link-box">${escapeHtml(syncUrl)}</div><div class="portal-actions"><a class="btn primary" href="${syncUrl}">Ouvrir le lien de retour scheduler</a><button class="btn secondary" type="button" id="copySyncUrl">Copier le lien de retour</button></div></div>`:'';
+  mount.innerHTML=`<div class="portal-shell"><div class="portal-card"><div class="portal-kicker">${escapeHtml(payload.companyName||'Crew Scheduler')}</div><h2 class="portal-title">Demande de travail</h2><div class="portal-meta">Bonjour <strong>${escapeHtml(payload.employeeName||'travailleur')}</strong>, on t'invite sur <strong>${escapeHtml(payload.eventTitle||'Événement')}</strong>.</div><div class="portal-grid"><div class="portal-stat"><div class="label">Bloc</div><div class="value">${escapeHtml(payload.blockName||'Bloc')}</div></div><div class="portal-stat"><div class="label">Poste</div><div class="value">${escapeHtml(payload.role||'Poste')}</div></div><div class="portal-stat"><div class="label">Début</div><div class="value">${escapeHtml(payload.startDate||'')} · ${escapeHtml(payload.startTime||'')}</div></div><div class="portal-stat"><div class="label">Fin</div><div class="value">${escapeHtml(payload.endDate||'')} · ${escapeHtml(payload.endTime||'')}</div></div></div><div class="portal-stat"><div class="label">Lieu</div><div class="value">${escapeHtml(payload.location||'Lieu à confirmer')}</div></div>${!response?`<div class="portal-note">Choisis ta réponse ci-dessous. Cette page est le côté employé du lien web.</div>${answerButtons}`:responseBox}<div class="portal-note">Pour un vrai système multi-utilisateur en production, il faudra un petit backend ou une base de données partagée pour que la réponse revienne automatiquement dans le calendrier.</div><div class="portal-actions"><a class="btn secondary" href="${currentAppBaseUrl()}">Retour à l'application</a></div></div></div>`;
+  document.getElementById('copySyncUrl')?.addEventListener('click',()=>copyText(syncUrl));
+  if(response && key){ applyResponseToAssignment(key,response); }
+  return true;
+}
+function buildRequestMessage(item){
+  const emp=state.employees.find(x=>x.id===item.roleItem.employeeId);
+  const timing=getRoleTiming(item.evt,item.block);
+  const company=state.settings.companyName||"Crew Scheduler";
+  const webLink=buildPortalUrl(item.key);
+  const subject=`Demande de travail — ${item.evt.title}`;
+  const body=`Bonjour ${emp?.name||""},
+
+${company} t'invite pour un appel de travail.
+
+Événement: ${item.evt.title}
+Bloc: ${item.block.name}
+Poste: ${item.roleItem.role}
+Date début: ${timing.startDate}
+Heure début: ${timing.startTime}
+Date fin: ${timing.endDate}
+Heure fin: ${timing.endTime}
+Lieu: ${item.evt.location||"À confirmer"}
+
+Réponds directement ici:
+${webLink}
+
+Réponses possibles: Disponible / Peut-être / Non disponible
+
+Merci!`;
+  return {subject,body,webLink};
+}
+function openRequestChannel(key,channel){
+  const item=getAssignmentByKey(key); if(!item||!item.roleItem.employeeId) return;
+  const ref=getRoleItemRef(item.evtId,item.blockId,item.roleIdx); if(!ref) return;
+  const msg=buildRequestMessage(item);
+  ref.roleItem.requestStatus="sent"; ref.roleItem.responseStatus=ref.roleItem.responseStatus==="available"?"available":"pending"; ref.roleItem.sentAt=new Date().toISOString(); ref.roleItem.lastChannel=channel; ref.roleItem.lastMessage=msg.body; saveEvents(); renderAll();
+  const emp=state.employees.find(x=>x.id===ref.roleItem.employeeId);
+  if(channel==="email" && emp?.email){ window.location.href=`mailto:${encodeURIComponent(emp.email)}?subject=${encodeURIComponent(msg.subject)}&body=${encodeURIComponent(msg.body)}`; }
+  else if(channel==="sms" && emp?.phone){ window.location.href=`sms:${encodeURIComponent(emp.phone)}?body=${encodeURIComponent(msg.body)}`; }
+  else { alert(`Aucun ${channel==="email"?"courriel":"numéro de téléphone"} disponible pour cet employé.`); }
+}
+function setAssignmentResponse(key,responseStatus){
+  const item=getAssignmentByKey(key); if(!item) return;
+  const ref=getRoleItemRef(item.evtId,item.blockId,item.roleIdx); if(!ref) return;
+  ref.roleItem.requestStatus="answered"; ref.roleItem.responseStatus=responseStatus; ref.roleItem.respondedAt=new Date().toISOString(); saveEvents(); state.activeRequestKey=key; renderAll();
+}
+function replacementSuggestions(key){
+  const item=getAssignmentByKey(key); if(!item) return [];
+  return employeesForRole(item.roleItem.role).filter(emp=>emp.id!==item.roleItem.employeeId).map(emp=>({emp, conflicts:findEmployeeConflicts(emp.id,item.evtId,item.blockId,item.roleIdx)})).filter(x=>state.settings.conflictMode!=="block" || !x.conflicts.length).slice(0,5);
+}
+function applyReplacement(key,newEmployeeId){
+  const item=getAssignmentByKey(key); if(!item) return;
+  const ref=getRoleItemRef(item.evtId,item.blockId,item.roleIdx); if(!ref) return;
+  ref.roleItem.employeeId=newEmployeeId||""; ref.roleItem.requestStatus="draft"; ref.roleItem.responseStatus="pending"; ref.roleItem.sentAt=""; ref.roleItem.respondedAt=""; ref.roleItem.lastChannel=""; saveEvents(); state.activeRequestKey=key; renderAll();
 }
 
-async function login(){
-    const res = await pca.loginPopup({
-        scopes:["User.Read","Calendars.Read","Calendars.Read.Shared"]
-    });
-    account = res.account;
+
+function renderTabs(){
+  els.calendarView.style.display = state.activeTab==="calendar" ? "block" : "none";
+  els.teamView.style.display = state.activeTab==="team" ? "block" : "none";
+  els.availabilityView.style.display = state.activeTab==="availability" ? "block" : "none";
+  els.settingsView.style.display = state.activeTab==="settings" ? "block" : "none";
+  document.querySelectorAll('.nav button[data-tab]').forEach(btn=>btn.classList.toggle('active', btn.dataset.tab===state.activeTab));
 }
 
-async function getToken(){
-    const res = await pca.acquireTokenSilent({
-        account,
-        scopes:["User.Read","Calendars.Read","Calendars.Read.Shared"]
-    });
-    token = res.accessToken;
+function buildCalendarRoleFilterOptions(){
+  const all = normalizeRoles([...state.rolesCatalog, ...state.events.flatMap(evt=>normalizeEventBlocks(evt).flatMap(b=>(b.roles||[]).map(r=>r.role)))]);
+  els.roleFilter.innerHTML = [`<option value="all">Tous les postes</option>`, ...all.map(role=>`<option value="${escapeHtml(role)}">${escapeHtml(role)}</option>`)].join("");
+}
+function buildCalendarEmployeeFilterOptions(){
+  const all = [...state.employees].sort((a,b)=>(a.name||"").localeCompare((b.name||""),"fr-CA"));
+  els.employeeFilter.innerHTML = [`<option value="all">Tous les employés</option>`, ...all.map(emp=>`<option value="${escapeHtml(emp.id)}">${escapeHtml(emp.name)}</option>`)].join("");
+}
+function getFilteredEvents(){
+  const q=(els.searchInput.value||"").trim().toLowerCase();
+  const roleQ=els.roleFilter.value;
+  const employeeQ=els.employeeFilter.value;
+  return [...state.events].filter(evt=>{
+    const blocks=normalizeEventBlocks(evt);
+    const hay=`${evt.title||""} ${evt.location||""} ${evt.notes||""} ${eventAssignmentsSummary(evt)} ${evt.startDate||""} ${evt.endDate||""}`.toLowerCase();
+    if(q && !hay.includes(q)) return false;
+    if(roleQ!=="all" && !blocks.some(b=>(b.roles||[]).some(r=>r.role===roleQ))) return false;
+    if(employeeQ!=="all" && !blocks.some(b=>(b.roles||[]).some(r=>r.employeeId===employeeQ))) return false;
+    return true;
+  }).sort((a,b)=>((a.startDate||a.date)+" "+a.time).localeCompare((b.startDate||b.date)+" "+b.time));
+}
+function eventsForDate(date){ return getFilteredEvents().filter(evt=>spansDate(evt,date)); }
+
+function monthBarSegmentsForEvent(evt,gridStart){
+  const segments=[]; const start=eventStartDate(evt); const end=eventEndDate(evt);
+  for(let row=0;row<6;row++){
+    const rowStart=addDays(gridStart,row*7), rowEnd=addDays(rowStart,6);
+    if(end<rowStart||start>rowEnd) continue;
+    const segStart=start>rowStart?start:rowStart, segEnd=end<rowEnd?end:rowEnd;
+    const startOffset=Math.round((startOfDay(segStart)-startOfDay(rowStart))/86400000);
+    const endOffset=Math.round((startOfDay(segEnd)-startOfDay(rowStart))/86400000);
+    const segType=sameDay(start,end)?"single":(sameDay(segStart,start)?(sameDay(segEnd,end)?"single":"start"):(sameDay(segEnd,end)?"end":"middle"));
+    segments.push({row,startOffset,endOffset,type:segType});
+  }
+  return segments;
 }
 
-async function loadCalendars(){
-    await getToken();
-    const res = await fetch("https://graph.microsoft.com/v1.0/me/calendars", {
-        headers:{Authorization:"Bearer "+token}
-    });
-    const data = await res.json();
-
-    const box = document.getElementById("calendars");
-    box.innerHTML = "";
-
-    data.value.forEach(cal => {
-        const div = document.createElement("div");
-        div.className="card";
-        div.innerHTML = "<b>"+cal.name+"</b><br>"+cal.id;
-        div.onclick = ()=>loadEvents(cal.id);
-        box.appendChild(div);
-    });
+function renderHeader(){
+  if(state.currentView==="month"){ els.rangeTitle.textContent=capitalize(formatShortMonth(state.anchorDate)); els.rangeSubtitle.textContent="Vue mensuelle du planning"; }
+  else if(state.currentView==="week"){ const start=startOfWeek(state.anchorDate); els.rangeTitle.textContent="Semaine"; els.rangeSubtitle.textContent=formatWeekLabel(start); }
+  else { els.rangeTitle.textContent=capitalize(formatLongDate(state.selectedDate)); els.rangeSubtitle.textContent="Vue détaillée de la journée"; }
+}
+function updateVisibleView(){
+  els.monthView.style.display=state.currentView==="month"?"block":"none";
+  els.weekView.style.display=state.currentView==="week"?"block":"none";
+  els.dayView.style.display=state.currentView==="day"?"block":"none";
+  document.querySelectorAll(".view-switch button").forEach(btn=>btn.classList.toggle("active", btn.dataset.view===state.currentView));
 }
 
-async function loadEvents(id){
-    const start = new Date().toISOString();
-    const end = new Date(Date.now()+1000*60*60*24*30).toISOString();
-
-    const res = await fetch(
-        `https://graph.microsoft.com/v1.0/me/calendars/${id}/calendarView?startDateTime=${start}&endDateTime=${end}`,
-        {headers:{Authorization:"Bearer "+token}}
-    );
-
-    const data = await res.json();
-
-    const box = document.getElementById("events");
-    box.innerHTML = "";
-
-    data.value.forEach(ev => {
-        const div = document.createElement("div");
-        div.className="card";
-        div.innerHTML = ev.subject + "<br>" + ev.start.dateTime;
-        box.appendChild(div);
+function renderMonthView(){
+  const dows=["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"];
+  const gridStart=startOfMonthGrid(state.anchorDate);
+  let html='<div class="month-grid-wrapper"><div class="month-grid">';
+  html += dows.map(d=>`<div class="dow">${d}</div>`).join("");
+  for(let i=0;i<42;i++){
+    const day=addDays(gridStart,i);
+    const isOutside=day.getMonth()!==state.anchorDate.getMonth();
+    const isToday=sameDay(day,new Date());
+    const isSelected=sameDay(day,state.selectedDate);
+    const count=eventsForDate(day).length;
+    html += `<div class="day-cell ${isOutside?"outside":""} ${isToday?"today":""} ${isSelected?"selected":""}" data-date="${toDateInput(day)}"><div class="day-top"><div class="day-num">${day.getDate()}</div>${count?`<div class="badge-count">${count}</div>`:""}</div></div>`;
+  }
+  html += '</div><div class="month-bars-layer" id="monthBarsLayer"></div></div>';
+  els.monthView.innerHTML=html;
+  const barLayer=document.getElementById("monthBarsLayer");
+  const firstDayCell=els.monthView.querySelector(".day-cell");
+  if(firstDayCell){
+    const gap=10, dayHeight=firstDayCell.offsetHeight+gap, dayWidth=firstDayCell.offsetWidth+gap, rowOffsetBase=44;
+    const barStacks=[[],[],[],[],[],[]];
+    getFilteredEvents().forEach(evt=>{
+      monthBarSegmentsForEvent(evt,gridStart).forEach(seg=>{
+        const rowArr=barStacks[seg.row]; let lane=0; while(rowArr[lane]!==undefined && rowArr[lane]>=seg.startOffset) lane++; rowArr[lane]=seg.endOffset+1;
+        const left=seg.startOffset*dayWidth+4, width=((seg.endOffset-seg.startOffset+1)*dayWidth)-18, top=rowOffsetBase+(seg.row*dayHeight)+4+(lane*24);
+        const cls=seg.type==="start"?"start":seg.type==="middle"?"mid":seg.type==="end"?"end":"";
+        const bar=document.createElement("div");
+        bar.className=`month-bar ${cls}`;
+        bar.style.left=`${left}px`; bar.style.width=`${Math.max(24,width)}px`; bar.style.top=`${top}px`; bar.style.background=evt.color;
+        bar.textContent=evt.title; bar.title=`${evt.title} — ${timeRangeLabel(evt)}`;
+        bar.addEventListener("click",(e)=>{ e.stopPropagation(); openEditModal(evt.id); });
+        barLayer.appendChild(bar);
+      });
     });
+  }
+  els.monthView.querySelectorAll(".day-cell").forEach(cell=>{
+    cell.addEventListener("click",()=>{ state.selectedDate=parseLocalDate(cell.dataset.date); renderSelectedPanel(); renderMonthView(); });
+    cell.addEventListener("dblclick",()=>openCreateModal(parseLocalDate(cell.dataset.date)));
+  });
 }
 
+function renderWeekView(){
+  const start=startOfWeek(state.anchorDate), days=Array.from({length:7},(_,i)=>addDays(start,i)), hours=Array.from({length:14},(_,i)=>i+8);
+  let html='<div class="week-grid"><div class="week-grid-inner">';
+  html+=`<div class="time-head">Heure</div>`;
+  html+=days.map(d=>`<div class="day-head">${["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"][(d.getDay()+6)%7]}<span class="num">${d.getDate()}</span></div>`).join("");
+  for(const hour of hours){
+    html+=`<div class="time-cell">${String(hour).padStart(2,"0")}:00</div>`;
+    for(const day of days){
+      const iso=toDateInput(day);
+      const anchorEvents=eventsForDate(day).filter(evt=>{
+        const startHour=eventStartsOnDate(evt,day)?parseHour(evt.time,8):8;
+        return hour===startHour;
+      });
+      html+=`<div class="week-slot" data-date="${iso}" data-hour="${String(hour).padStart(2,"0")}:00"><div class="slot-events">${
+        anchorEvents.map((evt,idx)=>{
+          const seg=segmentTypeForDate(evt,day);
+          const startHour=eventStartsOnDate(evt,day)?parseHour(evt.time,8):8;
+          const endHour=eventEndsOnDate(evt,day)?parseHour(evt.endTime,21):21;
+          const spanHours=Math.max(1,endHour-startHour);
+          const total=Math.max(1,anchorEvents.length);
+          const innerWidthCalc=`calc((100% - ${(total+1)*4}px) / ${total})`;
+          const leftCalc=`calc(4px + ${idx} * (${innerWidthCalc} + 4px))`;
+          return `<div class="week-event continuous ${segmentClass(seg)}" data-id="${evt.id}" style="background:${evt.color};height:calc(${spanHours} * 58px - 8px);width:${innerWidthCalc};left:${leftCalc}">
+            <div class="week-title">${escapeHtml(evt.title)}</div>
+            <div class="segment-note">${escapeHtml(to24h(evt.time))} → ${escapeHtml(to24h(evt.endTime||""))}</div>
+          </div>`;
+        }).join("")
+      }</div></div>`;
+    }
+  }
+  html+="</div></div>";
+  els.weekView.innerHTML=html;
+  els.weekView.querySelectorAll(".week-slot").forEach(slot=>{
+    slot.addEventListener("click",(e)=>{ if(e.target.closest(".week-event")) return; state.selectedDate=parseLocalDate(slot.dataset.date); renderSelectedPanel(); });
+    slot.addEventListener("dblclick",()=>openCreateModal(parseLocalDate(slot.dataset.date),slot.dataset.hour));
+  });
+  els.weekView.querySelectorAll(".week-event").forEach(item=>item.addEventListener("click",(e)=>{ e.stopPropagation(); openEditModal(item.dataset.id); }));
+}
+
+function renderDayView(){
+  const day=state.selectedDate, dayEvents=eventsForDate(day), hours=Array.from({length:14},(_,i)=>i+8);
+  let html=`<div class="day-layout"><div class="day-header-big"><div class="small">Vue jour</div><div class="big">${capitalize(formatLongDate(day))}</div></div><div class="timeline">`;
+  for(const hour of hours){
+    const label=`${String(hour).padStart(2,"0")}:00`;
+    const anchorEvents=dayEvents.filter(evt=>{
+      const startHour=eventStartsOnDate(evt,day)?parseHour(evt.time,8):8;
+      return hour===startHour;
+    });
+    html+=`<div class="timeline-row"><div class="timeline-time">${label}</div><div class="timeline-block" data-date="${toDateInput(day)}" data-hour="${label}">${
+      anchorEvents.map((evt,idx)=>{
+        const seg=segmentTypeForDate(evt,day);
+        const startHour=eventStartsOnDate(evt,day)?parseHour(evt.time,8):8;
+        const endHour=eventEndsOnDate(evt,day)?parseHour(evt.endTime,21):21;
+        const spanHours=Math.max(1,endHour-startHour);
+        const total=Math.max(1,anchorEvents.length);
+        const innerWidthCalc=`calc((100% - ${(total+1)*8}px) / ${total})`;
+        const leftCalc=`calc(8px + ${idx} * (${innerWidthCalc} + 8px))`;
+        return `<div class="timeline-card ${segmentClass(seg)}" data-id="${evt.id}" style="background:${evt.color};height:calc(${Math.max(1,spanHours)} * 74px - 10px);top:8px;width:${innerWidthCalc};left:${leftCalc};right:auto">
+          <div>${escapeHtml(evt.title)}</div>
+        </div>`;
+      }).join("") || `<div class="muted" style="padding:10px;font-size:13px">Double-clique ici pour ajouter un événement.</div>`
+    }</div></div>`;
+  }
+  html+='</div></div>';
+  els.dayView.innerHTML=html;
+  els.dayView.querySelectorAll(".timeline-block").forEach(block=>block.addEventListener("dblclick",()=>openCreateModal(parseLocalDate(block.dataset.date),block.dataset.hour)));
+  els.dayView.querySelectorAll(".timeline-card").forEach(card=>card.addEventListener("click",()=>openEditModal(card.dataset.id)));
+}
+
+function renderSelectedPanel(){
+  els.selectedDateTitle.textContent=capitalize(formatLongDate(state.selectedDate));
+  const items=eventsForDate(state.selectedDate);
+  els.selectedDateSub.textContent=items.length?`${items.length} événement${items.length>1?"s":""}`:"Aucun événement";
+  if(!items.length){ els.selectedEventsList.innerHTML=`<div class="empty">Aucun événement pour cette date.<br />Double-clique sur une case du calendrier pour en ajouter un.</div>`; return; }
+  els.selectedEventsList.innerHTML=items.map(evt=>`<div class="event-card"><div class="event-card-top"><div><div class="event-title"><span class="color-dot" style="background:${evt.color}"></span>${escapeHtml(evt.title)}</div><div class="event-meta">${escapeHtml(timeRangeLabel(evt))}${evt.location?" · "+escapeHtml(evt.location):""}</div></div></div>${normalizeEventBlocks(evt).length?`<div class="chip-wrap">${normalizeEventBlocks(evt).map(block=>`<span class="chip">${escapeHtml(block.name)} · ${escapeHtml(blockRolesSummary(block))}</span>`).join("")}</div>`:`<div class="empty">Aucun bloc ajouté à cet événement.</div>`}${evt.notes?`<div class="event-meta">${escapeHtml(evt.notes)}</div>`:""}<div class="row-actions"><button class="btn secondary small" type="button" data-edit-id="${evt.id}">Modifier</button><button class="btn danger small" type="button" data-del-id="${evt.id}">Supprimer</button></div></div>`).join("");
+  els.selectedEventsList.querySelectorAll("[data-edit-id]").forEach(btn=>btn.addEventListener("click",()=>openEditModal(btn.dataset.editId)));
+  els.selectedEventsList.querySelectorAll("[data-del-id]").forEach(btn=>btn.addEventListener("click",()=>deleteEvent(btn.dataset.delId)));
+}
+
+function renderStats(){
+  const filtered=getFilteredEvents(), roles=filtered.flatMap(evt=>normalizeEventBlocks(evt).flatMap(b=>b.roles||[]));
+  els.statEvents.textContent=String(filtered.length);
+  els.statOpenRoles.textContent=String(roles.filter(r=>!r.employeeId).length);
+  els.statAssignments.textContent=String(roles.filter(r=>!!r.employeeId).length);
+}
+function renderColorButtons(){
+  els.colorRow.innerHTML=COLORS.map(color=>`<button type="button" class="color-btn ${state.selectedColor===color?"active":""}" data-color="${color}" style="background:${color}"></button>`).join("");
+  els.colorRow.querySelectorAll(".color-btn").forEach(btn=>btn.addEventListener("click",()=>{ state.selectedColor=btn.dataset.color; renderColorButtons(); }));
+}
+function buildBlockRoleOptions(selectedRole="",selectedEmployee=""){
+  const roleOptions=[`<option value="">Choisir un poste</option>`, ...normalizeRoles(state.rolesCatalog).map(role=>`<option value="${escapeHtml(role)}" ${role===selectedRole?"selected":""}>${escapeHtml(role)}</option>`)].join("");
+  const employeeOptions=buildEmployeeOptionsForRole(selectedRole,selectedEmployee);
+  return {roleOptions,employeeOptions};
+}
+function buildEmployeeOptionsForRole(role,selectedId=""){
+  if(!role) return `<option value="">Choisir d’abord un poste</option>`;
+  const compatible=employeesForRole(role);
+  return [`<option value="" ${selectedId===""?"selected":""}>À combler</option>`, ...compatible.map(emp=>`<option value="${escapeHtml(emp.id)}" ${emp.id===selectedId?"selected":""}>${escapeHtml(emp.name)}</option>`)].join("");
+}
+function sortCurrentBlocks(){ state.currentBlocks.sort((a,b)=>compareDateTimes(a.startDate||"",a.startTime||"00:00",b.startDate||"",b.startTime||"00:00")); }
+
+function renderBlockEditor(){
+  sortCurrentBlocks();
+  if(!state.currentBlocks.length){ els.blockList.innerHTML=`<div class="empty">Aucun bloc. Ajoute par exemple Montage, Show ou Démontage.</div>`; return; }
+  els.blockList.innerHTML=state.currentBlocks.map((block,blockIdx)=>`
+    <div class="block-card">
+      <div class="block-head">
+        <button class="block-delete" data-del-block="${blockIdx}" title="Supprimer">✕</button>
+        <div class="block-title-wrap">
+          <input class="block-title-input" data-block-name="${blockIdx}" value="${escapeHtml(block.name||"Bloc")}"/>
+          <div class="block-meta">${escapeHtml(block.startDate||"")} · ${escapeHtml(to24h(block.startTime||""))} → ${escapeHtml(block.endDate||"")} · ${escapeHtml(to24h(block.endTime||""))}</div>
+        </div>
+      </div>
+      <div class="block-section">
+        <div class="block-section-title">Horaire du bloc</div>
+        <div class="block-compact-grid">
+          <div class="field"><label>Date début</label><input data-block-start-date="${blockIdx}" type="date" value="${escapeHtml(block.startDate||"")}"/></div>
+          <div class="field"><label>Heure début</label><input data-block-start-time="${blockIdx}" type="time" step="900" value="${escapeHtml(block.startTime||"09:00")}"/></div>
+          <div class="field"><label>Date fin</label><input data-block-end-date="${blockIdx}" type="date" min="${escapeHtml(block.startDate||"")}" value="${escapeHtml(block.endDate||"")}"/></div>
+          <div class="field"><label>Heure fin</label><input data-block-end-time="${blockIdx}" type="time" step="900" value="${escapeHtml(block.endTime||"17:00")}"/></div>
+        </div>
+      </div>
+      <div class="block-section">
+        <div class="block-section-title">Postes dans ce bloc</div>
+        <div class="roles-list">
+          ${(block.roles||[]).length ? (block.roles||[]).map((roleItem,roleIdx)=>{ const opts=buildBlockRoleOptions(roleItem.role||"",roleItem.employeeId||""); return `<div class="role-item-row"><div class="role-entry" style="grid-template-columns:1fr 1fr auto"><div class="field" style="margin:0"><label>Poste</label><select data-role-role="${blockIdx}:${roleIdx}">${opts.roleOptions}</select></div><div class="field" style="margin:0"><label>Employé assigné</label><select data-role-employee="${blockIdx}:${roleIdx}">${opts.employeeOptions}</select></div><div class="field" style="margin:0"><label>&nbsp;</label><button class="btn danger small" type="button" data-del-role="${blockIdx}:${roleIdx}" style="width:100%">Retirer poste</button></div></div></div>`; }).join("") : `<div class="empty">Aucun poste dans ce bloc.</div>`}
+        </div>
+      </div>
+      <div class="block-section">
+        <div class="block-section-title">Ajouter un poste au bloc</div>
+        <div class="role-entry" style="grid-template-columns:1fr 1fr auto">
+          <div class="field" style="margin:0"><label>Poste</label><select data-new-role-select="${blockIdx}">${buildBlockRoleOptions().roleOptions}</select></div>
+          <div class="field" style="margin:0"><label>Employé assigné</label><select data-new-role-employee="${blockIdx}"><option value="">Choisir d’abord un poste</option></select></div>
+          <div class="field" style="margin:0"><label>&nbsp;</label><button class="btn secondary" type="button" data-add-role="${blockIdx}" style="width:100%">Ajouter poste</button></div>
+        </div>
+      </div>
+    </div>`).join("");
+
+  els.blockList.querySelectorAll("[data-del-block]").forEach(btn=>btn.addEventListener("click",()=>{ state.currentBlocks.splice(Number(btn.dataset.delBlock),1); renderBlockEditor(); }));
+  els.blockList.querySelectorAll("[data-block-name]").forEach(input=>input.addEventListener("input",()=>{ state.currentBlocks[Number(input.dataset.blockName)].name=input.value; }));
+  els.blockList.querySelectorAll("[data-block-start-date]").forEach(input=>input.addEventListener("change",()=>{ const i=Number(input.dataset.blockStartDate), b=state.currentBlocks[i]; b.startDate=input.value; if((b.endDate||"")<(b.startDate||"")) b.endDate=b.startDate; if(compareDateTimes(b.startDate,b.startTime,b.endDate,b.endTime)>0) b.endTime=b.startTime; renderBlockEditor(); }));
+  els.blockList.querySelectorAll("[data-block-end-date]").forEach(input=>input.addEventListener("change",()=>{ const i=Number(input.dataset.blockEndDate), b=state.currentBlocks[i]; b.endDate=input.value; if((b.endDate||"")<(b.startDate||"")) b.endDate=b.startDate; if(compareDateTimes(b.startDate,b.startTime,b.endDate,b.endTime)>0) b.endTime=b.startTime; renderBlockEditor(); }));
+  els.blockList.querySelectorAll("[data-block-start-time]").forEach(input=>input.addEventListener("change",()=>{ const i=Number(input.dataset.blockStartTime), b=state.currentBlocks[i]; b.startTime=to24h(input.value); if(compareDateTimes(b.startDate,b.startTime,b.endDate,b.endTime)>0) b.endTime=b.startTime; renderBlockEditor(); }));
+  els.blockList.querySelectorAll("[data-block-end-time]").forEach(input=>input.addEventListener("change",()=>{ const i=Number(input.dataset.blockEndTime), b=state.currentBlocks[i]; b.endTime=to24h(input.value); if(compareDateTimes(b.startDate,b.startTime,b.endDate,b.endTime)>0) b.endTime=b.startTime; renderBlockEditor(); }));
+  els.blockList.querySelectorAll("[data-role-role]").forEach(select=>select.addEventListener("change",()=>{ const [b,r]=select.dataset.roleRole.split(":").map(Number); state.currentBlocks[b].roles[r]=normalizeRoleRequest({role:select.value,employeeId:""}); renderBlockEditor(); }));
+  els.blockList.querySelectorAll("[data-role-employee]").forEach(select=>select.addEventListener("change",()=>{ const [b,r]=select.dataset.roleEmployee.split(":").map(Number); const roleItem=state.currentBlocks[b].roles[r]; roleItem.employeeId=select.value; roleItem.requestStatus="draft"; roleItem.responseStatus="pending"; roleItem.sentAt=""; roleItem.respondedAt=""; }));
+  els.blockList.querySelectorAll("[data-del-role]").forEach(btn=>btn.addEventListener("click",()=>{ const [b,r]=btn.dataset.delRole.split(":").map(Number); state.currentBlocks[b].roles.splice(r,1); renderBlockEditor(); }));
+  els.blockList.querySelectorAll("[data-new-role-select]").forEach(select=>select.addEventListener("change",()=>{ const b=Number(select.dataset.newRoleSelect); const employeeSelect=els.blockList.querySelector(`[data-new-role-employee="${b}"]`); if(employeeSelect) employeeSelect.innerHTML=buildEmployeeOptionsForRole(select.value,""); }));
+  els.blockList.querySelectorAll("[data-add-role]").forEach(btn=>btn.addEventListener("click",()=>{ const b=Number(btn.dataset.addRole); const roleSelect=els.blockList.querySelector(`[data-new-role-select="${b}"]`); const empSelect=els.blockList.querySelector(`[data-new-role-employee="${b}"]`); const role=roleSelect.value; if(!role) return; state.currentBlocks[b].roles.push(normalizeRoleRequest({role,employeeId:empSelect.value||""})); renderBlockEditor(); }));
+}
+
+function openCreateModal(date=state.selectedDate,hour="09:00"){
+  state.editingId=null; state.selectedColor=COLORS[0]; state.currentBlocks=[]; els.modalTitle.textContent="Nouvel événement";
+  els.evtTitle.value=""; els.evtStartDate.value=toDateInput(date); els.evtEndDate.value=toDateInput(date); els.evtTime.value=hour; els.evtEndTime.value=suggestedEnd(hour); els.evtLocation.value=""; els.evtNotes.value="";
+  els.btnDeleteEvent.style.display="none"; renderColorButtons(); renderBlockEditor(); showModal(); els.evtTitle.focus();
+}
+function openEditModal(id){
+  const evt=state.events.find(x=>x.id===id); if(!evt) return;
+  state.editingId=id; state.selectedColor=evt.color||COLORS[0];
+  state.currentBlocks=normalizeEventBlocks(evt).map(b=>({id:b.id||cryptoRandomId(),name:b.name||"",startDate:b.startDate||evt.startDate,endDate:b.endDate||evt.endDate,startTime:b.startTime||evt.time||"09:00",endTime:b.endTime||evt.endTime||"17:00",roles:Array.isArray(b.roles)?b.roles.map(r=>normalizeRoleRequest(r)):[]}));
+  els.modalTitle.textContent="Modifier l’événement"; els.evtTitle.value=evt.title||""; els.evtStartDate.value=evt.startDate||toDateInput(state.selectedDate); els.evtEndDate.value=evt.endDate||toDateInput(state.selectedDate); els.evtTime.value=evt.time||"09:00"; els.evtEndTime.value=evt.endTime||"12:00"; els.evtLocation.value=evt.location||""; els.evtNotes.value=evt.notes||"";
+  els.btnDeleteEvent.style.display="inline-flex"; renderColorButtons(); renderBlockEditor(); showModal();
+}
+function showModal(){ els.modalWrap.style.display="flex"; }
+function closeModal(){ els.modalWrap.style.display="none"; }
+function suggestedEnd(time){ const [h,m]=String(time).split(":").map(Number); const d=new Date(); d.setHours(h,m,0,0); d.setHours(d.getHours()+3); return `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`; }
+function saveEventFromModal(){
+  const cleanBlocks=state.currentBlocks.map(block=>({id:block.id||cryptoRandomId(),name:String(block.name||"").trim()||"Bloc",startDate:block.startDate,endDate:block.endDate,startTime:to24h(block.startTime||"09:00"),endTime:to24h(block.endTime||"17:00"),roles:(block.roles||[]).map(item=>normalizeRoleRequest({role:String(item.role||"").trim(),employeeId:String(item.employeeId||""),requestStatus:item.requestStatus,responseStatus:item.responseStatus,sentAt:item.sentAt,respondedAt:item.respondedAt,lastChannel:item.lastChannel,lastMessage:item.lastMessage})).filter(item=>item.role)})).filter(block=>block.startDate&&block.endDate);
+  if(!els.evtTitle.value.trim()){ alert("Ajoute un titre à l’événement."); els.evtTitle.focus(); return; }
+  if(!els.evtStartDate.value||!els.evtEndDate.value){ alert("Choisis les dates de début et de fin."); return; }
+  if(els.evtEndDate.value<els.evtStartDate.value){ alert("La date de fin doit être égale ou après la date de début."); return; }
+  for(const block of cleanBlocks){ if(block.endDate<block.startDate){ alert(`Le bloc "${block.name}" a une date de fin avant sa date de début.`); return; } if(compareDateTimes(block.startDate,block.startTime,block.endDate,block.endTime)>0){ alert(`Le bloc "${block.name}" se termine avant de commencer.`); return; } }
+  let globalStartDate=els.evtStartDate.value, globalEndDate=els.evtEndDate.value, globalStartTime=to24h(els.evtTime.value), globalEndTime=to24h(els.evtEndTime.value);
+  if(cleanBlocks.length){
+    cleanBlocks.sort((a,b)=>(a.startDate+" "+a.startTime).localeCompare(b.startDate+" "+b.startTime));
+    globalStartDate=cleanBlocks[0].startDate; globalStartTime=cleanBlocks[0].startTime;
+    const sortedEnd=[...cleanBlocks].sort((a,b)=>(b.endDate+" "+b.endTime).localeCompare(a.endDate+" "+a.endTime));
+    globalEndDate=sortedEnd[0].endDate; globalEndTime=sortedEnd[0].endTime;
+  }
+  const payload={title:els.evtTitle.value.trim(),startDate:globalStartDate,endDate:globalEndDate,time:globalStartTime,endTime:globalEndTime,color:state.selectedColor,location:els.evtLocation.value.trim(),notes:els.evtNotes.value.trim(),blocks:cleanBlocks};
+  if(state.editingId){ const idx=state.events.findIndex(x=>x.id===state.editingId); if(idx>=0) state.events[idx]={...state.events[idx],...payload}; }
+  else state.events.push({id:cryptoRandomId(),...payload});
+  saveEvents(); state.selectedDate=parseLocalDate(payload.startDate); state.anchorDate=parseLocalDate(payload.startDate); closeModal(); renderAll();
+}
+function deleteEvent(id){ const evt=state.events.find(x=>x.id===id); if(!evt) return; if(!confirm(`Supprimer "${evt.title}" ?`)) return; state.events=state.events.filter(x=>x.id!==id); saveEvents(); if(state.editingId===id) closeModal(); renderAll(); }
+
+function renderDrawer(){ els.rolesDrawer.classList.toggle("open", !!state.rolesDrawerOpen); els.btnToggleRolesAdmin.classList.toggle("active", !!state.rolesDrawerOpen); }
+function buildTeamRoleFilterOptions(){
+  const used = new Set(); state.employees.forEach(emp=>normalizeRoles(emp.roles||[]).forEach(role=>used.add(role)));
+  const all=normalizeRoles([...state.rolesCatalog, ...used]);
+  els.teamRoleFilter.innerHTML=[`<option value="all">Tous les postes</option>`, ...all.map(role=>`<option value="${escapeHtml(role)}">${escapeHtml(role)}</option>`)].join("");
+  els.empRoleSelect.innerHTML=[`<option value="">Choisir un poste</option>`, ...all.map(role=>`<option value="${escapeHtml(role)}">${escapeHtml(role)}</option>`)].join("");
+}
+function renderGlobalRoles(){
+  const roles=normalizeRoles(state.rolesCatalog);
+  els.roleCatalogList.innerHTML=roles.length ? roles.map((role,idx)=>`<div class="roles-manager-item"><strong>${escapeHtml(role)}</strong><button type="button" class="btn secondary small" data-global-role-edit="${idx}">Modifier</button><button type="button" class="btn danger small" data-global-role-del="${idx}">Supprimer</button></div>`).join("") : `<div class="empty">Aucun poste dans la liste pour l’instant.</div>`;
+  els.roleCatalogList.querySelectorAll("[data-global-role-del]").forEach(btn=>btn.addEventListener("click",()=>{ const idx=Number(btn.dataset.globalRoleDel), role=roles[idx]; if(!confirm(`Retirer "${role}" de la liste de postes ?`)) return; state.rolesCatalog=roles.filter((_,i)=>i!==idx); saveRolesCatalog(); buildTeamRoleFilterOptions(); buildCalendarRoleFilterOptions(); renderGlobalRoles(); renderAll(); }));
+  els.roleCatalogList.querySelectorAll("[data-global-role-edit]").forEach(btn=>btn.addEventListener("click",()=>{ const idx=Number(btn.dataset.globalRoleEdit), role=roles[idx], next=prompt("Modifier le nom du poste :", role); if(!next) return; const clean=next.trim(); if(!clean) return; state.rolesCatalog=normalizeRoles(roles.map((r,i)=>i===idx?clean:r)); state.employees=state.employees.map(emp=>({...emp, roles:normalizeRoles((emp.roles||[]).map(r=>r===role?clean:r))})); saveEmployees(); saveRolesCatalog(); renderAll(); }));
+}
+function addGlobalRole(){ const value=els.newCatalogRole.value.trim(); if(!value) return; state.rolesCatalog=normalizeRoles([...state.rolesCatalog, value]); saveRolesCatalog(); els.newCatalogRole.value=""; renderAll(); }
+function getFilteredEmployees(){
+  const q=els.teamSearchInput.value.trim().toLowerCase(), roleQ=els.teamRoleFilter.value, contactQ=els.teamContactFilter.value;
+  return [...state.employees].filter(emp=>{ const roles=normalizeRoles(emp.roles||[]); const hay=[emp.name,emp.email,emp.phone,emp.notes,...roles].join(" ").toLowerCase(); if(q && !hay.includes(q)) return false; if(roleQ!=="all"&&!roles.includes(roleQ)) return false; if(contactQ!=="all"&&(emp.contactPref||"none")!==contactQ) return false; return true; }).sort((a,b)=>(a.name||"").localeCompare((b.name||""),"fr-CA"));
+}
+function renderTeamEmployees(){
+  const items=getFilteredEmployees();
+  if(!items.length){ els.teamEmployeeList.innerHTML=`<div class="empty">Aucun employé trouvé avec ces filtres.</div>`; return; }
+  els.teamEmployeeList.innerHTML=items.map(emp=>{ const roles=normalizeRoles(emp.roles||[]); return `<div class="employee-row"><div class="name-block"><div class="name">${escapeHtml(emp.name)}</div><div class="meta">${emp.email?escapeHtml(emp.email):"Aucun courriel"}<br/>${emp.phone?escapeHtml(emp.phone):"Aucun téléphone"}</div></div><div><div class="chip-wrap">${roles.length?roles.map(role=>`<span class="chip role">${escapeHtml(role)}</span>`).join(""):`<span class="meta">Aucun poste</span>`}</div></div><div><div class="chip-wrap"><span class="chip contact">${escapeHtml(contactLabel(emp.contactPref||"none"))}</span></div>${emp.notes?`<div class="meta" style="margin-top:8px">${escapeHtml(emp.notes)}</div>`:""}</div><div class="row-actions"><button class="btn secondary small" type="button" data-edit-employee="${emp.id}">Modifier</button><button class="btn danger small" type="button" data-delete-employee="${emp.id}">Supprimer</button></div></div>`; }).join("");
+  els.teamEmployeeList.querySelectorAll("[data-edit-employee]").forEach(btn=>btn.addEventListener("click",()=>openEmployeeModal(btn.dataset.editEmployee)));
+  els.teamEmployeeList.querySelectorAll("[data-delete-employee]").forEach(btn=>btn.addEventListener("click",()=>deleteEmployee(btn.dataset.deleteEmployee)));
+}
+function renderCurrentEmployeeRoles(){
+  const roles=normalizeRoles(state.currentEmployeeRoles);
+  els.empRoleList.innerHTML=roles.length ? roles.map((role,idx)=>`<span class="team-role-chip">${escapeHtml(role)} <button type="button" data-del-emp-role="${idx}">✕</button></span>`).join("") : `<div class="empty">Aucun poste pour l’instant.</div>`;
+  els.empRoleList.querySelectorAll("[data-del-emp-role]").forEach(btn=>btn.addEventListener("click",()=>{ roles.splice(Number(btn.dataset.delEmpRole),1); state.currentEmployeeRoles=[...roles]; renderCurrentEmployeeRoles(); }));
+}
+function showTeamModal(){ els.teamModalWrap.style.display="flex"; }
+function closeTeamModal(){ els.teamModalWrap.style.display="none"; }
+function openEmployeeModal(id=null){
+  state.editingEmployeeId=id;
+  if(id){
+    const emp=state.employees.find(x=>x.id===id); if(!emp) return;
+    els.teamModalTitle.textContent="Modifier l’employé"; els.empName.value=emp.name||""; els.empContactPref.value=emp.contactPref||"sms"; els.empEmail.value=emp.email||""; els.empPhone.value=emp.phone||""; els.empNotes.value=emp.notes||""; state.currentEmployeeRoles=normalizeRoles(emp.roles||[]); els.btnDeleteEmployee.style.display="inline-flex";
+  } else {
+    els.teamModalTitle.textContent="Nouvel employé"; els.empName.value=""; els.empContactPref.value="sms"; els.empEmail.value=""; els.empPhone.value=""; els.empNotes.value=""; state.currentEmployeeRoles=[]; els.btnDeleteEmployee.style.display="none";
+  }
+  buildTeamRoleFilterOptions(); renderCurrentEmployeeRoles(); showTeamModal();
+}
+function saveEmployee(){
+  const payload={name:els.empName.value.trim(),email:els.empEmail.value.trim(),phone:els.empPhone.value.trim(),contactPref:els.empContactPref.value,notes:els.empNotes.value.trim(),roles:normalizeRoles(state.currentEmployeeRoles)};
+  if(!payload.name){ alert("Ajoute un nom à l’employé."); els.empName.focus(); return; }
+  if(!payload.email && !payload.phone){ alert("Ajoute au moins un courriel ou un numéro de téléphone."); return; }
+  state.rolesCatalog=normalizeRoles([...state.rolesCatalog, ...payload.roles]); saveRolesCatalog();
+  if(state.editingEmployeeId){ const idx=state.employees.findIndex(x=>x.id===state.editingEmployeeId); if(idx>=0) state.employees[idx]={...state.employees[idx],...payload}; }
+  else state.employees.push({id:cryptoRandomId(), ...payload});
+  saveEmployees(); closeTeamModal(); renderAll();
+}
+function deleteEmployee(id){
+  const emp=state.employees.find(x=>x.id===id); if(!emp) return; if(!confirm(`Supprimer "${emp.name}" ?`)) return;
+  state.employees=state.employees.filter(x=>x.id!==id);
+  state.events=state.events.map(evt=>({...evt, blocks:normalizeEventBlocks(evt).map(block=>({...block, roles:(block.roles||[]).map(r=>r.employeeId===id?{...r, employeeId:""}:r)}))}));
+  saveEmployees(); saveEvents(); if(state.editingEmployeeId===id) closeTeamModal(); renderAll();
+}
+function addEmployeeRoleToDraft(){ const role=els.empRoleSelect.value; if(!role) return; state.currentEmployeeRoles=normalizeRoles([...state.currentEmployeeRoles, role]); renderCurrentEmployeeRoles(); }
+
+
+function renderAvailability(){
+  const items=allAssignments().sort((a,b)=>`${a.block.startDate} ${a.block.startTime}`.localeCompare(`${b.block.startDate} ${b.block.startTime}`));
+  const confirmed=items.filter(x=>x.roleItem.responseStatus==="available").length;
+  const pending=items.filter(x=>x.roleItem.requestStatus==="sent" || x.roleItem.responseStatus==="maybe" || x.roleItem.requestStatus==="draft").length;
+  const problems=items.filter(x=>x.roleItem.responseStatus==="unavailable" || findEmployeeConflicts(x.roleItem.employeeId,x.evtId,x.blockId,x.roleIdx).length).length;
+  els.availStatConfirmed.textContent=String(confirmed);
+  els.availStatPending.textContent=String(pending);
+  els.availStatProblems.textContent=String(problems);
+  if(!items.length){ els.availabilitySyncMsg.innerHTML = state.syncBanner ? `<div class="sync-banner">${escapeHtml(state.syncBanner)}</div>` : ''; els.availabilityList.innerHTML=`<div class="empty">Aucun poste assigné pour l'instant. Ajoute des postes dans un événement pour commencer les demandes.</div>`; els.requestPreview.innerHTML=`<div class="empty">Choisis une assignation pour voir l'aperçu employé.</div>`; return; }
+  if(!state.activeRequestKey) state.activeRequestKey=items[0].key;
+  els.availabilityList.innerHTML=items.map(item=>{
+    const emp=state.employees.find(x=>x.id===item.roleItem.employeeId);
+    const status=roleVisualState(item.roleItem);
+    const conflicts=findEmployeeConflicts(item.roleItem.employeeId,item.evtId,item.blockId,item.roleIdx);
+    const suggestions=replacementSuggestions(item.key);
+    const timing=getRoleTiming(item.evt,item.block);
+    return `<div class="assignment-card">
+      <div class="assignment-head">
+        <div>
+          <div class="assignment-title">${escapeHtml(item.roleItem.role||"Poste")}${emp?` — ${escapeHtml(emp.name)}`:" — à combler"}</div>
+          <div class="assignment-sub">${escapeHtml(item.evt.title)} · ${escapeHtml(item.block.name)} · ${escapeHtml(timing.startDate)} ${escapeHtml(timing.startTime)} → ${escapeHtml(timing.endDate)} ${escapeHtml(timing.endTime)}${item.evt.location?` · ${escapeHtml(item.evt.location)}`:""}</div>
+        </div>
+        <div class="chip-wrap">
+          <span class="status-pill ${status.cls}">${escapeHtml(status.label)}</span>
+          ${conflicts.length?`<span class="status-pill red">Conflit</span>`:""}
+        </div>
+      </div>
+      ${conflicts.length?`<div class="conflict-box">${escapeHtml(emp?.name||"Cette personne")} est déjà booké(e) sur ${conflicts.map(c=>`${c.evt.title} / ${c.block.name}`).join(' · ')}.</div>`:`<div class="good-box">Aucun conflit détecté pour cette assignation.</div>`}
+      <div class="assignment-actions">
+        <button class="btn secondary small" type="button" data-preview-request="${item.key}">Prévisualiser</button>
+        <button class="btn secondary small" type="button" data-open-web="${item.key}">Ouvrir lien web</button>
+        <button class="btn secondary small" type="button" data-copy-web="${item.key}">Copier lien web</button>
+        <button class="btn secondary small" type="button" data-send-email="${item.key}">Envoyer courriel</button>
+        <button class="btn secondary small" type="button" data-send-sms="${item.key}">Envoyer SMS</button>
+        <button class="btn small ${item.roleItem.responseStatus==='available'?'primary':'secondary'}" type="button" data-answer-yes="${item.key}">Confirmé</button>
+        <button class="btn small ${item.roleItem.responseStatus==='maybe'?'primary':'secondary'}" type="button" data-answer-maybe="${item.key}">Peut-être</button>
+        <button class="btn small ${item.roleItem.responseStatus==='unavailable'?'danger':'secondary'}" type="button" data-answer-no="${item.key}">Non dispo</button>
+      </div>
+      ${suggestions.length?`<div><div class="small-note" style="margin-bottom:8px">Remplacements suggérés</div><div class="assignment-suggestions">${suggestions.map(s=>`<button class="btn secondary small" type="button" data-replace="${item.key}::${s.emp.id}">${escapeHtml(s.emp.name)}${s.conflicts.length?' · conflit':''}</button>`).join('')}</div></div>`:`<div class="small-note">Aucun remplaçant compatible trouvé pour le moment.</div>`}
+    </div>`;
+  }).join('');
+  els.availabilityList.querySelectorAll('[data-preview-request]').forEach(btn=>btn.addEventListener('click',()=>{ state.activeRequestKey=btn.dataset.previewRequest; renderAvailability(); }));
+  els.availabilityList.querySelectorAll('[data-open-web]').forEach(btn=>btn.addEventListener('click',()=>{ window.open(buildPortalUrl(btn.dataset.openWeb),'_blank'); }));
+  els.availabilityList.querySelectorAll('[data-copy-web]').forEach(btn=>btn.addEventListener('click',()=>copyText(buildPortalUrl(btn.dataset.copyWeb))));
+  els.availabilityList.querySelectorAll('[data-send-email]').forEach(btn=>btn.addEventListener('click',()=>openRequestChannel(btn.dataset.sendEmail,'email')));
+  els.availabilityList.querySelectorAll('[data-send-sms]').forEach(btn=>btn.addEventListener('click',()=>openRequestChannel(btn.dataset.sendSms,'sms')));
+  els.availabilityList.querySelectorAll('[data-answer-yes]').forEach(btn=>btn.addEventListener('click',()=>setAssignmentResponse(btn.dataset.answerYes,'available')));
+  els.availabilityList.querySelectorAll('[data-answer-maybe]').forEach(btn=>btn.addEventListener('click',()=>setAssignmentResponse(btn.dataset.answerMaybe,'maybe')));
+  els.availabilityList.querySelectorAll('[data-answer-no]').forEach(btn=>btn.addEventListener('click',()=>setAssignmentResponse(btn.dataset.answerNo,'unavailable')));
+  els.availabilityList.querySelectorAll('[data-replace]').forEach(btn=>btn.addEventListener('click',()=>{ const [key,empId]=btn.dataset.replace.split('::'); applyReplacement(key,empId); }));
+
+  const active=getAssignmentByKey(state.activeRequestKey) || items[0];
+  if(active) state.activeRequestKey=active.key;
+  if(!active){ els.requestPreview.innerHTML=`<div class="empty">Choisis une assignation pour voir l'aperçu employé.</div>`; return; }
+  const emp=state.employees.find(x=>x.id===active.roleItem.employeeId);
+  const timing=getRoleTiming(active.evt,active.block);
+  els.requestPreview.innerHTML=`<div class="preview-card">
+    <div class="status-pill ${roleVisualState(active.roleItem).cls}" style="width:max-content">${escapeHtml(roleVisualState(active.roleItem).label)}</div>
+    <h4 class="preview-title">Demande de travail</h4>
+    <div class="preview-meta">Bonjour ${escapeHtml(emp?.name||'travailleur')},<br><br>On aimerait te booker sur <strong>${escapeHtml(active.evt.title)}</strong> pour le bloc <strong>${escapeHtml(active.block.name)}</strong> au poste de <strong>${escapeHtml(active.roleItem.role)}</strong>.<br><br>${escapeHtml(timing.startDate)} ${escapeHtml(timing.startTime)} → ${escapeHtml(timing.endDate)} ${escapeHtml(timing.endTime)}<br>${active.evt.location?escapeHtml(active.evt.location):'Lieu à confirmer'}</div>
+    <div class="preview-actions">
+      <button class="btn primary" type="button" id="previewAccept">Je suis disponible</button>
+      <button class="btn secondary" type="button" id="previewMaybe">Peut-être</button>
+      <button class="btn danger" type="button" id="previewDecline">Je ne suis pas disponible</button>
+      <button class="btn secondary" type="button" id="previewOpenLink">Ouvrir vrai lien web</button>
+      <button class="btn secondary" type="button" id="previewCopyLink">Copier lien web</button>
+    </div>
+    <div class="small-note">Tu peux maintenant tester un vrai lien web employé. Sans serveur, la synchronisation automatique complète reste limitée à la même instance ou via le lien de retour scheduler.</div>
+  </div>`;
+  document.getElementById('previewAccept')?.addEventListener('click',()=>setAssignmentResponse(active.key,'available'));
+  document.getElementById('previewMaybe')?.addEventListener('click',()=>setAssignmentResponse(active.key,'maybe'));
+  document.getElementById('previewDecline')?.addEventListener('click',()=>setAssignmentResponse(active.key,'unavailable'));
+  document.getElementById('previewOpenLink')?.addEventListener('click',()=>window.open(buildPortalUrl(active.key),'_blank'));
+  document.getElementById('previewCopyLink')?.addEventListener('click',()=>copyText(buildPortalUrl(active.key)));
+  els.availabilitySyncMsg.innerHTML = state.syncBanner ? `<div class="sync-banner">${escapeHtml(state.syncBanner)}</div>` : '';
+}
+function renderSettings(){
+  els.settingDefaultChannel.value=state.settings.defaultChannel||'email';
+  els.settingConflictMode.value=state.settings.conflictMode||'warn';
+  els.settingCompanyName.value=state.settings.companyName||'Crew Scheduler';
+}
+
+function renderCalendar(){
+  buildCalendarRoleFilterOptions();
+  buildCalendarEmployeeFilterOptions();
+  renderHeader();
+  updateVisibleView();
+  if(state.currentView==="month") renderMonthView();
+  else if(state.currentView==="week") renderWeekView();
+  else renderDayView();
+  renderSelectedPanel();
+  renderStats();
+}
+function renderTeam(){ buildTeamRoleFilterOptions(); renderDrawer(); renderGlobalRoles(); renderTeamEmployees(); }
+function renderAll(){ renderTabs(); renderCalendar(); renderTeam(); renderAvailability(); renderSettings(); }
+
+function changeAnchor(delta){ if(state.currentView==="month"){ state.anchorDate=new Date(state.anchorDate.getFullYear(),state.anchorDate.getMonth()+delta,1); } else if(state.currentView==="week"){ state.anchorDate=addDays(state.anchorDate,7*delta); state.selectedDate=addDays(state.selectedDate,7*delta); } else { state.anchorDate=addDays(state.anchorDate,delta); state.selectedDate=addDays(state.selectedDate,delta); } renderCalendar(); }
+function goToday(){ state.anchorDate=startOfDay(new Date()); state.selectedDate=startOfDay(new Date()); renderCalendar(); }
+
+function bind(){
+  document.querySelectorAll('.nav button[data-tab]').forEach(btn=>btn.addEventListener('click',()=>{ const tab=btn.dataset.tab; if(["calendar","team","availability","settings"].includes(tab)){ state.activeTab=tab; renderAll(); } }));
+  document.getElementById("btnPrev").addEventListener("click",()=>changeAnchor(-1));
+  document.getElementById("btnNext").addEventListener("click",()=>changeAnchor(1));
+  document.getElementById("btnToday").addEventListener("click",goToday);
+  document.getElementById("btnAddTop").addEventListener("click",()=>openCreateModal(state.selectedDate));
+  document.querySelectorAll(".view-switch button").forEach(btn=>btn.addEventListener("click",()=>{ state.currentView=btn.dataset.view; if(state.currentView==="day") state.anchorDate=startOfDay(state.selectedDate); renderCalendar(); }));
+  els.searchInput.addEventListener("input",renderCalendar);
+  els.roleFilter.addEventListener("change",renderCalendar);
+  els.employeeFilter.addEventListener("change",renderCalendar);
+  document.getElementById("btnClearFilters").addEventListener("click",()=>{ els.searchInput.value=""; els.roleFilter.value="all"; els.employeeFilter.value="all"; renderCalendar(); });
+  document.getElementById("btnCloseModal").addEventListener("click",closeModal);
+  document.getElementById("btnCancelModal").addEventListener("click",closeModal);
+  document.getElementById("btnSaveEvent").addEventListener("click",saveEventFromModal);
+  els.btnDeleteEvent.addEventListener("click",()=>{ if(state.editingId) deleteEvent(state.editingId); });
+  els.evtTime.addEventListener("change",()=>{ if(!state.editingId) els.evtEndTime.value=suggestedEnd(els.evtTime.value); });
+  els.evtStartDate.addEventListener("change",()=>{ if(!state.editingId||!els.evtEndDate.value||els.evtEndDate.value<els.evtStartDate.value) els.evtEndDate.value=els.evtStartDate.value; });
+  document.getElementById("btnAddBlock").addEventListener("click",()=>{ const name=(els.newBlockName.value||"").trim()||"Bloc"; state.currentBlocks.push({id:cryptoRandomId(),name,startDate:els.evtStartDate.value||toDateInput(state.selectedDate),endDate:els.evtEndDate.value||els.evtStartDate.value||toDateInput(state.selectedDate),startTime:to24h(els.evtTime.value||"09:00"),endTime:to24h(els.evtEndTime.value||"17:00"),roles:[]}); els.newBlockName.value=""; renderBlockEditor(); });
+  els.modalWrap.addEventListener("click",(e)=>{ if(e.target===els.modalWrap) closeModal(); });
+
+  document.getElementById("btnRefreshAvailability")?.addEventListener("click",renderAvailability);
+  document.getElementById("btnSaveSettings")?.addEventListener("click",()=>{ state.settings.defaultChannel=els.settingDefaultChannel.value; state.settings.conflictMode=els.settingConflictMode.value; state.settings.companyName=els.settingCompanyName.value.trim()||"Crew Scheduler"; saveSettings(); els.settingsSavedMsg.textContent="Paramètres enregistrés."; renderAll(); });
+  document.getElementById("btnAddEmployeeTop").addEventListener("click",()=>openEmployeeModal());
+  document.getElementById("btnToggleRolesAdmin").addEventListener("click",()=>{ state.rolesDrawerOpen=!state.rolesDrawerOpen; renderDrawer(); });
+  document.getElementById("btnCloseRolesAdmin").addEventListener("click",()=>{ state.rolesDrawerOpen=false; renderDrawer(); });
+  document.getElementById("btnAddCatalogRole").addEventListener("click",addGlobalRole);
+  document.getElementById("btnCloseTeamModal").addEventListener("click",closeTeamModal);
+  document.getElementById("btnCancelTeamModal").addEventListener("click",closeTeamModal);
+  document.getElementById("btnSaveEmployee").addEventListener("click",saveEmployee);
+  els.btnDeleteEmployee.addEventListener("click",()=>{ if(state.editingEmployeeId) deleteEmployee(state.editingEmployeeId); });
+  document.getElementById("btnAddEmpRole").addEventListener("click",addEmployeeRoleToDraft);
+  els.teamSearchInput.addEventListener("input",renderTeam);
+  els.teamRoleFilter.addEventListener("change",renderTeam);
+  els.teamContactFilter.addEventListener("change",renderTeam);
+  document.getElementById("btnClearTeamFilters").addEventListener("click",()=>{ els.teamSearchInput.value=""; els.teamRoleFilter.value="all"; els.teamContactFilter.value="all"; renderTeam(); });
+  els.newCatalogRole.addEventListener("keydown",(e)=>{ if(e.key==="Enter"){ e.preventDefault(); addGlobalRole(); } });
+  els.teamModalWrap.addEventListener("click",(e)=>{ if(e.target===els.teamModalWrap) closeTeamModal(); });
+
+  window.addEventListener("keydown",(e)=>{ if(e.key==="Escape"){ if(els.modalWrap.style.display==="flex") closeModal(); if(els.teamModalWrap.style.display==="flex") closeTeamModal(); } });
+}
+
+window.addEventListener("resize",()=>{ if(state.activeTab==="calendar" && state.currentView==="month") renderMonthView(); });
+
+handleSyncResponseFromUrl();
+if(!renderPortalMode()){
+  bind();
+  renderAll();
+}
 </script>
 </body>
 </html>
