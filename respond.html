@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Réponse disponibilité</title>
+  <style>
+    body {
+      font-family: Arial;
+      text-align: center;
+      padding: 40px;
+    }
+    button {
+      display: block;
+      margin: 10px auto;
+      padding: 15px;
+      width: 200px;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .yes { background: #22c55e; color: white; }
+    .maybe { background: #f59e0b; color: white; }
+    .no { background: #ef4444; color: white; }
+  </style>
+</head>
+
+<body>
+
+<h2>Es-tu disponible ?</h2>
+
+<button class="yes" onclick="respond('available')">✅ Disponible</button>
+<button class="maybe" onclick="respond('maybe')">🟡 Peut-être</button>
+<button class="no" onclick="respond('unavailable')">❌ Non disponible</button>
+
+<p id="status"></p>
+
+<script>
+const token = new URLSearchParams(window.location.search).get("token");
+
+async function respond(status){
+  const res = await fetch(
+    "https://yxkdyohscpsmeplbkyqo.supabase.co/rest/v1/assignments?token=eq." + token,
+    {
+      method: "PATCH",
+      headers: {
+        "apikey": "TA_ANON_KEY",
+        "Authorization": "Bearer TA_ANON_KEY",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        response_status: status
+      })
+    }
+  );
+
+  if(res.ok){
+    document.getElementById("status").innerText = "Réponse envoyée ✅";
+  } else {
+    document.getElementById("status").innerText = "Erreur ❌";
+  }
+}
+</script>
+
+</body>
+</html>
