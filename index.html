@@ -425,7 +425,7 @@ button{cursor:pointer}
             <p>Envoie une demande de travail par courriel ou SMS, suis les réponses, vois les conflits automatiquement et propose un remplacement.</p>
           </div>
           <div class="hero-actions">
-            <button class="btn primary" id="btnRefreshAvailability" type="button">Actualiser</button>
+            <button class="btn primary" id="btnRefreshAvailability" type="button">Synchroniser réponses</button>
           </div>
         </div>
         <div class="status-row">
@@ -440,6 +440,7 @@ button{cursor:pointer}
         <div class="card">
           <div class="card-head"><div><h3>Postes à confirmer</h3><div class="sub">Chaque assignation devient une demande individuelle à envoyer au travailleur.</div></div></div>
           <div class="card-body">
+            <div id="availabilitySyncMsg"></div>
             <div class="assignment-list" id="availabilityList"></div>
           </div>
         </div>
@@ -570,6 +571,12 @@ const EMPLOYEES_KEY="crewSchedulerEmployeesV5";
 const ROLES_KEY="crewSchedulerRolesV2";
 const SETTINGS_KEY="crewSchedulerSettingsV1";
 const COLORS=["#2563eb","#7c3aed","#059669","#d97706","#dc2626","#0f766e","#ea580c","#475569"];
+const APP_CONFIG={
+  supabaseUrl:"https://yxkdyohscpsmeplbkyqo.supabase.co",
+  anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4a2R5b2hzY3BzbWVwbGJreXFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3MTY1NDYsImV4cCI6MjA5MjI5MjU0Nn0.Xx8KjZFqqWnTvJczYqPRINXeX0fp7aq7wRvG30ZF6pE",
+  sendRequestUrl:"https://yxkdyohscpsmeplbkyqo.supabase.co/functions/v1/rapid-processor",
+  githubBaseUrl:"https://gedlp.github.io/crew-scheduler"
+};
 
 const state={
   activeTab:"calendar",
@@ -642,6 +649,7 @@ const els={
   empRoleSelect:document.getElementById("empRoleSelect"),
   empRoleList:document.getElementById("empRoleList"),
   btnDeleteEmployee:document.getElementById("btnDeleteEmployee"),
+  availabilitySyncMsg:document.getElementById("availabilitySyncMsg"),
   availabilityList:document.getElementById("availabilityList"),
   availStatConfirmed:document.getElementById("availStatConfirmed"),
   availStatPending:document.getElementById("availStatPending"),
@@ -657,7 +665,7 @@ function defaultSettings(){ return {defaultChannel:"email",conflictMode:"warn",c
 function loadSettings(){ try{ const raw=JSON.parse(localStorage.getItem(SETTINGS_KEY)||"null"); return {...defaultSettings(), ...(raw||{})}; }catch{return defaultSettings();} }
 function saveSettings(){ localStorage.setItem(SETTINGS_KEY, JSON.stringify(state.settings)); }
 function normalizeRoleRequest(item){
-  return {role:String(item?.role||""),employeeId:String(item?.employeeId||""),requestStatus:String(item?.requestStatus||"draft"),responseStatus:String(item?.responseStatus||"pending"),sentAt:String(item?.sentAt||""),respondedAt:String(item?.respondedAt||""),lastChannel:String(item?.lastChannel||""),lastMessage:String(item?.lastMessage||"")};
+  return {role:String(item?.role||""),employeeId:String(item?.employeeId||""),requestStatus:String(item?.requestStatus||"draft"),responseStatus:String(item?.responseStatus||"pending"),sentAt:String(item?.sentAt||""),respondedAt:String(item?.respondedAt||""),lastChannel:String(item?.lastChannel||""),lastMessage:String(item?.lastMessage||""),requestToken:String(item?.requestToken||""),backendRequestId:String(item?.backendRequestId||"")};
 }
 function normalizeLoadedEvent(evt){
   const blocks=normalizeEventBlocks(evt).map(block=>({
@@ -754,6 +762,7 @@ function roleVisualState(item){
   return {label:"Non envoyé", cls:"gray"};
 }
 function currentAppBaseUrl(){ return `${window.location.origin}${window.location.pathname}`; }
+function currentPublicRespondUrl(){ return `${APP_CONFIG.githubBaseUrl.replace(/\/$/, "")}/respond.html`; }
 function encodePortalPayload(obj){ try{return btoa(unescape(encodeURIComponent(JSON.stringify(obj))));}catch(e){return "";} }
 function decodePortalPayload(str){ try{return JSON.parse(decodeURIComponent(escape(atob(str))));}catch(e){return null;} }
 function portalPayloadFromItem(item){
@@ -846,11 +855,16 @@ function renderPortalMode(){
   if(response && key){ applyResponseToAssignment(key,response); }
   return true;
 }
+function refinedRespondLink(item){
+  const token=item?.roleItem?.requestToken||"";
+  if(token) return `${currentPublicRespondUrl()}?token=${encodeURIComponent(token)}`;
+  return buildPortalUrl(item.key);
+}
 function buildRequestMessage(item){
   const emp=state.employees.find(x=>x.id===item.roleItem.employeeId);
   const timing=getRoleTiming(item.evt,item.block);
   const company=state.settings.companyName||"Crew Scheduler";
-  const webLink=buildPortalUrl(item.key);
+  const webLink=refinedRespondLink(item);
   const subject=`Demande de travail — ${item.evt.title}`;
   const body=`Bonjour ${emp?.name||""},
 
@@ -872,6 +886,95 @@ Réponses possibles: Disponible / Peut-être / Non disponible
 
 Merci!`;
   return {subject,body,webLink};
+}
+
+async function sendRealEmailRequest(key){
+  const item=getAssignmentByKey(key); if(!item||!item.roleItem.employeeId) return;
+  const ref=getRoleItemRef(item.evtId,item.blockId,item.roleIdx); if(!ref) return;
+  const emp=state.employees.find(x=>x.id===ref.roleItem.employeeId);
+  if(!emp?.email){ alert("Ajoute un courriel à cet employé avant l'envoi réel."); return; }
+  const timing=getRoleTiming(item.evt,item.block);
+  const payload={
+    employee_id: emp.id,
+    employee_name: emp.name || "",
+    employee_email: emp.email || "",
+    role: ref.roleItem.role || "",
+    event_title: item.evt.title || "Événement",
+    start_time: new Date(`${timing.startDate}T${to24h(timing.startTime)}:00`).toISOString(),
+    end_time: new Date(`${timing.endDate}T${to24h(timing.endTime)}:00`).toISOString()
+  };
+  try{
+    const res=await fetch(APP_CONFIG.sendRequestUrl,{
+      method:"POST",
+      headers:{
+        "apikey": APP_CONFIG.anonKey,
+        "Authorization": `Bearer ${APP_CONFIG.anonKey}`,
+        "Content-Type":"application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+    const text=await res.text();
+    let data={};
+    try{ data = text ? JSON.parse(text) : {}; }catch{ data = { raw:text }; }
+    if(!res.ok){
+      alert(`Envoi réel échoué. ${data.reason||data.error||text||'Erreur inconnue.'}`);
+      return;
+    }
+    ref.roleItem.requestStatus="sent";
+    ref.roleItem.responseStatus=ref.roleItem.responseStatus==="available"?"available":"pending";
+    ref.roleItem.sentAt=new Date().toISOString();
+    ref.roleItem.lastChannel="email_api";
+    ref.roleItem.requestToken=String(data.token||ref.roleItem.requestToken||"");
+    ref.roleItem.backendRequestId=String(data.id||ref.roleItem.backendRequestId||"");
+    saveEvents();
+    state.syncBanner=`Demande réelle envoyée à ${emp.name}.`;
+    renderAll();
+    alert(`Courriel réel envoyé à ${emp.email}.`);
+  } catch(err){
+    alert(`Erreur réseau pendant l'envoi réel: ${err.message||err}`);
+  }
+}
+async function syncAssignmentFromSupabase(key){
+  const item=getAssignmentByKey(key); if(!item) return { ok:false, reason:"Assignation introuvable." };
+  const ref=getRoleItemRef(item.evtId,item.blockId,item.roleIdx); if(!ref) return { ok:false, reason:"Assignation locale introuvable." };
+  const token=ref.roleItem.requestToken||"";
+  if(!token) return { ok:false, reason:"Aucun token associé à cette demande." };
+  const url=`${APP_CONFIG.supabaseUrl}/rest/v1/assignments?select=id,token,request_status,response_status,conflict_status&token=eq.${encodeURIComponent(token)}`;
+  const res=await fetch(url,{
+    headers:{
+      "apikey": APP_CONFIG.anonKey,
+      "Authorization": `Bearer ${APP_CONFIG.anonKey}`
+    }
+  });
+  const text=await res.text();
+  let data=[];
+  try{ data = text ? JSON.parse(text) : []; }catch{ throw new Error(`Réponse sync invalide: ${text}`); }
+  if(!res.ok) throw new Error(data?.message||text||"Erreur de synchronisation.");
+  const row=Array.isArray(data)?data[0]:null;
+  if(!row) return { ok:false, reason:"Aucune réponse distante trouvée pour cette demande." };
+  ref.roleItem.requestStatus=String(row.request_status||ref.roleItem.requestStatus||"sent");
+  ref.roleItem.responseStatus=String(row.response_status||ref.roleItem.responseStatus||"pending");
+  ref.roleItem.backendRequestId=String(row.id||ref.roleItem.backendRequestId||"");
+  if(ref.roleItem.responseStatus!=="pending") ref.roleItem.respondedAt=new Date().toISOString();
+  saveEvents();
+  return { ok:true, row };
+}
+async function syncAllAssignmentsFromSupabase(){
+  const withToken=allAssignments().filter(x=>x.roleItem.requestToken);
+  if(!withToken.length){
+    state.syncBanner="Aucune demande envoyée par courriel réel à synchroniser pour l'instant.";
+    renderAvailability();
+    return;
+  }
+  let synced=0, missing=0, failed=0;
+  for(const item of withToken){
+    try{
+      const result=await syncAssignmentFromSupabase(item.key);
+      if(result.ok) synced++; else missing++;
+    } catch(err){ failed++; console.error(err); }
+  }
+  state.syncBanner=`Synchronisation terminée: ${synced} mise(s) à jour, ${missing} sans changement, ${failed} erreur(s).`;
+  renderAll();
 }
 function openRequestChannel(key,channel){
   const item=getAssignmentByKey(key); if(!item||!item.roleItem.employeeId) return;
@@ -895,7 +998,7 @@ function replacementSuggestions(key){
 function applyReplacement(key,newEmployeeId){
   const item=getAssignmentByKey(key); if(!item) return;
   const ref=getRoleItemRef(item.evtId,item.blockId,item.roleIdx); if(!ref) return;
-  ref.roleItem.employeeId=newEmployeeId||""; ref.roleItem.requestStatus="draft"; ref.roleItem.responseStatus="pending"; ref.roleItem.sentAt=""; ref.roleItem.respondedAt=""; ref.roleItem.lastChannel=""; saveEvents(); state.activeRequestKey=key; renderAll();
+  ref.roleItem.employeeId=newEmployeeId||""; ref.roleItem.requestStatus="draft"; ref.roleItem.responseStatus="pending"; ref.roleItem.sentAt=""; ref.roleItem.respondedAt=""; ref.roleItem.lastChannel=""; ref.roleItem.requestToken=""; ref.roleItem.backendRequestId=""; saveEvents(); state.activeRequestKey=key; renderAll();
 }
 
 
@@ -1141,7 +1244,7 @@ function renderBlockEditor(){
   els.blockList.querySelectorAll("[data-block-start-time]").forEach(input=>input.addEventListener("change",()=>{ const i=Number(input.dataset.blockStartTime), b=state.currentBlocks[i]; b.startTime=to24h(input.value); if(compareDateTimes(b.startDate,b.startTime,b.endDate,b.endTime)>0) b.endTime=b.startTime; renderBlockEditor(); }));
   els.blockList.querySelectorAll("[data-block-end-time]").forEach(input=>input.addEventListener("change",()=>{ const i=Number(input.dataset.blockEndTime), b=state.currentBlocks[i]; b.endTime=to24h(input.value); if(compareDateTimes(b.startDate,b.startTime,b.endDate,b.endTime)>0) b.endTime=b.startTime; renderBlockEditor(); }));
   els.blockList.querySelectorAll("[data-role-role]").forEach(select=>select.addEventListener("change",()=>{ const [b,r]=select.dataset.roleRole.split(":").map(Number); state.currentBlocks[b].roles[r]=normalizeRoleRequest({role:select.value,employeeId:""}); renderBlockEditor(); }));
-  els.blockList.querySelectorAll("[data-role-employee]").forEach(select=>select.addEventListener("change",()=>{ const [b,r]=select.dataset.roleEmployee.split(":").map(Number); const roleItem=state.currentBlocks[b].roles[r]; roleItem.employeeId=select.value; roleItem.requestStatus="draft"; roleItem.responseStatus="pending"; roleItem.sentAt=""; roleItem.respondedAt=""; }));
+  els.blockList.querySelectorAll("[data-role-employee]").forEach(select=>select.addEventListener("change",()=>{ const [b,r]=select.dataset.roleEmployee.split(":").map(Number); const roleItem=state.currentBlocks[b].roles[r]; roleItem.employeeId=select.value; roleItem.requestStatus="draft"; roleItem.responseStatus="pending"; roleItem.sentAt=""; roleItem.respondedAt=""; roleItem.requestToken=""; roleItem.backendRequestId=""; }));
   els.blockList.querySelectorAll("[data-del-role]").forEach(btn=>btn.addEventListener("click",()=>{ const [b,r]=btn.dataset.delRole.split(":").map(Number); state.currentBlocks[b].roles.splice(r,1); renderBlockEditor(); }));
   els.blockList.querySelectorAll("[data-new-role-select]").forEach(select=>select.addEventListener("change",()=>{ const b=Number(select.dataset.newRoleSelect); const employeeSelect=els.blockList.querySelector(`[data-new-role-employee="${b}"]`); if(employeeSelect) employeeSelect.innerHTML=buildEmployeeOptionsForRole(select.value,""); }));
   els.blockList.querySelectorAll("[data-add-role]").forEach(btn=>btn.addEventListener("click",()=>{ const b=Number(btn.dataset.addRole); const roleSelect=els.blockList.querySelector(`[data-new-role-select="${b}"]`); const empSelect=els.blockList.querySelector(`[data-new-role-employee="${b}"]`); const role=roleSelect.value; if(!role) return; state.currentBlocks[b].roles.push(normalizeRoleRequest({role,employeeId:empSelect.value||""})); renderBlockEditor(); }));
@@ -1163,7 +1266,7 @@ function showModal(){ els.modalWrap.style.display="flex"; }
 function closeModal(){ els.modalWrap.style.display="none"; }
 function suggestedEnd(time){ const [h,m]=String(time).split(":").map(Number); const d=new Date(); d.setHours(h,m,0,0); d.setHours(d.getHours()+3); return `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`; }
 function saveEventFromModal(){
-  const cleanBlocks=state.currentBlocks.map(block=>({id:block.id||cryptoRandomId(),name:String(block.name||"").trim()||"Bloc",startDate:block.startDate,endDate:block.endDate,startTime:to24h(block.startTime||"09:00"),endTime:to24h(block.endTime||"17:00"),roles:(block.roles||[]).map(item=>normalizeRoleRequest({role:String(item.role||"").trim(),employeeId:String(item.employeeId||""),requestStatus:item.requestStatus,responseStatus:item.responseStatus,sentAt:item.sentAt,respondedAt:item.respondedAt,lastChannel:item.lastChannel,lastMessage:item.lastMessage})).filter(item=>item.role)})).filter(block=>block.startDate&&block.endDate);
+  const cleanBlocks=state.currentBlocks.map(block=>({id:block.id||cryptoRandomId(),name:String(block.name||"").trim()||"Bloc",startDate:block.startDate,endDate:block.endDate,startTime:to24h(block.startTime||"09:00"),endTime:to24h(block.endTime||"17:00"),roles:(block.roles||[]).map(item=>normalizeRoleRequest({role:String(item.role||"").trim(),employeeId:String(item.employeeId||""),requestStatus:item.requestStatus,responseStatus:item.responseStatus,sentAt:item.sentAt,respondedAt:item.respondedAt,lastChannel:item.lastChannel,lastMessage:item.lastMessage,requestToken:item.requestToken,backendRequestId:item.backendRequestId})).filter(item=>item.role)})).filter(block=>block.startDate&&block.endDate);
   if(!els.evtTitle.value.trim()){ alert("Ajoute un titre à l’événement."); els.evtTitle.focus(); return; }
   if(!els.evtStartDate.value||!els.evtEndDate.value){ alert("Choisis les dates de début et de fin."); return; }
   if(els.evtEndDate.value<els.evtStartDate.value){ alert("La date de fin doit être égale ou après la date de début."); return; }
@@ -1274,18 +1377,19 @@ function renderAvailability(){
         <button class="btn secondary small" type="button" data-preview-request="${item.key}">Prévisualiser</button>
         <button class="btn secondary small" type="button" data-open-web="${item.key}">Ouvrir lien web</button>
         <button class="btn secondary small" type="button" data-copy-web="${item.key}">Copier lien web</button>
-        <button class="btn secondary small" type="button" data-send-email="${item.key}">Envoyer courriel</button>
+        <button class="btn primary small" type="button" data-send-real-email="${item.key}">Envoyer email réel</button><button class="btn secondary small" type="button" data-send-email="${item.key}">Brouillon courriel</button>
         <button class="btn secondary small" type="button" data-send-sms="${item.key}">Envoyer SMS</button>
         <button class="btn small ${item.roleItem.responseStatus==='available'?'primary':'secondary'}" type="button" data-answer-yes="${item.key}">Confirmé</button>
         <button class="btn small ${item.roleItem.responseStatus==='maybe'?'primary':'secondary'}" type="button" data-answer-maybe="${item.key}">Peut-être</button>
         <button class="btn small ${item.roleItem.responseStatus==='unavailable'?'danger':'secondary'}" type="button" data-answer-no="${item.key}">Non dispo</button>
       </div>
-      ${suggestions.length?`<div><div class="small-note" style="margin-bottom:8px">Remplacements suggérés</div><div class="assignment-suggestions">${suggestions.map(s=>`<button class="btn secondary small" type="button" data-replace="${item.key}::${s.emp.id}">${escapeHtml(s.emp.name)}${s.conflicts.length?' · conflit':''}</button>`).join('')}</div></div>`:`<div class="small-note">Aucun remplaçant compatible trouvé pour le moment.</div>`}
+      ${item.roleItem.requestToken?`<div class="small-note">Token demande: ${escapeHtml(item.roleItem.requestToken.slice(0,8))}…</div>`:""}${suggestions.length?`<div><div class="small-note" style="margin-bottom:8px">Remplacements suggérés</div><div class="assignment-suggestions">${suggestions.map(s=>`<button class="btn secondary small" type="button" data-replace="${item.key}::${s.emp.id}">${escapeHtml(s.emp.name)}${s.conflicts.length?' · conflit':''}</button>`).join('')}</div></div>`:`<div class="small-note">Aucun remplaçant compatible trouvé pour le moment.</div>`}
     </div>`;
   }).join('');
   els.availabilityList.querySelectorAll('[data-preview-request]').forEach(btn=>btn.addEventListener('click',()=>{ state.activeRequestKey=btn.dataset.previewRequest; renderAvailability(); }));
   els.availabilityList.querySelectorAll('[data-open-web]').forEach(btn=>btn.addEventListener('click',()=>{ window.open(buildPortalUrl(btn.dataset.openWeb),'_blank'); }));
   els.availabilityList.querySelectorAll('[data-copy-web]').forEach(btn=>btn.addEventListener('click',()=>copyText(buildPortalUrl(btn.dataset.copyWeb))));
+  els.availabilityList.querySelectorAll('[data-send-real-email]').forEach(btn=>btn.addEventListener('click',()=>sendRealEmailRequest(btn.dataset.sendRealEmail)));
   els.availabilityList.querySelectorAll('[data-send-email]').forEach(btn=>btn.addEventListener('click',()=>openRequestChannel(btn.dataset.sendEmail,'email')));
   els.availabilityList.querySelectorAll('[data-send-sms]').forEach(btn=>btn.addEventListener('click',()=>openRequestChannel(btn.dataset.sendSms,'sms')));
   els.availabilityList.querySelectorAll('[data-answer-yes]').forEach(btn=>btn.addEventListener('click',()=>setAssignmentResponse(btn.dataset.answerYes,'available')));
@@ -1306,16 +1410,18 @@ function renderAvailability(){
       <button class="btn primary" type="button" id="previewAccept">Je suis disponible</button>
       <button class="btn secondary" type="button" id="previewMaybe">Peut-être</button>
       <button class="btn danger" type="button" id="previewDecline">Je ne suis pas disponible</button>
-      <button class="btn secondary" type="button" id="previewOpenLink">Ouvrir vrai lien web</button>
+      <button class="btn primary" type="button" id="previewSendRealEmail">Envoyer email réel</button><button class="btn secondary" type="button" id="previewSyncStatus">Synchroniser réponse</button><button class="btn secondary" type="button" id="previewOpenLink">Ouvrir vrai lien web</button>
       <button class="btn secondary" type="button" id="previewCopyLink">Copier lien web</button>
     </div>
-    <div class="small-note">Tu peux maintenant tester un vrai lien web employé. Sans serveur, la synchronisation automatique complète reste limitée à la même instance ou via le lien de retour scheduler.</div>
+    <div class="small-note">Avec l'email réel, le travailleur reçoit maintenant un vrai lien GitHub. Après sa réponse, clique sur « Synchroniser réponse » pour rapatrier le statut dans le scheduler.</div>
   </div>`;
   document.getElementById('previewAccept')?.addEventListener('click',()=>setAssignmentResponse(active.key,'available'));
   document.getElementById('previewMaybe')?.addEventListener('click',()=>setAssignmentResponse(active.key,'maybe'));
   document.getElementById('previewDecline')?.addEventListener('click',()=>setAssignmentResponse(active.key,'unavailable'));
-  document.getElementById('previewOpenLink')?.addEventListener('click',()=>window.open(buildPortalUrl(active.key),'_blank'));
-  document.getElementById('previewCopyLink')?.addEventListener('click',()=>copyText(buildPortalUrl(active.key)));
+  document.getElementById('previewSendRealEmail')?.addEventListener('click',()=>sendRealEmailRequest(active.key));
+  document.getElementById('previewSyncStatus')?.addEventListener('click',async()=>{ try{ const result=await syncAssignmentFromSupabase(active.key); state.syncBanner=result.ok?'Réponse distante synchronisée.':result.reason; renderAll(); } catch(err){ alert(err.message||err); } });
+  document.getElementById('previewOpenLink')?.addEventListener('click',()=>window.open(refinedRespondLink(active),'_blank'));
+  document.getElementById('previewCopyLink')?.addEventListener('click',()=>copyText(refinedRespondLink(active)));
   els.availabilitySyncMsg.innerHTML = state.syncBanner ? `<div class="sync-banner">${escapeHtml(state.syncBanner)}</div>` : '';
 }
 function renderSettings(){
@@ -1361,7 +1467,7 @@ function bind(){
   document.getElementById("btnAddBlock").addEventListener("click",()=>{ const name=(els.newBlockName.value||"").trim()||"Bloc"; state.currentBlocks.push({id:cryptoRandomId(),name,startDate:els.evtStartDate.value||toDateInput(state.selectedDate),endDate:els.evtEndDate.value||els.evtStartDate.value||toDateInput(state.selectedDate),startTime:to24h(els.evtTime.value||"09:00"),endTime:to24h(els.evtEndTime.value||"17:00"),roles:[]}); els.newBlockName.value=""; renderBlockEditor(); });
   els.modalWrap.addEventListener("click",(e)=>{ if(e.target===els.modalWrap) closeModal(); });
 
-  document.getElementById("btnRefreshAvailability")?.addEventListener("click",renderAvailability);
+  document.getElementById("btnRefreshAvailability")?.addEventListener("click",()=>syncAllAssignmentsFromSupabase());
   document.getElementById("btnSaveSettings")?.addEventListener("click",()=>{ state.settings.defaultChannel=els.settingDefaultChannel.value; state.settings.conflictMode=els.settingConflictMode.value; state.settings.companyName=els.settingCompanyName.value.trim()||"Crew Scheduler"; saveSettings(); els.settingsSavedMsg.textContent="Paramètres enregistrés."; renderAll(); });
   document.getElementById("btnAddEmployeeTop").addEventListener("click",()=>openEmployeeModal());
   document.getElementById("btnToggleRolesAdmin").addEventListener("click",()=>{ state.rolesDrawerOpen=!state.rolesDrawerOpen; renderDrawer(); });
