@@ -6,81 +6,37 @@
   <title>Réponse disponibilité</title>
   <style>
     :root{
-      --bg:#0f172a;
-      --panel:#111827;
-      --text:#ffffff;
-      --muted:#cbd5e1;
-      --green:#16a34a;
-      --orange:#f59e0b;
-      --red:#dc2626;
+      --bg:#0f172a; --panel:rgba(255,255,255,.06); --line:rgba(255,255,255,.1);
+      --text:#fff; --muted:#cbd5e1; --green:#16a34a; --orange:#f59e0b; --red:#dc2626;
     }
     *{box-sizing:border-box}
     body{
-      margin:0;
-      min-height:100vh;
-      font-family:Arial, Helvetica, sans-serif;
-      background:linear-gradient(180deg,#0f172a 0%, #111827 100%);
-      color:var(--text);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:20px;
+      margin:0; min-height:100vh; font-family:Inter,Arial,Helvetica,sans-serif;
+      background:linear-gradient(180deg,#0f172a 0%, #111827 100%); color:var(--text);
+      display:flex; align-items:center; justify-content:center; padding:20px;
     }
     .card{
-      width:min(100%, 520px);
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.1);
-      border-radius:24px;
-      padding:28px 20px;
-      box-shadow:0 20px 50px rgba(0,0,0,.25);
-      text-align:center;
+      width:min(100%,520px); background:var(--panel); border:1px solid var(--line);
+      border-radius:24px; padding:28px 20px; box-shadow:0 20px 50px rgba(0,0,0,.25); text-align:center;
     }
-    h1{
-      margin:0 0 10px;
-      font-size:clamp(28px, 5vw, 40px);
-      line-height:1.05;
-    }
-    p{
-      margin:0 0 24px;
-      color:var(--muted);
-      font-size:16px;
-      line-height:1.5;
-    }
+    h1{margin:0 0 10px; font-size:clamp(28px,5vw,40px); line-height:1.05}
+    p{margin:0 0 24px; color:var(--muted); font-size:16px; line-height:1.5}
     .btn{
-      display:block;
-      width:100%;
-      margin:12px 0;
-      padding:18px 16px;
-      border:none;
-      border-radius:16px;
-      cursor:pointer;
-      font-size:18px;
-      font-weight:800;
-      color:#fff;
-      min-height:64px;
+      display:block; width:100%; margin:12px 0; padding:18px 16px; border:none; border-radius:16px;
+      cursor:pointer; font-size:18px; font-weight:800; color:#fff; min-height:64px;
       transition:transform .15s ease, opacity .15s ease;
     }
     .btn:active{ transform:scale(.98); }
     .yes{ background:var(--green); }
     .maybe{ background:var(--orange); }
     .no{ background:var(--red); }
-    #status{
-      margin-top:18px;
-      font-size:16px;
-      font-weight:700;
-      color:#fff;
-      min-height:24px;
-    }
-    .small{
-      margin-top:14px;
-      font-size:13px;
-      color:var(--muted);
-    }
+    #status{ margin-top:18px; font-size:16px; font-weight:700; min-height:24px; }
+    .small{ margin-top:14px; font-size:13px; color:var(--muted); }
   </style>
 </head>
 <body>
   <div class="card">
-    <h1>Es-tu disponible&nbsp;?</h1>
+    <h1>Es-tu disponible ?</h1>
     <p>Réponds simplement avec l’option qui correspond le mieux à ta situation.</p>
 
     <button class="btn yes" onclick="respond('available')">✅ Oui, je suis disponible</button>
@@ -92,39 +48,44 @@
   </div>
 
   <script>
+    const SUPABASE_URL = "https://yxkdyohscpsmeplbkyqo.supabase.co";
+    const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4a2R5b2hzY3BzbWVwbGJreXFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3MTY1NDYsImV4cCI6MjA5MjI5MjU0Nn0.Xx8KjZFqqWnTvJczYqPRINXeX0fp7aq7wRvG30ZF6pE";
     const token = new URLSearchParams(window.location.search).get("token");
+    const statusEl = document.getElementById("status");
 
     async function respond(status){
-      const statusEl = document.getElementById("status");
+      if(!token){
+        statusEl.innerText = "Lien invalide ❌";
+        return;
+      }
       statusEl.innerText = "Envoi de la réponse...";
-
       try{
         const res = await fetch(
-          "https://yxkdyohscpsmeplbkyqo.supabase.co/rest/v1/assignments?token=eq." + token,
+          `${SUPABASE_URL}/rest/v1/assignments?token=eq.${encodeURIComponent(token)}`,
           {
             method: "PATCH",
             headers: {
-              "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4a2R5b2hzY3BzbWVwbGJreXFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3MTY1NDYsImV4cCI6MjA5MjI5MjU0Nn0.Xx8KjZFqqWnTvJczYqPRINXeX0fp7aq7wRvG30ZF6pE",
-              "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4a2R5b2hzY3BzbWVwbGJreXFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3MTY1NDYsImV4cCI6MjA5MjI5MjU0Nn0.Xx8KjZFqqWnTvJczYqPRINXeX0fp7aq7wRvG30ZF6pE",
+              "apikey": ANON_KEY,
+              "Authorization": `Bearer ${ANON_KEY}`,
               "Content-Type": "application/json",
               "Prefer": "return=representation"
             },
             body: JSON.stringify({
-              response_status: status
+              response_status: status,
+              request_status: "answered"
             })
           }
         );
-
         if(res.ok){
           statusEl.innerText = "Réponse envoyée ✅ Merci.";
         } else {
           const txt = await res.text();
-          statusEl.innerText = "Erreur ❌";
           console.error(txt);
+          statusEl.innerText = "Erreur ❌";
         }
       } catch(err){
-        statusEl.innerText = "Erreur réseau ❌";
         console.error(err);
+        statusEl.innerText = "Erreur réseau ❌";
       }
     }
   </script>
