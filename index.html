@@ -172,7 +172,7 @@ button{cursor:pointer}
 .block-section{display:grid;gap:8px;padding:10px;border:1px dashed #cbd5e1;border-radius:16px;background:#fff}
 .block-section-title{font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:#64748b}
 .block-compact-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;align-items:end}
-.role-item-row{padding:8px;border:1px solid var(--line);border-radius:14px;background:var(--panel2)}
+.role-item-row{padding:8px;border:1px solid var(--line);border-radius:14px;background:var(--panel2)}\n.role-item-grid{display:grid;grid-template-columns:1fr .55fr 1.35fr auto;gap:10px;align-items:start}\n.role-main{align-self:start}\n.role-role{grid-column:1;grid-row:1}\n.role-qty{grid-column:2;grid-row:1}\n.role-emp-first{grid-column:3;grid-row:1;align-self:start}\n.role-del{grid-column:4;grid-row:1;align-self:start}\n.employee-slots-extra{grid-column:3;display:grid;gap:8px;align-self:start}\n@media (max-width:720px){.role-item-grid{grid-template-columns:1fr}.role-role,.role-qty,.role-emp-first,.role-del,.employee-slots-extra{grid-column:auto;grid-row:auto}}
 
 .team-view{display:none}
 .team-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:18px}
@@ -245,9 +245,109 @@ button{cursor:pointer}
 .portal-note{font-size:13px;color:var(--muted);line-height:1.6}
 @media (max-width:980px){.settings-grid,.portal-grid{grid-template-columns:1fr}}
 
+
+.time-pill{display:flex;align-items:center;gap:8px;border:1px solid var(--line2);background:#fff;border-radius:14px;padding:10px 12px}
+.time-pill select{border:0;background:transparent;color:var(--text);outline:none;font:inherit;padding:0}
+.time-pill .colon{font-weight:800;color:var(--muted)}
+.time-pill input[type="hidden"]{display:none}
+
 @media (max-width:1220px){.layout,.team-grid{grid-template-columns:1fr}}
 @media (max-width:980px){.app{grid-template-columns:1fr}.sidebar{position:relative;height:auto}.filters{grid-template-columns:1fr 1fr}.employee-row{grid-template-columns:1fr;align-items:start}.row-actions{justify-content:flex-start}}
 @media (max-width:720px){.main{padding:16px}.hero{padding:18px}.hero h2{font-size:30px}.filters,.role-entry,.block-compact-grid{grid-template-columns:1fr}.week-grid{overflow-x:auto}.week-grid-inner{min-width:840px}.team-grid{grid-template-columns:1fr}}
+
+
+
+/* Batch 6.1 — Groupement par événement et bloc */
+.availability-event-group{border:1px solid var(--line);border-radius:22px;overflow:hidden;margin-bottom:16px;box-shadow:0 14px 30px rgba(15,23,42,.06);background:#fff}
+.availability-event-head{padding:16px 18px;border-bottom:1px solid rgba(15,23,42,.08)}
+.availability-event-title{font-size:18px;font-weight:900;letter-spacing:-.02em}.availability-event-meta{margin-top:5px;color:var(--muted);font-size:13px;line-height:1.45}
+.availability-block-group{margin:14px;border:1px solid var(--line);border-radius:18px;background:rgba(248,250,252,.82);overflow:hidden}.availability-block-head{padding:12px 14px;background:#fff;border-bottom:1px solid var(--line)}
+.availability-block-title{font-weight:900;letter-spacing:-.02em}.availability-block-time{margin-top:4px;color:var(--muted);font-size:12px;font-weight:700}.availability-block-body{display:grid;gap:10px;padding:12px}
+.quick-block-group{border:1px solid var(--line);border-radius:18px;background:var(--panel2);overflow:hidden;margin-bottom:12px}.quick-block-head{padding:12px 14px;background:#fff;border-bottom:1px solid var(--line)}
+.quick-block-title{font-weight:900}.quick-block-time{margin-top:4px;font-size:12px;color:var(--muted);font-weight:700}.quick-block-body{padding:12px;display:grid;gap:10px}
+
+/* Batch 6 — Disponibilités plus propres */
+.assignment-actions.clean-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  align-items:center;
+  padding-top:10px;
+}
+.status-actions{
+  margin-top:10px;
+  padding-top:12px;
+  border-top:1px dashed var(--line2);
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  align-items:center;
+}
+.status-actions-label{
+  width:100%;
+  color:var(--muted);
+  font-size:12px;
+  font-weight:900;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+.replacement-panel{
+  margin-top:12px;
+  padding:12px;
+  border:1px solid var(--line);
+  background:var(--panel2);
+  border-radius:16px;
+  display:grid;
+  gap:10px;
+}
+.replacement-title{
+  color:var(--muted);
+  font-size:12px;
+  font-weight:900;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+.replacement-card{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:10px;
+  align-items:center;
+  padding:10px 12px;
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:14px;
+}
+.replacement-name{
+  font-weight:900;
+  letter-spacing:-.02em;
+}
+.replacement-meta{
+  margin-top:4px;
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.35;
+}
+.replacement-badges{
+  margin-top:7px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+}
+.mini-badge{
+  display:inline-flex;
+  align-items:center;
+  border-radius:999px;
+  padding:4px 7px;
+  font-size:11px;
+  font-weight:900;
+  border:1px solid var(--line);
+  background:#fff;
+  color:var(--muted);
+}
+.mini-badge.green{background:#ecfdf5;border-color:#bbf7d0;color:#047857}
+.mini-badge.orange{background:#fffbeb;border-color:#fde68a;color:#b45309}
+.mini-badge.red{background:#fff1f2;border-color:#fecdd3;color:#be123c}
+
 </style>
 </head>
 <body>
@@ -343,9 +443,9 @@ button{cursor:pointer}
           </div>
 
           <div class="card">
-            <div class="card-head"><div><h3>Résumé rapide</h3><div class="sub">Événements, postes et assignations.</div></div></div>
+            <div class="card-head"><div><h3 id="quickSummaryTitle">Résumé rapide</h3><div class="sub" id="quickSummarySub">Événements, postes et assignations.</div></div></div>
             <div class="card-body">
-              <div class="event-list">
+              <div class="event-list" id="quickSummaryContent">
                 <div class="selected-date-box"><div class="label">Événements filtrés</div><div class="value" id="statEvents">0</div><div class="muted">Selon les filtres actuels.</div></div>
                 <div class="selected-date-box"><div class="label">Postes ouverts</div><div class="value" id="statOpenRoles">0</div><div class="muted">Postes sans employé assigné.</div></div>
                 <div class="selected-date-box"><div class="label">Assignations</div><div class="value" id="statAssignments">0</div><div class="muted">Postes déjà comblés.</div></div>
@@ -514,8 +614,18 @@ button{cursor:pointer}
       <div class="filters" style="grid-template-columns:1fr 1fr 1fr 1fr">
         <div class="field"><label for="evtStartDate">Date de début</label><input id="evtStartDate" type="date"/></div>
         <div class="field"><label for="evtEndDate">Date de fin</label><input id="evtEndDate" type="date"/></div>
-        <div class="field"><label for="evtTime">Heure de début</label><input id="evtTime" type="time" step="900" value="09:00"/></div>
-        <div class="field"><label for="evtEndTime">Heure de fin</label><input id="evtEndTime" type="time" step="900" value="12:00"/></div>
+        <div class="field event-time-container"><label for="evtTimeHour">Heure de début</label><div class="time-pill">
+          <select id="evtTimeHour"><option value="00">00</option><option value="01">01</option><option value="02">02</option><option value="03">03</option><option value="04">04</option><option value="05">05</option><option value="06">06</option><option value="07">07</option><option value="08">08</option><option value="09">09</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option></select>
+          <span class="colon">:</span>
+          <select id="evtTimeMinute"><option value="00">00</option><option value="15">15</option><option value="30">30</option><option value="45">45</option></select>
+          <input id="evtTime" type="hidden" value="09:00"/>
+        </div></div>
+        <div class="field event-time-container"><label for="evtEndTimeHour">Heure de fin</label><div class="time-pill">
+          <select id="evtEndTimeHour"><option value="00">00</option><option value="01">01</option><option value="02">02</option><option value="03">03</option><option value="04">04</option><option value="05">05</option><option value="06">06</option><option value="07">07</option><option value="08">08</option><option value="09">09</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option></select>
+          <span class="colon">:</span>
+          <select id="evtEndTimeMinute"><option value="00">00</option><option value="15">15</option><option value="30">30</option><option value="45">45</option></select>
+          <input id="evtEndTime" type="hidden" value="12:00"/>
+        </div></div>
       </div>
       <div class="filters" style="grid-template-columns:1fr 1fr">
         <div class="field"><label for="evtLocation">Lieu</label><input id="evtLocation" type="text" placeholder="Ex: Théâtre / entrepôt / salle X"/></div>
@@ -594,7 +704,8 @@ const state={
   rolesDrawerOpen:false,
   settings:loadSettings(),
   activeRequestKey:"",
-  syncBanner:""
+  syncBanner:"",
+  selectedEventId:null
 };
 
 const els={
@@ -613,6 +724,9 @@ const els={
   statEvents:document.getElementById("statEvents"),
   statOpenRoles:document.getElementById("statOpenRoles"),
   statAssignments:document.getElementById("statAssignments"),
+  quickSummaryTitle:document.getElementById("quickSummaryTitle"),
+  quickSummarySub:document.getElementById("quickSummarySub"),
+  quickSummaryContent:document.getElementById("quickSummaryContent"),
   searchInput:document.getElementById("searchInput"),
   roleFilter:document.getElementById("roleFilter"),
   employeeFilter:document.getElementById("employeeFilter"),
@@ -665,7 +779,13 @@ function defaultSettings(){ return {defaultChannel:"email",conflictMode:"warn",c
 function loadSettings(){ try{ const raw=JSON.parse(localStorage.getItem(SETTINGS_KEY)||"null"); return {...defaultSettings(), ...(raw||{})}; }catch{return defaultSettings();} }
 function saveSettings(){ localStorage.setItem(SETTINGS_KEY, JSON.stringify(state.settings)); }
 function normalizeRoleRequest(item){
-  return {role:String(item?.role||""),employeeId:String(item?.employeeId||""),requestStatus:String(item?.requestStatus||"draft"),responseStatus:String(item?.responseStatus||"pending"),sentAt:String(item?.sentAt||""),respondedAt:String(item?.respondedAt||""),lastChannel:String(item?.lastChannel||""),lastMessage:String(item?.lastMessage||""),requestToken:String(item?.requestToken||""),backendRequestId:String(item?.backendRequestId||"")};
+  const qtyRaw=Number(item?.quantity??1);
+  const quantity=Number.isFinite(qtyRaw) && qtyRaw>0 ? Math.max(1, Math.round(qtyRaw)) : 1;
+  const normalizedIds=Array.isArray(item?.employeeIds)
+    ? item.employeeIds.map(x=>String(x||""))
+    : (item?.employeeId ? [String(item.employeeId)] : []);
+  const employeeIds=Array.from({length:quantity},(_,i)=>normalizedIds[i]||"");
+  return {role:String(item?.role||""),quantity,employeeId:String(employeeIds[0]||item?.employeeId||""),employeeIds,requestStatus:String(item?.requestStatus||"draft"),responseStatus:String(item?.responseStatus||"pending"),sentAt:String(item?.sentAt||""),respondedAt:String(item?.respondedAt||""),lastChannel:String(item?.lastChannel||""),lastMessage:String(item?.lastMessage||""),requestToken:String(item?.requestToken||""),backendRequestId:String(item?.backendRequestId||"")};
 }
 function normalizeLoadedEvent(evt){
   const blocks=normalizeEventBlocks(evt).map(block=>({
@@ -711,10 +831,56 @@ function eventStartsOnDate(evt,date){ return sameDay(eventStartDate(evt),date); 
 function eventEndsOnDate(evt,date){ return sameDay(eventEndDate(evt),date); }
 function parseHour(timeStr,fallback){ const parts=String(timeStr||"").split(":"); const h=Number(parts[0]); return Number.isFinite(h)?h:fallback; }
 function to24h(timeStr){ const parts=String(timeStr||"").split(":"); const h=String(parts[0]||"00").padStart(2,"0"); const m=String(parts[1]||"00").padStart(2,"0"); return `${h}:${m}`; }
+
+function splitQuarterTime(timeStr){ const norm=to24h(timeStr||"00:00"); const [hhRaw,mmRaw]=norm.split(":"); const hh=String(hhRaw||"00").padStart(2,"0"); const allowed=["00","15","30","45"]; const mm=allowed.includes(mmRaw)?mmRaw:"00"; return {hh,mm}; }
+function buildHourOptions(selected){ return Array.from({length:24},(_,i)=>{ const v=String(i).padStart(2,"0"); return `<option value="${v}" ${v===selected?"selected":""}>${v}</option>`; }).join(""); }
+function setEventTimeValue(prefix,timeStr){
+  const {hh,mm}=splitQuarterTime(timeStr);
+  const hourEl=prefix==="start"?document.getElementById("evtTimeHour"):document.getElementById("evtEndTimeHour");
+  const minuteEl=prefix==="start"?document.getElementById("evtTimeMinute"):document.getElementById("evtEndTimeMinute");
+  const hiddenEl=prefix==="start"?document.getElementById("evtTime"):document.getElementById("evtEndTime");
+  if(hourEl) hourEl.value=hh;
+  if(minuteEl) minuteEl.value=mm;
+  if(hiddenEl) hiddenEl.value=`${hh}:${mm}`;
+}
+function getEventTimeValue(prefix){
+  const hourEl=prefix==="start"?document.getElementById("evtTimeHour"):document.getElementById("evtEndTimeHour");
+  const minuteEl=prefix==="start"?document.getElementById("evtTimeMinute"):document.getElementById("evtEndTimeMinute");
+  return `${hourEl?.value||"00"}:${minuteEl?.value||"00"}`;
+}
+function syncEventHiddenTimes(){
+  const startHidden=document.getElementById("evtTime");
+  const endHidden=document.getElementById("evtEndTime");
+  if(startHidden) startHidden.value=getEventTimeValue("start");
+  if(endHidden) endHidden.value=getEventTimeValue("end");
+}
+function buildTimePairHtml(kind,blockIdx,timeStr){
+  const {hh,mm}=splitQuarterTime(timeStr||"09:00");
+  return `<div class="time-pill">
+    <select data-block-${kind}-time-hour="${blockIdx}">${buildHourOptions(hh)}</select>
+    <span class="colon">:</span>
+    <select data-block-${kind}-time-minute="${blockIdx}">
+      <option value="00" ${mm==="00"?"selected":""}>00</option>
+      <option value="15" ${mm==="15"?"selected":""}>15</option>
+      <option value="30" ${mm==="30"?"selected":""}>30</option>
+      <option value="45" ${mm==="45"?"selected":""}>45</option>
+    </select>
+    <input data-block-${kind}-time="${blockIdx}" type="hidden" value="${hh}:${mm}"/>
+  </div>`;
+}
+function getBlockTimeValue(blockIdx,kind){
+  const hourEl=els.blockList.querySelector(`[data-block-${kind}-time-hour="${blockIdx}"]`);
+  const minuteEl=els.blockList.querySelector(`[data-block-${kind}-time-minute="${blockIdx}"]`);
+  return `${hourEl?.value||"00"}:${minuteEl?.value||"00"}`;
+}
+function toggleEventTimeVisibility(){
+  const isMultiDay=!!els.evtStartDate.value&&!!els.evtEndDate.value&&els.evtStartDate.value!==els.evtEndDate.value;
+  document.querySelectorAll(".event-time-container").forEach(el=>el.style.display=isMultiDay?"none":"block");
+}
 function compareDateTimes(dateA,timeA,dateB,timeB){ return `${dateA} ${to24h(timeA)}`.localeCompare(`${dateB} ${to24h(timeB)}`); }
 function timeRangeLabel(evt){ const start=evt.startDate&&evt.endDate&&evt.startDate!==evt.endDate?`${evt.startDate} ${to24h(evt.time)} → ${evt.endDate} ${to24h(evt.endTime||"")}`:`${to24h(evt.time)} → ${to24h(evt.endTime||"")}`; return start.trim(); }
 function normalizeEventBlocks(evt){ if(Array.isArray(evt.blocks)) return evt.blocks; const legacy=Array.isArray(evt.teamRoles)?evt.teamRoles:[]; return [{id:cryptoRandomId(),name:"Bloc principal",startDate:evt.startDate||evt.date||toDateInput(new Date()),endDate:evt.endDate||evt.date||toDateInput(new Date()),startTime:evt.time||"09:00",endTime:evt.endTime||"17:00",roles:legacy}]; }
-function blockRolesSummary(block){ const roles=Array.isArray(block.roles)?block.roles:[]; if(!roles.length) return "Aucun poste"; return roles.map(item=>{ const emp=employeeNameById(item.employeeId); return emp?`${item.role} → ${emp}`:`${item.role} → à combler`; }).join(" · "); }
+function blockRolesSummary(block){ const roles=Array.isArray(block.roles)?block.roles:[]; if(!roles.length) return "Aucun poste"; return roles.map(item=>{ syncRoleEmployees(item); const qty=(Number(item.quantity)||1)>1?` ×${Number(item.quantity)||1}`:""; const names=employeeNamesForRoleItem(item); return names.length?`${item.role}${qty} → ${names.join(", ")}`:`${item.role}${qty} → à combler`; }).join(" · "); }
 function eventAssignmentsSummary(evt){ return normalizeEventBlocks(evt).map(b=>`${b.name}: ${blockRolesSummary(b)}`).join(" · "); }
 
 function segmentTypeForDate(evt,date){ const start=eventStartDate(evt); const end=eventEndDate(evt); if(sameDay(start,end)) return "single"; if(sameDay(date,start)) return "start"; if(sameDay(date,end)) return "end"; return "middle"; }
@@ -747,14 +913,15 @@ function findEmployeeConflicts(employeeId,evtId,blockId,roleIdx){
   const timing=getRoleTiming(current.evt,current.block);
   return allAssignments().filter(item=>{
     if(item.evtId===evtId && item.blockId===blockId && item.roleIdx===roleIdx) return false;
-    if(item.roleItem.employeeId!==employeeId) return false;
+    const assignedIds=(Array.isArray(item.roleItem.employeeIds)&&item.roleItem.employeeIds.length?item.roleItem.employeeIds:[item.roleItem.employeeId||""]); if(!assignedIds.includes(employeeId)) return false;
     if(item.roleItem.responseStatus==="unavailable") return false;
     const other=getRoleTiming(item.evt,item.block);
     return rangeOverlaps(timing.startDate,timing.startTime,timing.endDate,timing.endTime,other.startDate,other.startTime,other.endDate,other.endTime);
   });
 }
 function roleVisualState(item){
-  if(!item.employeeId) return {label:"À combler", cls:"gray"};
+  syncRoleEmployees(item);
+  if(!(item.employeeIds||[]).some(Boolean) && !item.employeeId) return {label:"À combler", cls:"gray"};
   if(item.responseStatus==="available") return {label:"Confirmé", cls:"green"};
   if(item.responseStatus==="unavailable") return {label:"Refusé", cls:"red"};
   if(item.responseStatus==="maybe") return {label:"Peut-être", cls:"orange"};
@@ -886,6 +1053,103 @@ Réponses possibles: Disponible / Peut-être / Non disponible
 
 Merci!`;
   return {subject,body,webLink};
+}
+
+function respondLinkForSlot(slotItem){
+  if(!slotItem) return currentPublicRespondUrl();
+  const ref=getRoleItemRef(slotItem.evtId,slotItem.blockId,slotItem.roleIdx);
+  if(ref){
+    syncRoleEmployees(ref.roleItem);
+    const token=ref.roleItem.slotRequests?.[slotItem.slotIdx]?.requestToken || "";
+    if(token) return `${currentPublicRespondUrl()}?token=${encodeURIComponent(token)}`;
+  }
+  return buildPortalUrl(slotItem.key);
+}
+function buildRequestMessageForSlot(key){
+  const item=getAssignmentSlotByKey(key);
+  if(!item || !item.employeeId) return null;
+  const ref=getRoleItemRef(item.evtId,item.blockId,item.roleIdx);
+  if(!ref) return null;
+  syncRoleEmployees(ref.roleItem);
+  const emp=state.employees.find(x=>x.id===item.employeeId);
+  const timing=getRoleTiming(item.evt,item.block);
+  const company=state.settings.companyName||"Crew Scheduler";
+  const roleLabel=`${ref.roleItem.role || "Poste"}${(ref.roleItem.quantity||1)>1?` (${item.slotIdx+1}/${ref.roleItem.quantity})`:""}`;
+  const webLink=respondLinkForSlot(item);
+  const subject=`Demande de travail — ${item.evt.title}`;
+  const body=`Bonjour ${emp?.name||""},
+
+${company} t'invite pour un appel de travail.
+
+Événement: ${item.evt.title}
+Bloc: ${item.block.name}
+Poste: ${roleLabel}
+Date début: ${timing.startDate}
+Heure début: ${timing.startTime}
+Date fin: ${timing.endDate}
+Heure fin: ${timing.endTime}
+Lieu: ${item.evt.location||"À confirmer"}
+
+Réponds directement ici:
+${webLink}
+
+Réponses possibles: Disponible / Peut-être / Non disponible
+
+Merci!`;
+  return {subject,body,webLink,employee:emp};
+}
+async function copyRequestMessageForSlot(key){
+  const msg=buildRequestMessageForSlot(key);
+  if(!msg){ alert("Aucun travailleur assigné à cette demande."); return; }
+  try{
+    await navigator.clipboard.writeText(msg.body);
+    alert("Message complet copié.");
+  }catch(err){
+    const tmp=document.createElement('textarea');
+    tmp.value=msg.body;
+    document.body.appendChild(tmp);
+    tmp.select();
+    document.execCommand('copy');
+    tmp.remove();
+    alert("Message complet copié.");
+  }
+}
+function openGmailForSlot(key){
+  const msg=buildRequestMessageForSlot(key);
+  if(!msg){ alert("Aucun travailleur assigné à cette demande."); return; }
+  if(!msg.employee?.email){ alert("Ajoute un courriel à cet employé avant d’ouvrir le courriel."); return; }
+  const url=`mailto:${encodeURIComponent(msg.employee.email)}?subject=${encodeURIComponent(msg.subject)}&body=${encodeURIComponent(msg.body)}`;
+  window.location.href=url;
+}
+function buildRequestMessageLegacy(key){
+  const item=getAssignmentByKey(key);
+  if(!item || !item.roleItem?.employeeId) return null;
+  const emp=state.employees.find(x=>x.id===item.roleItem.employeeId);
+  const msg=buildRequestMessage(item);
+  return {...msg, employee:emp};
+}
+async function copyRequestMessageLegacy(key){
+  const msg=buildRequestMessageLegacy(key);
+  if(!msg){ alert("Aucun travailleur assigné à cette demande."); return; }
+  try{
+    await navigator.clipboard.writeText(msg.body);
+    alert("Message complet copié.");
+  }catch(err){
+    const tmp=document.createElement('textarea');
+    tmp.value=msg.body;
+    document.body.appendChild(tmp);
+    tmp.select();
+    document.execCommand('copy');
+    tmp.remove();
+    alert("Message complet copié.");
+  }
+}
+function openGmailLegacy(key){
+  const msg=buildRequestMessageLegacy(key);
+  if(!msg){ alert("Aucun travailleur assigné à cette demande."); return; }
+  if(!msg.employee?.email){ alert("Ajoute un courriel à cet employé avant d’ouvrir le courriel."); return; }
+  const url=`mailto:${encodeURIComponent(msg.employee.email)}?subject=${encodeURIComponent(msg.subject)}&body=${encodeURIComponent(msg.body)}`;
+  window.location.href=url;
 }
 
 async function sendRealEmailRequest(key){
@@ -1088,13 +1352,14 @@ function renderMonthView(){
         bar.className=`month-bar ${cls}`;
         bar.style.left=`${left}px`; bar.style.width=`${Math.max(24,width)}px`; bar.style.top=`${top}px`; bar.style.background=evt.color;
         bar.textContent=evt.title; bar.title=`${evt.title} — ${timeRangeLabel(evt)}`;
-        bar.addEventListener("click",(e)=>{ e.stopPropagation(); openEditModal(evt.id); });
+        bar.addEventListener("click",(e)=>{ e.stopPropagation(); selectEventInCalendar(evt.id); });
+        bar.addEventListener("dblclick",(e)=>{ e.stopPropagation(); openEditModal(evt.id); });
         barLayer.appendChild(bar);
       });
     });
   }
   els.monthView.querySelectorAll(".day-cell").forEach(cell=>{
-    cell.addEventListener("click",()=>{ state.selectedDate=parseLocalDate(cell.dataset.date); renderSelectedPanel(); renderMonthView(); });
+    cell.addEventListener("click",()=>{ clearSelectedCalendarEvent(); state.selectedDate=parseLocalDate(cell.dataset.date); renderSelectedPanel(); renderQuickSummary(); renderMonthView(); });
     cell.addEventListener("dblclick",()=>openCreateModal(parseLocalDate(cell.dataset.date)));
   });
 }
@@ -1132,10 +1397,10 @@ function renderWeekView(){
   html+="</div></div>";
   els.weekView.innerHTML=html;
   els.weekView.querySelectorAll(".week-slot").forEach(slot=>{
-    slot.addEventListener("click",(e)=>{ if(e.target.closest(".week-event")) return; state.selectedDate=parseLocalDate(slot.dataset.date); renderSelectedPanel(); });
+    slot.addEventListener("click",(e)=>{ if(e.target.closest(".week-event")) return; clearSelectedCalendarEvent(); state.selectedDate=parseLocalDate(slot.dataset.date); renderSelectedPanel(); renderQuickSummary(); });
     slot.addEventListener("dblclick",()=>openCreateModal(parseLocalDate(slot.dataset.date),slot.dataset.hour));
   });
-  els.weekView.querySelectorAll(".week-event").forEach(item=>item.addEventListener("click",(e)=>{ e.stopPropagation(); openEditModal(item.dataset.id); }));
+  els.weekView.querySelectorAll(".week-event").forEach(item=>{ item.addEventListener("click",(e)=>{ e.stopPropagation(); selectEventInCalendar(item.dataset.id); }); item.addEventListener("dblclick",(e)=>{ e.stopPropagation(); openEditModal(item.dataset.id); }); });
 }
 
 function renderDayView(){
@@ -1165,10 +1430,84 @@ function renderDayView(){
   html+='</div></div>';
   els.dayView.innerHTML=html;
   els.dayView.querySelectorAll(".timeline-block").forEach(block=>block.addEventListener("dblclick",()=>openCreateModal(parseLocalDate(block.dataset.date),block.dataset.hour)));
-  els.dayView.querySelectorAll(".timeline-card").forEach(card=>card.addEventListener("click",()=>openEditModal(card.dataset.id)));
+  els.dayView.querySelectorAll(".timeline-card").forEach(card=>{ card.addEventListener("click",()=>selectEventInCalendar(card.dataset.id,state.selectedDate)); card.addEventListener("dblclick",(e)=>{ e.stopPropagation(); openEditModal(card.dataset.id); }); });
+}
+
+
+function selectEventInCalendar(evtId,date=null){
+  const evt=state.events.find(x=>x.id===evtId);
+  if(!evt) return;
+  state.selectedEventId=evtId;
+  state.selectedDate=date?startOfDay(date):eventStartDate(evt);
+  renderSelectedPanel();
+  renderQuickSummary();
+  if(state.currentView==="month") renderMonthView();
+}
+function clearSelectedCalendarEvent(){
+  state.selectedEventId=null;
+}
+function selectedCalendarEvent(){
+  const evt=state.events.find(x=>x.id===state.selectedEventId);
+  if(!evt) return null;
+  return evt;
+}
+function eventAssignmentsForSummary(evt){
+  const out=[];
+  normalizeEventBlocks(evt).forEach((block,blockIdx)=>{
+    (block.roles||[]).forEach((roleItem,roleIdx)=>{
+      const normalized=normalizeRoleRequest(roleItem);
+      const ids=(Array.isArray(normalized.employeeIds)&&normalized.employeeIds.length?normalized.employeeIds:[normalized.employeeId||""]);
+      const names=ids.map(id=>employeeNameById(id)||"À combler");
+      out.push({block,blockIdx,roleIdx,roleItem:normalized,names,status:roleVisualState(normalized)});
+    });
+  });
+  return out;
+}
+function renderQuickSummary(){
+  if(!els.quickSummaryContent) return;
+  const selectedEvt=selectedCalendarEvent();
+  if(selectedEvt){
+    const items=eventAssignmentsForSummary(selectedEvt);
+    els.quickSummaryTitle.textContent="Disponibilités de l’événement";
+    els.quickSummarySub.textContent="Lecture rapide des postes et des confirmations du travail sélectionné.";
+    if(!items.length){
+      els.quickSummaryContent.innerHTML=`<div class="empty">Aucun poste assigné dans cet événement pour l’instant.</div>`;
+      return;
+    }
+    els.quickSummaryContent.innerHTML=items.map(item=>`
+      <div class="event-card">
+        <div class="event-card-top">
+          <div>
+            <div class="event-title">${escapeHtml(item.roleItem.role||"Poste")}${item.roleItem.quantity>1?` ×${item.roleItem.quantity}`:""}</div>
+            <div class="event-meta">${escapeHtml(item.block.name)} · ${escapeHtml(item.names.join(" · "))}</div>
+          </div>
+          <span class="status-pill ${item.status.cls}">${escapeHtml(item.status.label)}</span>
+        </div>
+      </div>
+    `).join("");
+    return;
+  }
+  els.quickSummaryTitle.textContent="Résumé rapide";
+  els.quickSummarySub.textContent="Événements, postes et assignations.";
+  els.quickSummaryContent.innerHTML=`
+    <div class="selected-date-box"><div class="label">Événements filtrés</div><div class="value">${escapeHtml(String(els.statEvents.textContent||"0"))}</div><div class="muted">Selon les filtres actuels.</div></div>
+    <div class="selected-date-box"><div class="label">Postes ouverts</div><div class="value">${escapeHtml(String(els.statOpenRoles.textContent||"0"))}</div><div class="muted">Postes sans employé assigné.</div></div>
+    <div class="selected-date-box"><div class="label">Assignations</div><div class="value">${escapeHtml(String(els.statAssignments.textContent||"0"))}</div><div class="muted">Postes déjà comblés.</div></div>
+  `;
 }
 
 function renderSelectedPanel(){
+  const selectedEvt=selectedCalendarEvent();
+  if(selectedEvt && spansDate(selectedEvt,state.selectedDate)){
+    els.selectedDateTitle.textContent=escapeHtml(selectedEvt.title);
+    els.selectedDateSub.textContent=`${escapeHtml(timeRangeLabel(selectedEvt))}${selectedEvt.location?" · "+escapeHtml(selectedEvt.location):""}`;
+    const items=[selectedEvt];
+    els.selectedEventsList.innerHTML=items.map(evt=>`<div class="event-card"><div class="event-card-top"><div><div class="event-title"><span class="color-dot" style="background:${evt.color}"></span>${escapeHtml(evt.title)}</div><div class="event-meta">${escapeHtml(timeRangeLabel(evt))}${evt.location?" · "+escapeHtml(evt.location):""}</div></div></div>${normalizeEventBlocks(evt).length?`<div class="chip-wrap">${normalizeEventBlocks(evt).map(block=>`<span class="chip">${escapeHtml(block.name)} · ${escapeHtml(blockRolesSummary(block))}</span>`).join("")}</div>`:`<div class="empty">Aucun bloc ajouté à cet événement.</div>`}${evt.notes?`<div class="event-meta">${escapeHtml(evt.notes)}</div>`:""}<div class="row-actions"><button class="btn secondary small" type="button" data-edit-id="${evt.id}">Modifier</button><button class="btn danger small" type="button" data-del-id="${evt.id}">Supprimer</button></div></div>`).join("");
+    els.selectedEventsList.querySelectorAll("[data-edit-id]").forEach(btn=>btn.addEventListener("click",()=>openEditModal(btn.dataset.editId)));
+    els.selectedEventsList.querySelectorAll("[data-del-id]").forEach(btn=>btn.addEventListener("click",()=>deleteEvent(btn.dataset.delId)));
+    return;
+  }
+  state.selectedEventId=null;
   els.selectedDateTitle.textContent=capitalize(formatLongDate(state.selectedDate));
   const items=eventsForDate(state.selectedDate);
   els.selectedDateSub.textContent=items.length?`${items.length} événement${items.length>1?"s":""}`:"Aucun événement";
@@ -1198,10 +1537,36 @@ function buildEmployeeOptionsForRole(role,selectedId=""){
   const compatible=employeesForRole(role);
   return [`<option value="" ${selectedId===""?"selected":""}>À combler</option>`, ...compatible.map(emp=>`<option value="${escapeHtml(emp.id)}" ${emp.id===selectedId?"selected":""}>${escapeHtml(emp.name)}</option>`)].join("");
 }
+function syncRoleEmployees(roleItem){
+  const qty=Math.max(1, Number(roleItem.quantity)||1);
+  const ids=Array.isArray(roleItem.employeeIds)?roleItem.employeeIds.map(x=>String(x||"")):[String(roleItem.employeeId||"")];
+  roleItem.quantity=qty;
+  roleItem.employeeIds=Array.from({length:qty},(_,i)=>ids[i]||"");
+  roleItem.employeeId=roleItem.employeeIds[0]||"";
+  return roleItem;
+}
+function employeeNamesForRoleItem(roleItem){
+  const ids=(Array.isArray(roleItem.employeeIds)&&roleItem.employeeIds.length?roleItem.employeeIds:[roleItem.employeeId||""]).filter(Boolean);
+  return ids.map(employeeNameById).filter(Boolean);
+}
+function buildFirstEmployeeSelectorHtml(blockIdx,roleIdx,roleItem){
+  const ids=(Array.isArray(roleItem.employeeIds)&&roleItem.employeeIds.length?roleItem.employeeIds:[roleItem.employeeId||""]);
+  return `<div class="field role-main role-emp-first" style="margin:0"><label>${roleItem.quantity>1?"Employé 1":"Employé assigné"}</label><select data-role-employee-slot="${blockIdx}:${roleIdx}:0">${buildEmployeeOptionsForRole(roleItem.role||"", ids[0]||"")}</select></div>`;
+}
+function buildExtraEmployeeSelectorsHtml(blockIdx,roleIdx,roleItem){
+  const qty=Math.max(1, Number(roleItem.quantity)||1);
+  const ids=(Array.isArray(roleItem.employeeIds)&&roleItem.employeeIds.length?roleItem.employeeIds:[roleItem.employeeId||""]);
+  if(qty<=1) return "";
+  return `<div class="employee-slots-extra">${Array.from({length:qty-1},(_,offset)=>{
+    const slotIdx=offset+1;
+    return `<div class="field" style="margin:0"><label>Employé ${slotIdx+1}</label><select data-role-employee-slot="${blockIdx}:${roleIdx}:${slotIdx}">${buildEmployeeOptionsForRole(roleItem.role||"", ids[slotIdx]||"")}</select></div>`;
+  }).join("")}</div>`;
+}
+
 function sortCurrentBlocks(){ state.currentBlocks.sort((a,b)=>compareDateTimes(a.startDate||"",a.startTime||"00:00",b.startDate||"",b.startTime||"00:00")); }
+function sortBlocksForSave(blocks){ return [...blocks].sort((a,b)=>compareDateTimes(a.startDate||"",a.startTime||"00:00",b.startDate||"",b.startTime||"00:00")); }
 
 function renderBlockEditor(){
-  sortCurrentBlocks();
   if(!state.currentBlocks.length){ els.blockList.innerHTML=`<div class="empty">Aucun bloc. Ajoute par exemple Montage, Show ou Démontage.</div>`; return; }
   els.blockList.innerHTML=state.currentBlocks.map((block,blockIdx)=>`
     <div class="block-card">
@@ -1216,21 +1581,22 @@ function renderBlockEditor(){
         <div class="block-section-title">Horaire du bloc</div>
         <div class="block-compact-grid">
           <div class="field"><label>Date début</label><input data-block-start-date="${blockIdx}" type="date" value="${escapeHtml(block.startDate||"")}"/></div>
-          <div class="field"><label>Heure début</label><input data-block-start-time="${blockIdx}" type="time" step="900" value="${escapeHtml(block.startTime||"09:00")}"/></div>
+          <div class="field"><label>Heure début</label>${buildTimePairHtml("start",blockIdx,block.startTime||"09:00")}</div>
           <div class="field"><label>Date fin</label><input data-block-end-date="${blockIdx}" type="date" min="${escapeHtml(block.startDate||"")}" value="${escapeHtml(block.endDate||"")}"/></div>
-          <div class="field"><label>Heure fin</label><input data-block-end-time="${blockIdx}" type="time" step="900" value="${escapeHtml(block.endTime||"17:00")}"/></div>
+          <div class="field"><label>Heure fin</label>${buildTimePairHtml("end",blockIdx,block.endTime||"17:00")}</div>
         </div>
       </div>
       <div class="block-section">
         <div class="block-section-title">Postes dans ce bloc</div>
         <div class="roles-list">
-          ${(block.roles||[]).length ? (block.roles||[]).map((roleItem,roleIdx)=>{ const opts=buildBlockRoleOptions(roleItem.role||"",roleItem.employeeId||""); return `<div class="role-item-row"><div class="role-entry" style="grid-template-columns:1fr 1fr auto"><div class="field" style="margin:0"><label>Poste</label><select data-role-role="${blockIdx}:${roleIdx}">${opts.roleOptions}</select></div><div class="field" style="margin:0"><label>Employé assigné</label><select data-role-employee="${blockIdx}:${roleIdx}">${opts.employeeOptions}</select></div><div class="field" style="margin:0"><label>&nbsp;</label><button class="btn danger small" type="button" data-del-role="${blockIdx}:${roleIdx}" style="width:100%">Retirer poste</button></div></div></div>`; }).join("") : `<div class="empty">Aucun poste dans ce bloc.</div>`}
+          ${(block.roles||[]).length ? (block.roles||[]).map((roleItem,roleIdx)=>{ const opts=buildBlockRoleOptions(roleItem.role||"",roleItem.employeeId||""); return `<div class="role-item-row"><div class="role-item-grid"><div class="field role-main role-role" style="margin:0"><label>Poste</label><select data-role-role="${blockIdx}:${roleIdx}">${opts.roleOptions}</select></div><div class="field role-main role-qty" style="margin:0"><label>Nombre</label><input data-role-quantity="${blockIdx}:${roleIdx}" type="number" min="1" step="1" value="${escapeHtml(String(roleItem.quantity||1))}"/></div>${buildFirstEmployeeSelectorHtml(blockIdx,roleIdx,roleItem)}${buildExtraEmployeeSelectorsHtml(blockIdx,roleIdx,roleItem)}<div class="field role-main role-del" style="margin:0"><label>&nbsp;</label><button class="btn danger small" type="button" data-del-role="${blockIdx}:${roleIdx}" style="width:100%">Retirer poste</button></div></div></div>`; }).join("") : ``}
         </div>
       </div>
       <div class="block-section">
         <div class="block-section-title">Ajouter un poste au bloc</div>
-        <div class="role-entry" style="grid-template-columns:1fr 1fr auto">
+        <div class="role-entry" style="grid-template-columns:1fr .55fr 1.35fr auto">
           <div class="field" style="margin:0"><label>Poste</label><select data-new-role-select="${blockIdx}">${buildBlockRoleOptions().roleOptions}</select></div>
+          <div class="field" style="margin:0"><label>Nombre</label><input data-new-role-quantity="${blockIdx}" type="number" min="1" step="1" value="1"/></div>
           <div class="field" style="margin:0"><label>Employé assigné</label><select data-new-role-employee="${blockIdx}"><option value="">Choisir d’abord un poste</option></select></div>
           <div class="field" style="margin:0"><label>&nbsp;</label><button class="btn secondary" type="button" data-add-role="${blockIdx}" style="width:100%">Ajouter poste</button></div>
         </div>
@@ -1241,42 +1607,49 @@ function renderBlockEditor(){
   els.blockList.querySelectorAll("[data-block-name]").forEach(input=>input.addEventListener("input",()=>{ state.currentBlocks[Number(input.dataset.blockName)].name=input.value; }));
   els.blockList.querySelectorAll("[data-block-start-date]").forEach(input=>input.addEventListener("change",()=>{ const i=Number(input.dataset.blockStartDate), b=state.currentBlocks[i]; b.startDate=input.value; if((b.endDate||"")<(b.startDate||"")) b.endDate=b.startDate; if(compareDateTimes(b.startDate,b.startTime,b.endDate,b.endTime)>0) b.endTime=b.startTime; renderBlockEditor(); }));
   els.blockList.querySelectorAll("[data-block-end-date]").forEach(input=>input.addEventListener("change",()=>{ const i=Number(input.dataset.blockEndDate), b=state.currentBlocks[i]; b.endDate=input.value; if((b.endDate||"")<(b.startDate||"")) b.endDate=b.startDate; if(compareDateTimes(b.startDate,b.startTime,b.endDate,b.endTime)>0) b.endTime=b.startTime; renderBlockEditor(); }));
-  els.blockList.querySelectorAll("[data-block-start-time]").forEach(input=>input.addEventListener("change",()=>{ const i=Number(input.dataset.blockStartTime), b=state.currentBlocks[i]; b.startTime=to24h(input.value); if(compareDateTimes(b.startDate,b.startTime,b.endDate,b.endTime)>0) b.endTime=b.startTime; renderBlockEditor(); }));
-  els.blockList.querySelectorAll("[data-block-end-time]").forEach(input=>input.addEventListener("change",()=>{ const i=Number(input.dataset.blockEndTime), b=state.currentBlocks[i]; b.endTime=to24h(input.value); if(compareDateTimes(b.startDate,b.startTime,b.endDate,b.endTime)>0) b.endTime=b.startTime; renderBlockEditor(); }));
-  els.blockList.querySelectorAll("[data-role-role]").forEach(select=>select.addEventListener("change",()=>{ const [b,r]=select.dataset.roleRole.split(":").map(Number); state.currentBlocks[b].roles[r]=normalizeRoleRequest({role:select.value,employeeId:""}); renderBlockEditor(); }));
-  els.blockList.querySelectorAll("[data-role-employee]").forEach(select=>select.addEventListener("change",()=>{ const [b,r]=select.dataset.roleEmployee.split(":").map(Number); const roleItem=state.currentBlocks[b].roles[r]; roleItem.employeeId=select.value; roleItem.requestStatus="draft"; roleItem.responseStatus="pending"; roleItem.sentAt=""; roleItem.respondedAt=""; roleItem.requestToken=""; roleItem.backendRequestId=""; }));
+  els.blockList.querySelectorAll("[data-block-start-time-hour],[data-block-start-time-minute]").forEach(input=>input.addEventListener("change",()=>{ const i=Number((input.dataset.blockStartTimeHour||input.dataset.blockStartTimeMinute)); const b=state.currentBlocks[i]; b.startTime=to24h(getBlockTimeValue(i,"start")); if(compareDateTimes(b.startDate,b.startTime,b.endDate,b.endTime)>0) b.endTime=b.startTime; renderBlockEditor(); }));
+  els.blockList.querySelectorAll("[data-block-end-time-hour],[data-block-end-time-minute]").forEach(input=>input.addEventListener("change",()=>{ const i=Number((input.dataset.blockEndTimeHour||input.dataset.blockEndTimeMinute)); const b=state.currentBlocks[i]; b.endTime=to24h(getBlockTimeValue(i,"end")); if(compareDateTimes(b.startDate,b.startTime,b.endDate,b.endTime)>0) b.endTime=b.startTime; renderBlockEditor(); }));
+  els.blockList.querySelectorAll("[data-role-role]").forEach(select=>select.addEventListener("change",()=>{ const [b,r]=select.dataset.roleRole.split(":").map(Number); const current=state.currentBlocks[b].roles[r]||normalizeRoleRequest({}); state.currentBlocks[b].roles[r]=normalizeRoleRequest({...current,role:select.value}); renderBlockEditor(); }));
+  els.blockList.querySelectorAll("[data-role-quantity]").forEach(input=>input.addEventListener("change",()=>{ const [b,r]=input.dataset.roleQuantity.split(":").map(Number); const roleItem=state.currentBlocks[b].roles[r]; roleItem.quantity=Math.max(1, Number(input.value)||1); syncRoleEmployees(roleItem); roleItem.requestStatus="draft"; roleItem.responseStatus="pending"; roleItem.sentAt=""; roleItem.respondedAt=""; roleItem.requestToken=""; roleItem.backendRequestId=""; renderBlockEditor(); }));
+  els.blockList.querySelectorAll("[data-role-employee-slot]").forEach(select=>select.addEventListener("change",()=>{ const [b,r,slotIdx]=select.dataset.roleEmployeeSlot.split(":").map(Number); const roleItem=state.currentBlocks[b].roles[r]; syncRoleEmployees(roleItem); roleItem.employeeIds[slotIdx]=select.value; roleItem.employeeId=roleItem.employeeIds[0]||""; roleItem.requestStatus="draft"; roleItem.responseStatus="pending"; roleItem.sentAt=""; roleItem.respondedAt=""; roleItem.requestToken=""; roleItem.backendRequestId=""; }));
   els.blockList.querySelectorAll("[data-del-role]").forEach(btn=>btn.addEventListener("click",()=>{ const [b,r]=btn.dataset.delRole.split(":").map(Number); state.currentBlocks[b].roles.splice(r,1); renderBlockEditor(); }));
   els.blockList.querySelectorAll("[data-new-role-select]").forEach(select=>select.addEventListener("change",()=>{ const b=Number(select.dataset.newRoleSelect); const employeeSelect=els.blockList.querySelector(`[data-new-role-employee="${b}"]`); if(employeeSelect) employeeSelect.innerHTML=buildEmployeeOptionsForRole(select.value,""); }));
-  els.blockList.querySelectorAll("[data-add-role]").forEach(btn=>btn.addEventListener("click",()=>{ const b=Number(btn.dataset.addRole); const roleSelect=els.blockList.querySelector(`[data-new-role-select="${b}"]`); const empSelect=els.blockList.querySelector(`[data-new-role-employee="${b}"]`); const role=roleSelect.value; if(!role) return; state.currentBlocks[b].roles.push(normalizeRoleRequest({role,employeeId:empSelect.value||""})); renderBlockEditor(); }));
+  els.blockList.querySelectorAll("[data-add-role]").forEach(btn=>btn.addEventListener("click",()=>{ const b=Number(btn.dataset.addRole); const roleSelect=els.blockList.querySelector(`[data-new-role-select="${b}"]`); const empSelect=els.blockList.querySelector(`[data-new-role-employee="${b}"]`); const qtyInput=els.blockList.querySelector(`[data-new-role-quantity="${b}"]`); const role=roleSelect.value; if(!role) return; const quantity=Math.max(1, Number(qtyInput?.value)||1); const employeeIds=Array.from({length:quantity},(_,i)=>i===0?(empSelect.value||""):""); state.currentBlocks[b].roles.push(normalizeRoleRequest({role,quantity,employeeIds})); renderBlockEditor(); }));
 }
 
 function openCreateModal(date=state.selectedDate,hour="09:00"){
   state.editingId=null; state.selectedColor=COLORS[0]; state.currentBlocks=[]; els.modalTitle.textContent="Nouvel événement";
-  els.evtTitle.value=""; els.evtStartDate.value=toDateInput(date); els.evtEndDate.value=toDateInput(date); els.evtTime.value=hour; els.evtEndTime.value=suggestedEnd(hour); els.evtLocation.value=""; els.evtNotes.value="";
-  els.btnDeleteEvent.style.display="none"; renderColorButtons(); renderBlockEditor(); showModal(); els.evtTitle.focus();
+  els.evtTitle.value=""; els.evtStartDate.value=toDateInput(date); els.evtEndDate.value=toDateInput(date); setEventTimeValue("start",hour); setEventTimeValue("end",suggestedEnd(hour)); els.evtLocation.value=""; els.evtNotes.value="";
+  els.btnDeleteEvent.style.display="none"; renderColorButtons(); renderBlockEditor(); showModal(); toggleEventTimeVisibility(); els.evtTitle.focus();
 }
 function openEditModal(id){
   const evt=state.events.find(x=>x.id===id); if(!evt) return;
   state.editingId=id; state.selectedColor=evt.color||COLORS[0];
   state.currentBlocks=normalizeEventBlocks(evt).map(b=>({id:b.id||cryptoRandomId(),name:b.name||"",startDate:b.startDate||evt.startDate,endDate:b.endDate||evt.endDate,startTime:b.startTime||evt.time||"09:00",endTime:b.endTime||evt.endTime||"17:00",roles:Array.isArray(b.roles)?b.roles.map(r=>normalizeRoleRequest(r)):[]}));
-  els.modalTitle.textContent="Modifier l’événement"; els.evtTitle.value=evt.title||""; els.evtStartDate.value=evt.startDate||toDateInput(state.selectedDate); els.evtEndDate.value=evt.endDate||toDateInput(state.selectedDate); els.evtTime.value=evt.time||"09:00"; els.evtEndTime.value=evt.endTime||"12:00"; els.evtLocation.value=evt.location||""; els.evtNotes.value=evt.notes||"";
-  els.btnDeleteEvent.style.display="inline-flex"; renderColorButtons(); renderBlockEditor(); showModal();
+  els.modalTitle.textContent="Modifier l’événement"; els.evtTitle.value=evt.title||""; els.evtStartDate.value=evt.startDate||toDateInput(state.selectedDate); els.evtEndDate.value=evt.endDate||toDateInput(state.selectedDate); setEventTimeValue("start",evt.time||"09:00"); setEventTimeValue("end",evt.endTime||"12:00"); els.evtLocation.value=evt.location||""; els.evtNotes.value=evt.notes||"";
+  els.btnDeleteEvent.style.display="inline-flex"; renderColorButtons(); renderBlockEditor(); showModal(); toggleEventTimeVisibility();
 }
 function showModal(){ els.modalWrap.style.display="flex"; }
 function closeModal(){ els.modalWrap.style.display="none"; }
 function suggestedEnd(time){ const [h,m]=String(time).split(":").map(Number); const d=new Date(); d.setHours(h,m,0,0); d.setHours(d.getHours()+3); return `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`; }
 function saveEventFromModal(){
-  const cleanBlocks=state.currentBlocks.map(block=>({id:block.id||cryptoRandomId(),name:String(block.name||"").trim()||"Bloc",startDate:block.startDate,endDate:block.endDate,startTime:to24h(block.startTime||"09:00"),endTime:to24h(block.endTime||"17:00"),roles:(block.roles||[]).map(item=>normalizeRoleRequest({role:String(item.role||"").trim(),employeeId:String(item.employeeId||""),requestStatus:item.requestStatus,responseStatus:item.responseStatus,sentAt:item.sentAt,respondedAt:item.respondedAt,lastChannel:item.lastChannel,lastMessage:item.lastMessage,requestToken:item.requestToken,backendRequestId:item.backendRequestId})).filter(item=>item.role)})).filter(block=>block.startDate&&block.endDate);
+  const cleanBlocks=sortBlocksForSave(state.currentBlocks.map(block=>({id:block.id||cryptoRandomId(),name:String(block.name||"").trim()||"Bloc",startDate:block.startDate,endDate:block.endDate,startTime:to24h(block.startTime||"09:00"),endTime:to24h(block.endTime||"17:00"),roles:(block.roles||[]).map(item=>normalizeRoleRequest({role:String(item.role||"").trim(),quantity:Math.max(1, parseInt(item.quantity||1,10)||1),employeeId:String(item.employeeId||""),requestStatus:item.requestStatus,responseStatus:item.responseStatus,sentAt:item.sentAt,respondedAt:item.respondedAt,lastChannel:item.lastChannel,lastMessage:item.lastMessage,requestToken:item.requestToken,backendRequestId:item.backendRequestId})).filter(item=>item.role)})).filter(block=>block.startDate&&block.endDate));
   if(!els.evtTitle.value.trim()){ alert("Ajoute un titre à l’événement."); els.evtTitle.focus(); return; }
   if(!els.evtStartDate.value||!els.evtEndDate.value){ alert("Choisis les dates de début et de fin."); return; }
   if(els.evtEndDate.value<els.evtStartDate.value){ alert("La date de fin doit être égale ou après la date de début."); return; }
   for(const block of cleanBlocks){ if(block.endDate<block.startDate){ alert(`Le bloc "${block.name}" a une date de fin avant sa date de début.`); return; } if(compareDateTimes(block.startDate,block.startTime,block.endDate,block.endTime)>0){ alert(`Le bloc "${block.name}" se termine avant de commencer.`); return; } }
-  let globalStartDate=els.evtStartDate.value, globalEndDate=els.evtEndDate.value, globalStartTime=to24h(els.evtTime.value), globalEndTime=to24h(els.evtEndTime.value);
-  if(cleanBlocks.length){
+  const globalStartDate=els.evtStartDate.value;
+  const globalEndDate=els.evtEndDate.value;
+  let globalStartTime=to24h(els.evtTime.value);
+  let globalEndTime=to24h(els.evtEndTime.value);
+  if(cleanBlocks.length && globalStartDate===globalEndDate){
     cleanBlocks.sort((a,b)=>(a.startDate+" "+a.startTime).localeCompare(b.startDate+" "+b.startTime));
-    globalStartDate=cleanBlocks[0].startDate; globalStartTime=cleanBlocks[0].startTime;
-    const sortedEnd=[...cleanBlocks].sort((a,b)=>(b.endDate+" "+b.endTime).localeCompare(a.endDate+" "+a.endTime));
-    globalEndDate=sortedEnd[0].endDate; globalEndTime=sortedEnd[0].endTime;
+    const sameDayBlocks=cleanBlocks.filter(block=>block.startDate===globalStartDate && block.endDate===globalEndDate);
+    if(sameDayBlocks.length){
+      globalStartTime=sameDayBlocks[0].startTime;
+      const sortedEnd=[...sameDayBlocks].sort((a,b)=>(b.endDate+" "+b.endTime).localeCompare(a.endDate+" "+a.endTime));
+      globalEndTime=sortedEnd[0].endTime;
+    }
   }
   const payload={title:els.evtTitle.value.trim(),startDate:globalStartDate,endDate:globalEndDate,time:globalStartTime,endTime:globalEndTime,color:state.selectedColor,location:els.evtLocation.value.trim(),notes:els.evtNotes.value.trim(),blocks:cleanBlocks};
   if(state.editingId){ const idx=state.events.findIndex(x=>x.id===state.editingId); if(idx>=0) state.events[idx]={...state.events[idx],...payload}; }
@@ -1345,85 +1718,28 @@ function deleteEmployee(id){
 function addEmployeeRoleToDraft(){ const role=els.empRoleSelect.value; if(!role) return; state.currentEmployeeRoles=normalizeRoles([...state.currentEmployeeRoles, role]); renderCurrentEmployeeRoles(); }
 
 
-function renderAvailability(){
-  const items=allAssignments().sort((a,b)=>`${a.block.startDate} ${a.block.startTime}`.localeCompare(`${b.block.startDate} ${b.block.startTime}`));
-  const confirmed=items.filter(x=>x.roleItem.responseStatus==="available").length;
-  const pending=items.filter(x=>x.roleItem.requestStatus==="sent" || x.roleItem.responseStatus==="maybe" || x.roleItem.requestStatus==="draft").length;
-  const problems=items.filter(x=>x.roleItem.responseStatus==="unavailable" || findEmployeeConflicts(x.roleItem.employeeId,x.evtId,x.blockId,x.roleIdx).length).length;
-  els.availStatConfirmed.textContent=String(confirmed);
-  els.availStatPending.textContent=String(pending);
-  els.availStatProblems.textContent=String(problems);
-  if(!items.length){ els.availabilitySyncMsg.innerHTML = state.syncBanner ? `<div class="sync-banner">${escapeHtml(state.syncBanner)}</div>` : ''; els.availabilityList.innerHTML=`<div class="empty">Aucun poste assigné pour l'instant. Ajoute des postes dans un événement pour commencer les demandes.</div>`; els.requestPreview.innerHTML=`<div class="empty">Choisis une assignation pour voir l'aperçu employé.</div>`; return; }
-  if(!state.activeRequestKey) state.activeRequestKey=items[0].key;
-  els.availabilityList.innerHTML=items.map(item=>{
-    const emp=state.employees.find(x=>x.id===item.roleItem.employeeId);
-    const status=roleVisualState(item.roleItem);
-    const conflicts=findEmployeeConflicts(item.roleItem.employeeId,item.evtId,item.blockId,item.roleIdx);
-    const suggestions=replacementSuggestions(item.key);
-    const timing=getRoleTiming(item.evt,item.block);
-    return `<div class="assignment-card">
-      <div class="assignment-head">
-        <div>
-          <div class="assignment-title">${escapeHtml(item.roleItem.role||"Poste")}${emp?` — ${escapeHtml(emp.name)}`:" — à combler"}</div>
-          <div class="assignment-sub">${escapeHtml(item.evt.title)} · ${escapeHtml(item.block.name)} · ${escapeHtml(timing.startDate)} ${escapeHtml(timing.startTime)} → ${escapeHtml(timing.endDate)} ${escapeHtml(timing.endTime)}${item.evt.location?` · ${escapeHtml(item.evt.location)}`:""}</div>
-        </div>
-        <div class="chip-wrap">
-          <span class="status-pill ${status.cls}">${escapeHtml(status.label)}</span>
-          ${conflicts.length?`<span class="status-pill red">Conflit</span>`:""}
-        </div>
-      </div>
-      ${conflicts.length?`<div class="conflict-box">${escapeHtml(emp?.name||"Cette personne")} est déjà booké(e) sur ${conflicts.map(c=>`${c.evt.title} / ${c.block.name}`).join(' · ')}.</div>`:`<div class="good-box">Aucun conflit détecté pour cette assignation.</div>`}
-      <div class="assignment-actions">
-        <button class="btn secondary small" type="button" data-preview-request="${item.key}">Prévisualiser</button>
-        <button class="btn secondary small" type="button" data-open-web="${item.key}">Ouvrir lien web</button>
-        <button class="btn secondary small" type="button" data-copy-web="${item.key}">Copier lien web</button>
-        <button class="btn primary small" type="button" data-send-real-email="${item.key}">Envoyer email réel</button><button class="btn secondary small" type="button" data-send-email="${item.key}">Brouillon courriel</button>
-        <button class="btn secondary small" type="button" data-send-sms="${item.key}">Envoyer SMS</button>
-        <button class="btn small ${item.roleItem.responseStatus==='available'?'primary':'secondary'}" type="button" data-answer-yes="${item.key}">Confirmé</button>
-        <button class="btn small ${item.roleItem.responseStatus==='maybe'?'primary':'secondary'}" type="button" data-answer-maybe="${item.key}">Peut-être</button>
-        <button class="btn small ${item.roleItem.responseStatus==='unavailable'?'danger':'secondary'}" type="button" data-answer-no="${item.key}">Non dispo</button>
-      </div>
-      ${item.roleItem.requestToken?`<div class="small-note">Token demande: ${escapeHtml(item.roleItem.requestToken.slice(0,8))}…</div>`:""}${suggestions.length?`<div><div class="small-note" style="margin-bottom:8px">Remplacements suggérés</div><div class="assignment-suggestions">${suggestions.map(s=>`<button class="btn secondary small" type="button" data-replace="${item.key}::${s.emp.id}">${escapeHtml(s.emp.name)}${s.conflicts.length?' · conflit':''}</button>`).join('')}</div></div>`:`<div class="small-note">Aucun remplaçant compatible trouvé pour le moment.</div>`}
-    </div>`;
-  }).join('');
-  els.availabilityList.querySelectorAll('[data-preview-request]').forEach(btn=>btn.addEventListener('click',()=>{ state.activeRequestKey=btn.dataset.previewRequest; renderAvailability(); }));
-  els.availabilityList.querySelectorAll('[data-open-web]').forEach(btn=>btn.addEventListener('click',()=>{ window.open(buildPortalUrl(btn.dataset.openWeb),'_blank'); }));
-  els.availabilityList.querySelectorAll('[data-copy-web]').forEach(btn=>btn.addEventListener('click',()=>copyText(buildPortalUrl(btn.dataset.copyWeb))));
-  els.availabilityList.querySelectorAll('[data-send-real-email]').forEach(btn=>btn.addEventListener('click',()=>sendRealEmailRequest(btn.dataset.sendRealEmail)));
-  els.availabilityList.querySelectorAll('[data-send-email]').forEach(btn=>btn.addEventListener('click',()=>openRequestChannel(btn.dataset.sendEmail,'email')));
-  els.availabilityList.querySelectorAll('[data-send-sms]').forEach(btn=>btn.addEventListener('click',()=>openRequestChannel(btn.dataset.sendSms,'sms')));
-  els.availabilityList.querySelectorAll('[data-answer-yes]').forEach(btn=>btn.addEventListener('click',()=>setAssignmentResponse(btn.dataset.answerYes,'available')));
-  els.availabilityList.querySelectorAll('[data-answer-maybe]').forEach(btn=>btn.addEventListener('click',()=>setAssignmentResponse(btn.dataset.answerMaybe,'maybe')));
-  els.availabilityList.querySelectorAll('[data-answer-no]').forEach(btn=>btn.addEventListener('click',()=>setAssignmentResponse(btn.dataset.answerNo,'unavailable')));
-  els.availabilityList.querySelectorAll('[data-replace]').forEach(btn=>btn.addEventListener('click',()=>{ const [key,empId]=btn.dataset.replace.split('::'); applyReplacement(key,empId); }));
 
-  const active=getAssignmentByKey(state.activeRequestKey) || items[0];
-  if(active) state.activeRequestKey=active.key;
-  if(!active){ els.requestPreview.innerHTML=`<div class="empty">Choisis une assignation pour voir l'aperçu employé.</div>`; return; }
-  const emp=state.employees.find(x=>x.id===active.roleItem.employeeId);
-  const timing=getRoleTiming(active.evt,active.block);
-  els.requestPreview.innerHTML=`<div class="preview-card">
-    <div class="status-pill ${roleVisualState(active.roleItem).cls}" style="width:max-content">${escapeHtml(roleVisualState(active.roleItem).label)}</div>
-    <h4 class="preview-title">Demande de travail</h4>
-    <div class="preview-meta">Bonjour ${escapeHtml(emp?.name||'travailleur')},<br><br>On aimerait te booker sur <strong>${escapeHtml(active.evt.title)}</strong> pour le bloc <strong>${escapeHtml(active.block.name)}</strong> au poste de <strong>${escapeHtml(active.roleItem.role)}</strong>.<br><br>${escapeHtml(timing.startDate)} ${escapeHtml(timing.startTime)} → ${escapeHtml(timing.endDate)} ${escapeHtml(timing.endTime)}<br>${active.evt.location?escapeHtml(active.evt.location):'Lieu à confirmer'}</div>
-    <div class="preview-actions">
-      <button class="btn primary" type="button" id="previewAccept">Je suis disponible</button>
-      <button class="btn secondary" type="button" id="previewMaybe">Peut-être</button>
-      <button class="btn danger" type="button" id="previewDecline">Je ne suis pas disponible</button>
-      <button class="btn primary" type="button" id="previewSendRealEmail">Envoyer email réel</button><button class="btn secondary" type="button" id="previewSyncStatus">Synchroniser réponse</button><button class="btn secondary" type="button" id="previewOpenLink">Ouvrir vrai lien web</button>
-      <button class="btn secondary" type="button" id="previewCopyLink">Copier lien web</button>
-    </div>
-    <div class="small-note">Avec l'email réel, le travailleur reçoit maintenant un vrai lien GitHub. Après sa réponse, clique sur « Synchroniser réponse » pour rapatrier le statut dans le scheduler.</div>
-  </div>`;
-  document.getElementById('previewAccept')?.addEventListener('click',()=>setAssignmentResponse(active.key,'available'));
-  document.getElementById('previewMaybe')?.addEventListener('click',()=>setAssignmentResponse(active.key,'maybe'));
-  document.getElementById('previewDecline')?.addEventListener('click',()=>setAssignmentResponse(active.key,'unavailable'));
-  document.getElementById('previewSendRealEmail')?.addEventListener('click',()=>sendRealEmailRequest(active.key));
-  document.getElementById('previewSyncStatus')?.addEventListener('click',async()=>{ try{ const result=await syncAssignmentFromSupabase(active.key); state.syncBanner=result.ok?'Réponse distante synchronisée.':result.reason; renderAll(); } catch(err){ alert(err.message||err); } });
-  document.getElementById('previewOpenLink')?.addEventListener('click',()=>window.open(refinedRespondLink(active),'_blank'));
-  document.getElementById('previewCopyLink')?.addEventListener('click',()=>copyText(refinedRespondLink(active)));
+function formatBlockRange(block,evt){ const timing=getRoleTiming(evt,block); return timing.startDate===timing.endDate ? `${timing.startDate} · ${timing.startTime} → ${timing.endTime}` : `${timing.startDate} ${timing.startTime} → ${timing.endDate} ${timing.endTime}`; }
+function groupSlotsByEventAndBlock(items){ const eventOrder=new Map(state.events.map((evt,i)=>[evt.id,i])); const sorted=[...items].sort((a,b)=>{ const c=`${a.evt.startDate||''} ${a.evt.time||''}`.localeCompare(`${b.evt.startDate||''} ${b.evt.time||''}`); return c || ((eventOrder.get(a.evtId)||0)-(eventOrder.get(b.evtId)||0)); }); const groups=[]; sorted.forEach(item=>{ let eg=groups.find(g=>g.evt.id===item.evt.id); if(!eg){ eg={evt:item.evt,blocks:[]}; groups.push(eg); } let bg=eg.blocks.find(g=>g.block.id===item.block.id); if(!bg){ bg={block:item.block,items:[]}; eg.blocks.push(bg); } bg.items.push(item); }); return groups; }
+function eventTint(color){ const c=String(color||'#2563eb').replace('#',''); if(c.length!==6) return 'linear-gradient(135deg, rgba(37,99,235,.13), rgba(37,99,235,.04))'; const r=parseInt(c.slice(0,2),16),g=parseInt(c.slice(2,4),16),b=parseInt(c.slice(4,6),16); return `linear-gradient(135deg, rgba(${r},${g},${b},.18), rgba(${r},${g},${b},.045))`; }
+function setSlotResponse(key,responseStatus){ const item=getAssignmentSlotByKey(key); if(!item) return; const ref=getRoleItemRef(item.evtId,item.blockId,item.roleIdx); if(!ref) return; syncRoleEmployees(ref.roleItem); const slot=ref.roleItem.slotRequests?.[item.slotIdx]; if(!slot) return; slot.requestStatus='answered'; slot.responseStatus=responseStatus; slot.respondedAt=new Date().toISOString(); saveEvents(); renderAll(); }
+function renderAvailabilitySlotCard(item){ const emp=state.employees.find(x=>x.id===item.employeeId); const status=slotVisualState(item.roleItem,item.slotIdx); const conflicts=findEmployeeConflicts(item.employeeId,item.evtId,item.blockId,item.roleIdx); const suggestions=status.cls==='red'?replacementSuggestionsForSlot(item.key):[]; const qty=item.roleItem.quantity||1; return `<div class="assignment-card"><div class="assignment-head"><div><div class="assignment-title">${escapeHtml(item.roleItem.role||'Poste')}${qty>1?` · ${item.slotIdx+1}/${qty}`:''} — ${escapeHtml(emp?.name||'À combler')}</div><div class="assignment-sub">${emp?.email?escapeHtml(emp.email):emp?.phone?escapeHtml(emp.phone):'Aucun contact inscrit'}</div></div><div class="chip-wrap"><span class="status-pill ${status.cls}">${escapeHtml(status.label)}</span>${conflicts.length?`<span class="status-pill red">Conflit</span>`:''}</div></div>${conflicts.length?`<div class="conflict-box">${escapeHtml(emp?.name||'Cette personne')} est déjà booké(e) sur ${conflicts.map(c=>`${c.evt.title} / ${c.block.name}`).join(' · ')}.</div>`:''}<div class="assignment-actions clean-actions">${item.employeeId?`<button class="btn secondary small" type="button" data-open-slot-web="${item.key}">Ouvrir lien web</button><button class="btn secondary small" type="button" data-copy-slot-web="${item.key}">Copier lien web</button><button class="btn secondary small" type="button" data-copy-message-slot="${item.key}">Copier message</button><button class="btn secondary small" type="button" data-open-gmail-slot="${item.key}">Ouvrir courriel</button><button class="btn secondary small" type="button" data-sync-slot="${item.key}">Synchroniser</button>`:''}${status.cls==='red'?`<button class="btn danger small" type="button" data-toggle-replace="${item.key}">Trouver un remplaçant</button>`:''}</div><div class="status-actions"><div class="status-actions-label">Statut manuel</div><button class="btn small ${status.cls==='green'?'primary':'secondary'}" type="button" data-answer-slot-yes="${item.key}">Confirmé</button><button class="btn small ${status.label==='Peut-être'?'primary':'secondary'}" type="button" data-answer-slot-maybe="${item.key}">Peut-être</button><button class="btn small ${status.cls==='red'?'danger':'secondary'}" type="button" data-answer-slot-no="${item.key}">Non dispo</button></div>${status.cls==='red'?`<div id="replace-${item.key}" class="replacement-panel" style="display:none"><div class="replacement-title">Remplacements suggérés</div>${suggestions.length?suggestions.map(s=>`<div class="replacement-card"><div><div class="replacement-name">${escapeHtml(s.emp.name)}</div><div class="replacement-meta">${s.conflicts.length?`Conflit: ${escapeHtml(s.conflicts.map(c=>c.evt.title).join(' · '))}`:'Aucun conflit détecté'}</div><div class="replacement-badges"><span class="mini-badge green">Même poste</span>${s.conflicts.length?`<span class="mini-badge red">Conflit</span>`:`<span class="mini-badge green">Disponible</span>`}</div></div><button class="btn secondary small" type="button" data-apply-replace="${item.key}" data-emp="${s.emp.id}">Choisir</button></div>`).join(''):`<div class="empty">Aucun remplaçant compatible trouvé.</div>`}</div>`:''}</div>`; }
+function bindAvailabilityActionButtons(root){ root.querySelectorAll('[data-open-slot-web]').forEach(btn=>btn.addEventListener('click',()=>{ const item=getAssignmentSlotByKey(btn.dataset.openSlotWeb); window.open(respondLinkForSlot(item),'_blank'); })); root.querySelectorAll('[data-copy-slot-web]').forEach(btn=>btn.addEventListener('click',()=>{ const item=getAssignmentSlotByKey(btn.dataset.copySlotWeb); copyText(respondLinkForSlot(item)); })); root.querySelectorAll('[data-copy-message-slot]').forEach(btn=>btn.addEventListener('click',()=>copyRequestMessageForSlot(btn.dataset.copyMessageSlot))); root.querySelectorAll('[data-open-gmail-slot]').forEach(btn=>btn.addEventListener('click',()=>openGmailForSlot(btn.dataset.openGmailSlot))); root.querySelectorAll('[data-sync-slot]').forEach(btn=>btn.addEventListener('click',()=>syncAssignmentSlotFromSupabase(btn.dataset.syncSlot).then(()=>renderAll()).catch(err=>alert(err.message||err)))); root.querySelectorAll('[data-answer-slot-yes]').forEach(btn=>btn.addEventListener('click',()=>setSlotResponse(btn.dataset.answerSlotYes,'available'))); root.querySelectorAll('[data-answer-slot-maybe]').forEach(btn=>btn.addEventListener('click',()=>setSlotResponse(btn.dataset.answerSlotMaybe,'maybe'))); root.querySelectorAll('[data-answer-slot-no]').forEach(btn=>btn.addEventListener('click',()=>setSlotResponse(btn.dataset.answerSlotNo,'unavailable'))); root.querySelectorAll('[data-toggle-replace]').forEach(btn=>btn.addEventListener('click',()=>{ const el=document.getElementById(`replace-${btn.dataset.toggleReplace}`); if(el) el.style.display=el.style.display==='none'?'block':'none'; })); root.querySelectorAll('[data-apply-replace]').forEach(btn=>btn.addEventListener('click',()=>applyReplacementForSlot(btn.dataset.applyReplace,btn.dataset.emp))); }
+
+function renderAvailability(){
+  const items=allAssignmentSlots().sort((a,b)=>`${a.evt.startDate} ${a.block.startDate} ${a.block.startTime}`.localeCompare(`${b.evt.startDate} ${b.block.startDate} ${b.block.startTime}`));
+  els.availStatConfirmed.textContent=String(items.filter(x=>slotVisualState(x.roleItem,x.slotIdx).cls==='green').length);
+  els.availStatPending.textContent=String(items.filter(x=>['orange','gray'].includes(slotVisualState(x.roleItem,x.slotIdx).cls)).length);
+  els.availStatProblems.textContent=String(items.filter(x=>slotVisualState(x.roleItem,x.slotIdx).cls==='red' || findEmployeeConflicts(x.employeeId,x.evtId,x.blockId,x.roleIdx).length).length);
+  if(!items.length){ els.availabilitySyncMsg.innerHTML = state.syncBanner ? `<div class="sync-banner">${escapeHtml(state.syncBanner)}</div>` : ''; els.availabilityList.innerHTML=`<div class="empty">Aucun poste assigné pour l'instant. Ajoute des postes dans un événement pour commencer les demandes.</div>`; els.requestPreview.innerHTML=`<div class="empty">Choisis une assignation pour voir l'aperçu employé.</div>`; return; }
   els.availabilitySyncMsg.innerHTML = state.syncBanner ? `<div class="sync-banner">${escapeHtml(state.syncBanner)}</div>` : '';
+  els.availabilityList.innerHTML=groupSlotsByEventAndBlock(items).map(group=>{ const evt=group.evt; const eventRange=evt.startDate===evt.endDate?evt.startDate:`${evt.startDate} → ${evt.endDate}`; return `<section class="availability-event-group"><div class="availability-event-head" style="background:${eventTint(evt.color)}"><div class="availability-event-title"><span class="color-dot" style="background:${evt.color}"></span>${escapeHtml(evt.title||'Événement')}</div><div class="availability-event-meta">${escapeHtml(eventRange)}${evt.location?` · ${escapeHtml(evt.location)}`:''}</div></div>${group.blocks.map(bg=>`<div class="availability-block-group"><div class="availability-block-head"><div class="availability-block-title">${escapeHtml(bg.block.name||'Bloc')}</div><div class="availability-block-time">${escapeHtml(formatBlockRange(bg.block,evt))}</div></div><div class="availability-block-body">${bg.items.map(item=>renderAvailabilitySlotCard(item)).join('')}</div></div>`).join('')}</section>`; }).join('');
+  bindAvailabilityActionButtons(els.availabilityList);
+  const active=items.find(x=>x.key===state.activeRequestKey) || items.find(x=>x.employeeId) || items[0]; if(active) state.activeRequestKey=active.key;
+  const msg=active?buildRequestMessageForSlot(active.key):null;
+  els.requestPreview.innerHTML=active?`<div class="preview-card"><div class="status-pill ${slotVisualState(active.roleItem,active.slotIdx).cls}" style="width:max-content">${escapeHtml(slotVisualState(active.roleItem,active.slotIdx).label)}</div><h4 class="preview-title">Demande de travail</h4><div class="preview-message">${escapeHtml(msg?.body||'Assigne une personne à ce poste pour générer le message.').replaceAll('\\n','<br>')}</div></div>`:`<div class="empty">Choisis une assignation pour voir l'aperçu employé.</div>`;
 }
+
 function renderSettings(){
   els.settingDefaultChannel.value=state.settings.defaultChannel||'email';
   els.settingConflictMode.value=state.settings.conflictMode||'warn';
@@ -1440,6 +1756,7 @@ function renderCalendar(){
   else renderDayView();
   renderSelectedPanel();
   renderStats();
+  renderQuickSummary();
 }
 function renderTeam(){ buildTeamRoleFilterOptions(); renderDrawer(); renderGlobalRoles(); renderTeamEmployees(); }
 function renderAll(){ renderTabs(); renderCalendar(); renderTeam(); renderAvailability(); renderSettings(); }
@@ -1462,10 +1779,14 @@ function bind(){
   document.getElementById("btnCancelModal").addEventListener("click",closeModal);
   document.getElementById("btnSaveEvent").addEventListener("click",saveEventFromModal);
   els.btnDeleteEvent.addEventListener("click",()=>{ if(state.editingId) deleteEvent(state.editingId); });
-  els.evtTime.addEventListener("change",()=>{ if(!state.editingId) els.evtEndTime.value=suggestedEnd(els.evtTime.value); });
-  els.evtStartDate.addEventListener("change",()=>{ if(!state.editingId||!els.evtEndDate.value||els.evtEndDate.value<els.evtStartDate.value) els.evtEndDate.value=els.evtStartDate.value; });
-  document.getElementById("btnAddBlock").addEventListener("click",()=>{ const name=(els.newBlockName.value||"").trim()||"Bloc"; state.currentBlocks.push({id:cryptoRandomId(),name,startDate:els.evtStartDate.value||toDateInput(state.selectedDate),endDate:els.evtEndDate.value||els.evtStartDate.value||toDateInput(state.selectedDate),startTime:to24h(els.evtTime.value||"09:00"),endTime:to24h(els.evtEndTime.value||"17:00"),roles:[]}); els.newBlockName.value=""; renderBlockEditor(); });
-  els.modalWrap.addEventListener("click",(e)=>{ if(e.target===els.modalWrap) closeModal(); });
+  document.getElementById("evtTimeHour").addEventListener("change",()=>{ syncEventHiddenTimes(); if(!state.editingId) setEventTimeValue("end", suggestedEnd(getEventTimeValue("start"))); });
+  document.getElementById("evtTimeMinute").addEventListener("change",()=>{ syncEventHiddenTimes(); if(!state.editingId) setEventTimeValue("end", suggestedEnd(getEventTimeValue("start"))); });
+  document.getElementById("evtEndTimeHour").addEventListener("change",syncEventHiddenTimes);
+  document.getElementById("evtEndTimeMinute").addEventListener("change",syncEventHiddenTimes);
+  els.evtStartDate.addEventListener("change",()=>{ if(!state.editingId||!els.evtEndDate.value||els.evtEndDate.value<els.evtStartDate.value) els.evtEndDate.value=els.evtStartDate.value; toggleEventTimeVisibility(); });
+  els.evtEndDate.addEventListener("change",()=>{ if(els.evtEndDate.value<els.evtStartDate.value) els.evtEndDate.value=els.evtStartDate.value; toggleEventTimeVisibility(); });
+  document.getElementById("btnAddBlock").addEventListener("click",()=>{ syncEventHiddenTimes(); const name=(els.newBlockName.value||"").trim()||"Bloc"; state.currentBlocks.push({id:cryptoRandomId(),name,startDate:els.evtStartDate.value||toDateInput(state.selectedDate),endDate:els.evtEndDate.value||els.evtStartDate.value||toDateInput(state.selectedDate),startTime:to24h(document.getElementById("evtTime")?.value||"09:00"),endTime:to24h(document.getElementById("evtEndTime")?.value||"17:00"),roles:[]}); els.newBlockName.value=""; renderBlockEditor(); });
+
 
   document.getElementById("btnRefreshAvailability")?.addEventListener("click",()=>syncAllAssignmentsFromSupabase());
   document.getElementById("btnSaveSettings")?.addEventListener("click",()=>{ state.settings.defaultChannel=els.settingDefaultChannel.value; state.settings.conflictMode=els.settingConflictMode.value; state.settings.companyName=els.settingCompanyName.value.trim()||"Crew Scheduler"; saveSettings(); els.settingsSavedMsg.textContent="Paramètres enregistrés."; renderAll(); });
@@ -1483,9 +1804,249 @@ function bind(){
   els.teamContactFilter.addEventListener("change",renderTeam);
   document.getElementById("btnClearTeamFilters").addEventListener("click",()=>{ els.teamSearchInput.value=""; els.teamRoleFilter.value="all"; els.teamContactFilter.value="all"; renderTeam(); });
   els.newCatalogRole.addEventListener("keydown",(e)=>{ if(e.key==="Enter"){ e.preventDefault(); addGlobalRole(); } });
-  els.teamModalWrap.addEventListener("click",(e)=>{ if(e.target===els.teamModalWrap) closeTeamModal(); });
+
 
   window.addEventListener("keydown",(e)=>{ if(e.key==="Escape"){ if(els.modalWrap.style.display==="flex") closeModal(); if(els.teamModalWrap.style.display==="flex") closeTeamModal(); } });
+}
+
+
+function syncRoleEmployees(roleItem){
+  const qty=Math.max(1, Number(roleItem.quantity)||1);
+  const ids=Array.isArray(roleItem.employeeIds)?roleItem.employeeIds.map(x=>String(x||"")):[String(roleItem.employeeId||"")];
+  roleItem.quantity=qty;
+  roleItem.employeeIds=Array.from({length:qty},(_,i)=>ids[i]||"");
+  roleItem.employeeId=roleItem.employeeIds[0]||"";
+  const legacyFirst={
+    employeeId: roleItem.employeeIds[0]||"",
+    requestStatus: String(roleItem.requestStatus||"draft"),
+    responseStatus: String(roleItem.responseStatus||"pending"),
+    sentAt: String(roleItem.sentAt||""),
+    respondedAt: String(roleItem.respondedAt||""),
+    lastChannel: String(roleItem.lastChannel||""),
+    lastMessage: String(roleItem.lastMessage||""),
+    requestToken: String(roleItem.requestToken||""),
+    backendRequestId: String(roleItem.backendRequestId||"")
+  };
+  const existing=Array.isArray(roleItem.slotRequests)?roleItem.slotRequests:[legacyFirst];
+  roleItem.slotRequests = Array.from({length:qty},(_,i)=>({
+    employeeId: String(roleItem.employeeIds[i]||""),
+    requestStatus: String(existing[i]?.requestStatus || (i===0?legacyFirst.requestStatus:"draft") || "draft"),
+    responseStatus: String(existing[i]?.responseStatus || (i===0?legacyFirst.responseStatus:"pending") || "pending"),
+    sentAt: String(existing[i]?.sentAt || (i===0?legacyFirst.sentAt:"") || ""),
+    respondedAt: String(existing[i]?.respondedAt || (i===0?legacyFirst.respondedAt:"") || ""),
+    lastChannel: String(existing[i]?.lastChannel || (i===0?legacyFirst.lastChannel:"") || ""),
+    lastMessage: String(existing[i]?.lastMessage || (i===0?legacyFirst.lastMessage:"") || ""),
+    requestToken: String(existing[i]?.requestToken || (i===0?legacyFirst.requestToken:"") || ""),
+    backendRequestId: String(existing[i]?.backendRequestId || (i===0?legacyFirst.backendRequestId:"") || "")
+  }));
+  roleItem.requestStatus=roleItem.slotRequests[0]?.requestStatus||"draft";
+  roleItem.responseStatus=roleItem.slotRequests[0]?.responseStatus||"pending";
+  roleItem.sentAt=roleItem.slotRequests[0]?.sentAt||"";
+  roleItem.respondedAt=roleItem.slotRequests[0]?.respondedAt||"";
+  roleItem.lastChannel=roleItem.slotRequests[0]?.lastChannel||"";
+  roleItem.lastMessage=roleItem.slotRequests[0]?.lastMessage||"";
+  roleItem.requestToken=roleItem.slotRequests[0]?.requestToken||"";
+  roleItem.backendRequestId=roleItem.slotRequests[0]?.backendRequestId||"";
+  return roleItem;
+}
+
+function slotVisualState(roleItem,slotIdx){
+  syncRoleEmployees(roleItem);
+  const slot=roleItem.slotRequests?.[slotIdx]||{responseStatus:"pending",requestStatus:"draft"};
+  const empId=roleItem.employeeIds?.[slotIdx]||"";
+  if(!empId) return {label:"À combler", cls:"gray"};
+  if(slot.responseStatus==="available") return {label:"Confirmé", cls:"green"};
+  if(slot.responseStatus==="unavailable") return {label:"Refusé", cls:"red"};
+  if(slot.responseStatus==="maybe") return {label:"Peut-être", cls:"orange"};
+  if(slot.requestStatus==="sent" || slot.requestStatus==="answered") return {label:"En attente", cls:"orange"};
+  return {label:"Non envoyé", cls:"gray"};
+}
+
+function roleVisualState(item){
+  syncRoleEmployees(item);
+  const slots=(item.slotRequests||[]).map((_,i)=>slotVisualState(item,i));
+  if(!slots.length) return {label:"À combler", cls:"gray"};
+  if(slots.some(s=>s.cls==="red")) return {label:"Refus ou remplacement requis", cls:"red"};
+  if(slots.every(s=>s.cls==="green")) return {label:"Tous confirmés", cls:"green"};
+  if(slots.some(s=>s.cls==="orange")) return {label:"En attente", cls:"orange"};
+  if(slots.some(s=>s.cls==="gray")) return {label:"À envoyer", cls:"gray"};
+  return {label:"En attente", cls:"orange"};
+}
+
+function allAssignmentSlots(){
+  const out=[];
+  state.events.forEach(evt=>normalizeEventBlocks(evt).forEach((block,blockIdx)=>(block.roles||[]).forEach((roleItem,roleIdx)=>{
+    syncRoleEmployees(roleItem);
+    roleItem.employeeIds.forEach((employeeId,slotIdx)=>{
+      const key=`${evt.id}__${block.id}__${roleIdx}__${slotIdx}`;
+      out.push({key,evtId:evt.id,blockId:block.id,roleIdx,slotIdx,evt,block,roleItem,employeeId});
+    });
+  })));
+  return out;
+}
+function getAssignmentSlotByKey(key){ return allAssignmentSlots().find(x=>x.key===key)||null; }
+
+function replacementSuggestionsForSlot(key){
+  const item=getAssignmentSlotByKey(key); if(!item) return [];
+  return employeesForRole(item.roleItem.role)
+    .filter(emp=>emp.id!==item.employeeId)
+    .filter(emp=>!item.roleItem.employeeIds.includes(emp.id))
+    .map(emp=>({emp, conflicts:findEmployeeConflicts(emp.id,item.evtId,item.blockId,item.roleIdx)}))
+    .filter(x=>state.settings.conflictMode!=="block" || !x.conflicts.length)
+    .slice(0,5);
+}
+
+function applyReplacementForSlot(key,newEmployeeId){
+  const item=getAssignmentSlotByKey(key); if(!item) return;
+  const ref=getRoleItemRef(item.evtId,item.blockId,item.roleIdx); if(!ref) return;
+  syncRoleEmployees(ref.roleItem);
+  ref.roleItem.employeeIds[item.slotIdx]=newEmployeeId||"";
+  if(ref.roleItem.slotRequests?.[item.slotIdx]){
+    ref.roleItem.slotRequests[item.slotIdx]={
+      employeeId:newEmployeeId||"",
+      requestStatus:"draft",
+      responseStatus:"pending",
+      sentAt:"",
+      respondedAt:"",
+      lastChannel:"",
+      lastMessage:"",
+      requestToken:"",
+      backendRequestId:""
+    };
+  }
+  saveEvents(); renderAll();
+}
+
+async function sendRealEmailRequestForSlot(key){
+  const item=getAssignmentSlotByKey(key); if(!item||!item.employeeId) return;
+  const ref=getRoleItemRef(item.evtId,item.blockId,item.roleIdx); if(!ref) return;
+  syncRoleEmployees(ref.roleItem);
+  const emp=state.employees.find(x=>x.id===item.employeeId);
+  if(!emp?.email){ alert("Ajoute un courriel à cet employé avant l'envoi réel."); return; }
+  const timing=getRoleTiming(item.evt,item.block);
+  const payload={
+    employee_id: emp.id,
+    employee_name: emp.name || "",
+    employee_email: emp.email || "",
+    role: `${ref.roleItem.role || ""}${(ref.roleItem.quantity||1)>1?` (${item.slotIdx+1}/${ref.roleItem.quantity})`:""}`,
+    event_title: item.evt.title || "Événement",
+    start_time: new Date(`${timing.startDate}T${to24h(timing.startTime)}:00`).toISOString(),
+    end_time: new Date(`${timing.endDate}T${to24h(timing.endTime)}:00`).toISOString()
+  };
+  try{
+    const res=await fetch(APP_CONFIG.sendRequestUrl,{
+      method:"POST",
+      headers:{
+        "apikey": APP_CONFIG.anonKey,
+        "Authorization": `Bearer ${APP_CONFIG.anonKey}`,
+        "Content-Type":"application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+    const raw=await res.text();
+    let data={}; try{ data=raw?JSON.parse(raw):{}; }catch{ data={raw}; }
+    if(!res.ok){ alert(`Envoi réel échoué. ${data.reason||data.error||raw||'Erreur inconnue.'}`); return; }
+    const slot=ref.roleItem.slotRequests[item.slotIdx];
+    slot.requestStatus="sent";
+    slot.responseStatus=slot.responseStatus==="available"?"available":"pending";
+    slot.sentAt=new Date().toISOString();
+    slot.lastChannel="email_api";
+    slot.requestToken=String(data.token||slot.requestToken||"");
+    slot.backendRequestId=String(data.id||slot.backendRequestId||"");
+    saveEvents();
+    state.syncBanner=`Demande réelle envoyée à ${emp.name}.`;
+    renderAll();
+    alert(`Courriel réel envoyé à ${emp.email}.`);
+  } catch(err){
+    alert(`Erreur réseau pendant l'envoi réel: ${err.message||err}`);
+  }
+}
+
+async function sendAllRequestsForSelectedEvent(){
+  const evt=selectedCalendarEvent(); if(!evt) return;
+  const slots=allAssignmentSlots().filter(x=>x.evtId===evt.id && x.employeeId);
+  if(!slots.length){ alert("Aucun travailleur assigné à cet événement."); return; }
+  for(const slot of slots){ await sendRealEmailRequestForSlot(slot.key); }
+}
+
+async function syncAssignmentSlotFromSupabase(key){
+  const item=getAssignmentSlotByKey(key); if(!item) return {ok:false, reason:"Assignation introuvable."};
+  const ref=getRoleItemRef(item.evtId,item.blockId,item.roleIdx); if(!ref) return {ok:false, reason:"Assignation locale introuvable."};
+  syncRoleEmployees(ref.roleItem);
+  const slot=ref.roleItem.slotRequests[item.slotIdx];
+  const token=slot?.requestToken||"";
+  if(!token) return {ok:false, reason:"Aucun token associé à cette demande."};
+  const url=`${APP_CONFIG.supabaseUrl}/rest/v1/assignments?select=id,token,request_status,response_status,conflict_status&token=eq.${encodeURIComponent(token)}`;
+  const res=await fetch(url,{headers:{"apikey": APP_CONFIG.anonKey,"Authorization": `Bearer ${APP_CONFIG.anonKey}`}});
+  const raw=await res.text(); let data=[]; try{ data=raw?JSON.parse(raw):[]; }catch{ throw new Error(`Réponse sync invalide: ${raw}`); }
+  if(!res.ok) throw new Error(data?.message||raw||"Erreur de synchronisation.");
+  const row=Array.isArray(data)?data[0]:null;
+  if(!row) return {ok:false, reason:"Aucune réponse distante trouvée."};
+  slot.requestStatus=String(row.request_status||slot.requestStatus||"sent");
+  slot.responseStatus=String(row.response_status||slot.responseStatus||"pending");
+  slot.backendRequestId=String(row.id||slot.backendRequestId||"");
+  if(slot.responseStatus!=="pending") slot.respondedAt=new Date().toISOString();
+  saveEvents();
+  return {ok:true,row};
+}
+
+async function syncAllAssignmentsFromSupabase(){
+  const withToken=allAssignmentSlots().filter(x=>{
+    const ref=getRoleItemRef(x.evtId,x.blockId,x.roleIdx); if(!ref) return false;
+    syncRoleEmployees(ref.roleItem);
+    return !!ref.roleItem.slotRequests?.[x.slotIdx]?.requestToken;
+  });
+  if(!withToken.length){
+    state.syncBanner="Aucune demande envoyée par courriel réel à synchroniser pour l'instant.";
+    renderAvailability(); renderQuickSummary();
+    return;
+  }
+  let synced=0, missing=0, failed=0;
+  for(const item of withToken){
+    try{
+      const result=await syncAssignmentSlotFromSupabase(item.key);
+      if(result.ok) synced++; else missing++;
+    }catch(err){ failed++; console.error(err); }
+  }
+  state.syncBanner=`Synchronisation terminée: ${synced} mise(s) à jour, ${missing} sans changement, ${failed} erreur(s).`;
+  renderAll();
+}
+
+function eventAssignmentsForSummary(evt){
+  const out=[];
+  normalizeEventBlocks(evt).forEach((block,blockIdx)=>{
+    (block.roles||[]).forEach((roleItem,roleIdx)=>{
+      const normalized=syncRoleEmployees(normalizeRoleRequest(roleItem));
+      normalized.employeeIds.forEach((empId,slotIdx)=>{
+        const name=employeeNameById(empId)||"À combler";
+        out.push({
+          block,blockIdx,roleIdx,slotIdx,
+          roleItem:normalized,
+          employeeId:empId,
+          employeeName:name,
+          status:slotVisualState(normalized,slotIdx),
+          key:`${evt.id}__${block.id}__${roleIdx}__${slotIdx}`
+        });
+      });
+    });
+  });
+  return out;
+}
+
+function renderQuickSummary(){
+  if(!els.quickSummaryContent) return;
+  const selectedEvt=selectedCalendarEvent();
+  if(selectedEvt){
+    const items=eventAssignmentsForSummary(selectedEvt);
+    const canSendAny=items.some(item=>!!item.employeeId);
+    els.quickSummaryTitle.textContent="Disponibilités de l’événement"; els.quickSummarySub.textContent="Postes regroupés par bloc de travail.";
+    const header=`<div class="row-actions" style="justify-content:flex-start;margin-bottom:10px">${canSendAny?`<button class="btn primary small" type="button" id="btnSendSelectedEventRequests">Envoyer la demande</button>`:""}<button class="btn secondary small" type="button" id="btnSyncSelectedEventRequests">Synchroniser réponses</button></div>`;
+    if(!items.length){ els.quickSummaryContent.innerHTML=header+`<div class="empty">Aucun poste dans cet événement pour l’instant.</div>`; }
+    else{ const groups=[]; items.forEach(item=>{ let g=groups.find(x=>x.block.id===item.block.id); if(!g){ g={block:item.block,items:[]}; groups.push(g); } g.items.push(item); }); els.quickSummaryContent.innerHTML=header+groups.map(bg=>`<section class="quick-block-group"><div class="quick-block-head"><div class="quick-block-title">${escapeHtml(bg.block.name||'Bloc')}</div><div class="quick-block-time">${escapeHtml(formatBlockRange(bg.block,selectedEvt))}</div></div><div class="quick-block-body">${bg.items.map(item=>{ const suggestions=item.status.cls==='red'?replacementSuggestionsForSlot(item.key):[]; return `<div class="event-card"><div class="event-card-top"><div><div class="event-title">${escapeHtml(item.roleItem.role||'Poste')}${item.roleItem.quantity>1?` ×${item.roleItem.quantity}`:""} — ${escapeHtml(item.employeeName)}</div><div class="event-meta">Slot ${item.slotIdx+1}${item.employeeId?``:` · à combler`}</div></div><span class="status-pill ${item.status.cls}">${escapeHtml(item.status.label)}</span></div><div class="row-actions" style="justify-content:flex-start">${item.employeeId?`<button class="btn secondary small" type="button" data-send-slot="${item.key}">Envoyer la demande</button><button class="btn secondary small" type="button" data-open-gmail-slot="${item.key}">Ouvrir courriel</button><button class="btn secondary small" type="button" data-copy-message-slot="${item.key}">Copier message</button><button class="btn secondary small" type="button" data-sync-slot="${item.key}">Synchroniser</button>`:""}${item.status.cls==='red'?`<button class="btn danger small" type="button" data-toggle-replace="${item.key}">Trouver un remplaçant</button>`:""}</div>${item.status.cls==='red'?`<div id="replace-${item.key}" class="replacement-panel" style="display:none"><div class="replacement-title">Remplacements suggérés</div>${suggestions.length?suggestions.map(s=>`<div class="replacement-card"><div><div class="replacement-name">${escapeHtml(s.emp.name)}</div><div class="replacement-meta">${s.conflicts.length?`Conflit: ${escapeHtml(s.conflicts.map(c=>c.evt.title).join(' · '))}`:'Aucun conflit détecté'}</div><div class="replacement-badges"><span class="mini-badge green">Même poste</span>${s.conflicts.length?`<span class="mini-badge red">Conflit</span>`:`<span class="mini-badge green">Disponible</span>`}</div></div><button class="btn secondary small" type="button" data-apply-replace="${item.key}" data-emp="${s.emp.id}">Choisir</button></div>`).join(''):`<div class="empty">Aucun remplaçant compatible trouvé.</div>`}</div>`:""}</div>`; }).join('')}</div></section>`).join(''); }
+    document.getElementById('btnSendSelectedEventRequests')?.addEventListener('click',sendAllRequestsForSelectedEvent); document.getElementById('btnSyncSelectedEventRequests')?.addEventListener('click',syncAllAssignmentsFromSupabase); bindAvailabilityActionButtons(els.quickSummaryContent); els.quickSummaryContent.querySelectorAll('[data-send-slot]').forEach(btn=>btn.addEventListener('click',()=>sendRealEmailRequestForSlot(btn.dataset.sendSlot))); return;
+  }
+  els.quickSummaryTitle.textContent="Résumé rapide"; els.quickSummarySub.textContent="Événements, postes et assignations.";
+  els.quickSummaryContent.innerHTML=`<div class="selected-date-box"><div class="label">Événements filtrés</div><div class="value">${escapeHtml(String(els.statEvents.textContent||"0"))}</div><div class="muted">Selon les filtres actuels.</div></div><div class="selected-date-box"><div class="label">Postes ouverts</div><div class="value">${escapeHtml(String(els.statOpenRoles.textContent||"0"))}</div><div class="muted">Postes sans employé assigné.</div></div><div class="selected-date-box"><div class="label">Assignations</div><div class="value">${escapeHtml(String(els.statAssignments.textContent||"0"))}</div><div class="muted">Postes déjà comblés.</div></div>`;
 }
 
 window.addEventListener("resize",()=>{ if(state.activeTab==="calendar" && state.currentView==="month") renderMonthView(); });
