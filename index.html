@@ -2056,6 +2056,66 @@ if(!renderPortalMode()){
   bind();
   renderAll();
 }
+
+function buildPublicResponseLink(token){
+  if(!token) return "";
+  return `https://gedlp.github.io/crew-scheduler/respond.html?token=${encodeURIComponent(token)}`;
+}
+
+function buildWorkRequestMessage(payload){
+  const employeeName = payload.employeeName || "Bonjour";
+  const eventTitle = payload.eventTitle || "Événement";
+  const blockName = payload.blockName || "Bloc";
+  const role = payload.role || "Poste";
+  const slotLabel = payload.slotLabel || "";
+  const startDate = payload.startDate || "";
+  const startTime = payload.startTime || "";
+  const endDate = payload.endDate || "";
+  const endTime = payload.endTime || "";
+  const location = payload.location || "";
+  const link = payload.link || "";
+
+  return `Bonjour ${employeeName},
+
+Crew Scheduler t'invite pour un appel de travail.
+
+Événement: ${eventTitle}
+Bloc: ${blockName}
+Poste: ${role}${slotLabel ? " " + slotLabel : ""}
+Date début: ${startDate}
+Heure début: ${startTime}
+Date fin: ${endDate}
+Heure fin: ${endTime}
+Lieu: ${location}
+
+Clique ici pour répondre:
+${link}
+
+Réponses possibles: Disponible / Peut-être / Non disponible
+
+Merci!`;
+}
+
+function openMail(to, subject, body){
+  const url = `mailto:${encodeURIComponent(to || "")}?subject=${encodeURIComponent(subject || "")}&body=${encodeURIComponent(body || "")}`;
+  window.location.href = url;
+}
+
+async function copyTextToClipboard(text){
+  try{
+    await navigator.clipboard.writeText(text);
+    alert("Copié ✅");
+  }catch(err){
+    const ta=document.createElement("textarea");
+    ta.value=text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    ta.remove();
+    alert("Copié ✅");
+  }
+}
+
 </script>
 </body>
 </html>
