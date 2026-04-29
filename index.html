@@ -2141,6 +2141,8 @@ async function ensureManualRequestTokenForSlot(key){
     employee_email: emp.email || "",
     role: `${ref.roleItem.role || ""}${(ref.roleItem.quantity||1)>1?` (${item.slotIdx+1}/${ref.roleItem.quantity})`:""}`,
     event_title: item.evt.title || "Événement",
+    event_location: item.evt.location,
+    event_notes: item.evt.notes,
     start_time: new Date(`${timing.startDate}T${to24h(timing.startTime)}:00`).toISOString(),
     end_time: new Date(`${timing.endDate}T${to24h(timing.endTime)}:00`).toISOString()
   };
