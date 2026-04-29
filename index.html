@@ -2116,6 +2116,150 @@ async function copyTextToClipboard(text){
   }
 }
 
+
+/* === Batch 6.3: Mailto/copy message public token fix === */
+async function ensureManualRequestTokenForSlot(key){
+  const item = getAssignmentSlotByKey(key);
+  if(!item || !item.employeeId) throw new Error("Aucun travailleur assigné à cette demande.");
+  const ref = getRoleItemRef(item.evtId,item.blockId,item.roleIdx);
+  if(!ref) throw new Error("Assignation introuvable.");
+  syncRoleEmployees(ref.roleItem);
+  if(!ref.roleItem.slotRequests) ref.roleItem.slotRequests = [];
+  if(!ref.roleItem.slotRequests[item.slotIdx]){
+    ref.roleItem.slotRequests[item.slotIdx] = { employeeId:item.employeeId, requestStatus:"draft", responseStatus:"pending" };
+  }
+  const slot = ref.roleItem.slotRequests[item.slotIdx];
+  if(slot.requestToken) return slot.requestToken;
+
+  const emp = state.employees.find(x=>x.id===item.employeeId);
+  if(!emp?.email) throw new Error("Ajoute un courriel à cet employé avant de préparer la demande.");
+  const timing = getRoleTiming(item.evt,item.block);
+  const payload = {
+    manual_delivery: true,
+    employee_id: emp.id,
+    employee_name: emp.name || "",
+    employee_email: emp.email || "",
+    role: `${ref.roleItem.role || ""}${(ref.roleItem.quantity||1)>1?` (${item.slotIdx+1}/${ref.roleItem.quantity})`:""}`,
+    event_title: item.evt.title || "Événement",
+    start_time: new Date(`${timing.startDate}T${to24h(timing.startTime)}:00`).toISOString(),
+    end_time: new Date(`${timing.endDate}T${to24h(timing.endTime)}:00`).toISOString()
+  };
+
+  const res = await fetch(APP_CONFIG.sendRequestUrl,{
+    method:"POST",
+    headers:{
+      "apikey": APP_CONFIG.anonKey,
+      "Authorization": `Bearer ${APP_CONFIG.anonKey}`,
+      "Content-Type":"application/json"
+    },
+    body: JSON.stringify(payload)
+  });
+  const raw = await res.text();
+  let data = {};
+  try{ data = raw ? JSON.parse(raw) : {}; }catch{ data = {raw}; }
+  if(!res.ok) throw new Error(data.reason || data.error || raw || "Impossible de créer le lien public.");
+
+  slot.requestStatus = "manual";
+  slot.responseStatus = slot.responseStatus === "available" ? "available" : "pending";
+  slot.sentAt = new Date().toISOString();
+  slot.lastChannel = "mailto";
+  slot.requestToken = String(data.token || slot.requestToken || "");
+  slot.backendRequestId = String(data.id || slot.backendRequestId || "");
+  saveEvents();
+  return slot.requestToken;
+}
+
+function publicRespondLinkFromToken(token){
+  return `https://gedlp.github.io/crew-scheduler/respond.html?token=${encodeURIComponent(token||"")}`;
+}
+
+async function buildRequestMessageForSlotAsync(key){
+  const item = getAssignmentSlotByKey(key);
+  if(!item || !item.employeeId) return null;
+  const ref = getRoleItemRef(item.evtId,item.blockId,item.roleIdx);
+  if(!ref) return null;
+  const token = await ensureManualRequestTokenForSlot(key);
+  syncRoleEmployees(ref.roleItem);
+  const emp = state.employees.find(x=>x.id===item.employeeId);
+  const timing = getRoleTiming(item.evt,item.block);
+  const company = state.settings.companyName || "Crew Scheduler";
+  const roleLabel = `${ref.roleItem.role || "Poste"}${(ref.roleItem.quantity||1)>1?` (${item.slotIdx+1}/${ref.roleItem.quantity})`:""}`;
+  const webLink = publicRespondLinkFromToken(token);
+  const subject = `Demande de travail — ${item.evt.title}`;
+  const body = `Bonjour ${emp?.name||""},
+
+${company} t'invite pour un appel de travail.
+
+Événement: ${item.evt.title}
+Bloc: ${item.block.name}
+Poste: ${roleLabel}
+Date début: ${timing.startDate}
+Heure début: ${timing.startTime}
+Date fin: ${timing.endDate}
+Heure fin: ${timing.endTime}
+Lieu: ${item.evt.location||"À confirmer"}
+
+Clique ici pour répondre:
+${webLink}
+
+Réponses possibles: Disponible / Peut-être / Non disponible
+
+Merci!`;
+  return {subject,body,webLink,employee:emp};
+}
+
+async function copyRequestMessageForSlot(key){
+  try{
+    const msg = await buildRequestMessageForSlotAsync(key);
+    if(!msg){ alert("Aucun travailleur assigné à cette demande."); return; }
+    await copyTextToClipboard(msg.body);
+  }catch(err){
+    alert(err.message || String(err));
+  }
+}
+
+async function openGmailForSlot(key){
+  try{
+    const msg = await buildRequestMessageForSlotAsync(key);
+    if(!msg){ alert("Aucun travailleur assigné à cette demande."); return; }
+    if(!msg.employee?.email){ alert("Ajoute un courriel à cet employé avant d’ouvrir le courriel."); return; }
+    const url = `mailto:${encodeURIComponent(msg.employee.email)}?subject=${encodeURIComponent(msg.subject)}&body=${encodeURIComponent(msg.body)}`;
+    window.location.href = url;
+    renderAll();
+  }catch(err){
+    alert(err.message || String(err));
+  }
+}
+
+async function openPublicSlotLink(key){
+  try{
+    const token = await ensureManualRequestTokenForSlot(key);
+    window.open(publicRespondLinkFromToken(token),'_blank');
+    renderAll();
+  }catch(err){ alert(err.message || String(err)); }
+}
+
+async function copyPublicSlotLink(key){
+  try{
+    const token = await ensureManualRequestTokenForSlot(key);
+    await copyTextToClipboard(publicRespondLinkFromToken(token));
+    renderAll();
+  }catch(err){ alert(err.message || String(err)); }
+}
+
+function bindAvailabilityActionButtons(root){
+  root.querySelectorAll('[data-open-slot-web]').forEach(btn=>btn.addEventListener('click',()=>openPublicSlotLink(btn.dataset.openSlotWeb)));
+  root.querySelectorAll('[data-copy-slot-web]').forEach(btn=>btn.addEventListener('click',()=>copyPublicSlotLink(btn.dataset.copySlotWeb)));
+  root.querySelectorAll('[data-copy-message-slot]').forEach(btn=>btn.addEventListener('click',()=>copyRequestMessageForSlot(btn.dataset.copyMessageSlot)));
+  root.querySelectorAll('[data-open-gmail-slot]').forEach(btn=>btn.addEventListener('click',()=>openGmailForSlot(btn.dataset.openGmailSlot)));
+  root.querySelectorAll('[data-sync-slot]').forEach(btn=>btn.addEventListener('click',()=>syncAssignmentSlotFromSupabase(btn.dataset.syncSlot).then(()=>renderAll()).catch(err=>alert(err.message||err))));
+  root.querySelectorAll('[data-answer-slot-yes]').forEach(btn=>btn.addEventListener('click',()=>setSlotResponse(btn.dataset.answerSlotYes,'available')));
+  root.querySelectorAll('[data-answer-slot-maybe]').forEach(btn=>btn.addEventListener('click',()=>setSlotResponse(btn.dataset.answerSlotMaybe,'maybe')));
+  root.querySelectorAll('[data-answer-slot-no]').forEach(btn=>btn.addEventListener('click',()=>setSlotResponse(btn.dataset.answerSlotNo,'unavailable')));
+  root.querySelectorAll('[data-toggle-replace]').forEach(btn=>btn.addEventListener('click',()=>{ const el=document.getElementById(`replace-${btn.dataset.toggleReplace}`); if(el) el.style.display=el.style.display==='none'?'block':'none'; }));
+  root.querySelectorAll('[data-apply-replace]').forEach(btn=>btn.addEventListener('click',()=>applyReplacementForSlot(btn.dataset.applyReplace,btn.dataset.emp)));
+}
+
 </script>
 </body>
 </html>
