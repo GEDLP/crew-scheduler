@@ -190,7 +190,7 @@
           <div class="item"><div class="label">Début</div><div class="value" id="startTime">—</div></div>
           <div class="item"><div class="label">Fin</div><div class="value" id="endTime">—</div></div>
           <div class="item"><div class="label">Statut actuel</div><div class="value" id="currentStatus">—</div></div>
-          <div class="item"><div class="label">Demande</div><div class="value" id="requestStatus">—</div></div>
+          <div class="item"><div class="label">Lieu</div><div class="value" id="location">—</div></div>
         </div>
       </div>
 
@@ -300,9 +300,9 @@
       document.getElementById("startTime").innerText = formatDateTime(requestData.start_time);
       document.getElementById("endTime").innerText = formatDateTime(requestData.end_time);
       document.getElementById("currentStatus").innerText = statusLabels[requestData.response_status] || requestData.response_status || "—";
-      document.getElementById("requestStatus").innerText = statusLabels[requestData.request_status] || requestData.request_status || "—";
+      document.getElementById("location").innerText = requestData.location || requestData.event_location || "À confirmer";
 
-      document.getElementById("status").innerText = "Choisis ta réponse ci-dessous.";
+      document.getElementById("status").innerText = "";
       setButtonsDisabled(false);
     }
 
