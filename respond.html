@@ -3,141 +3,357 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Réponse disponibilité</title>
+  <title>Réponse disponibilité — Crew Scheduler</title>
   <style>
     :root{
-      --bg:#0f172a;
-      --panel:#111827;
-      --text:#ffffff;
-      --muted:#cbd5e1;
+      --bg:#eef3f9;
+      --panel:#ffffff;
+      --text:#0f172a;
+      --muted:#64748b;
+      --line:#dbe3ee;
       --green:#16a34a;
       --orange:#f59e0b;
       --red:#dc2626;
+      --shadow:0 24px 70px rgba(15,23,42,.14);
     }
     *{box-sizing:border-box}
     body{
       margin:0;
       min-height:100vh;
-      font-family:Arial, Helvetica, sans-serif;
-      background:linear-gradient(180deg,#0f172a 0%, #111827 100%);
+      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background:linear-gradient(180deg,#f8fbff 0%, var(--bg) 100%);
       color:var(--text);
       display:flex;
       align-items:center;
       justify-content:center;
-      padding:20px;
+      padding:18px;
     }
     .card{
-      width:min(100%, 520px);
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.1);
-      border-radius:24px;
-      padding:28px 20px;
-      box-shadow:0 20px 50px rgba(0,0,0,.25);
-      text-align:center;
+      width:min(100%, 620px);
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:28px;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .top{
+      padding:26px 24px 18px;
+      background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 100%);
+      color:white;
+    }
+    .eyebrow{
+      font-size:12px;
+      font-weight:900;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      opacity:.82;
+      margin-bottom:10px;
     }
     h1{
-      margin:0 0 10px;
-      font-size:clamp(28px, 5vw, 40px);
+      margin:0;
+      font-size:clamp(28px, 7vw, 42px);
       line-height:1.05;
+      letter-spacing:-.04em;
     }
-    p{
-      margin:0 0 24px;
-      color:var(--muted);
-      font-size:16px;
+    .subtitle{
+      margin:12px 0 0;
+      color:#dbeafe;
+      font-size:15px;
       line-height:1.5;
     }
-    .btn{
-      display:block;
-      width:100%;
-      margin:12px 0;
-      padding:18px 16px;
-      border:none;
-      border-radius:16px;
-      cursor:pointer;
-      font-size:18px;
-      font-weight:800;
-      color:#fff;
-      min-height:64px;
-      transition:transform .15s ease, opacity .15s ease;
+    .body{
+      padding:22px;
+      display:grid;
+      gap:16px;
     }
-    .btn:active{ transform:scale(.98); }
-    .yes{ background:var(--green); }
-    .maybe{ background:var(--orange); }
-    .no{ background:var(--red); }
-    #status{
-      margin-top:18px;
+    .info{
+      border:1px solid var(--line);
+      border-radius:20px;
+      background:#f8fafc;
+      padding:16px;
+      display:grid;
+      gap:12px;
+    }
+    .event-title{
+      font-size:22px;
+      font-weight:950;
+      line-height:1.15;
+      letter-spacing:-.03em;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+    .item{
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:12px;
+      min-height:68px;
+    }
+    .label{
+      font-size:11px;
+      font-weight:900;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      color:var(--muted);
+      margin-bottom:5px;
+    }
+    .value{
       font-size:16px;
-      font-weight:700;
-      color:#fff;
-      min-height:24px;
+      font-weight:800;
+      line-height:1.3;
+      word-break:break-word;
+    }
+    .actions{display:grid;gap:12px}
+    .btn{
+      width:100%;
+      min-height:66px;
+      border:0;
+      border-radius:18px;
+      color:white;
+      font-size:18px;
+      font-weight:900;
+      cursor:pointer;
+      padding:17px 16px;
+      transition:transform .15s ease, filter .15s ease;
+    }
+    .btn:active{transform:scale(.985)}
+    .btn:disabled{opacity:.55;cursor:not-allowed}
+    .yes{background:var(--green)}
+    .maybe{background:var(--orange)}
+    .no{background:var(--red)}
+    .status{
+      min-height:28px;
+      padding:12px 14px;
+      border-radius:16px;
+      background:#f8fafc;
+      border:1px solid var(--line);
+      color:var(--muted);
+      font-size:15px;
+      font-weight:800;
+      text-align:center;
       white-space:pre-wrap;
     }
-    .small{
-      margin-top:14px;
-      font-size:13px;
+    .footer{
       color:var(--muted);
+      font-size:12px;
+      text-align:center;
+      padding:0 22px 20px;
+    }
+    .error{
+      padding:28px;
+      text-align:center;
+      display:grid;
+      gap:12px;
+    }
+    .error h1{color:#0f172a}
+    .back{
+      display:inline-flex;
+      justify-content:center;
+      align-items:center;
+      padding:12px 16px;
+      border-radius:14px;
+      background:#f8fafc;
+      border:1px solid var(--line);
+      color:#0f172a;
+      font-weight:900;
+      text-decoration:none;
+      width:max-content;
+      margin:0 auto;
+    }
+    @media (max-width:560px){
+      body{padding:10px;align-items:stretch}
+      .card{border-radius:24px}
+      .top{padding:24px 20px 18px}
+      .body{padding:18px}
+      .grid{grid-template-columns:1fr}
+      .btn{font-size:17px;min-height:64px}
     }
   </style>
 </head>
 <body>
-  <div class="card">
-    <h1>Es-tu disponible ?</h1>
-    <p>Réponds simplement avec l’option qui correspond le mieux à ta situation.</p>
+  <main class="card" id="app">
+    <section class="top">
+      <div class="eyebrow">Crew Scheduler</div>
+      <h1>Demande de disponibilité</h1>
+      <p class="subtitle">Vérifie les informations de l’événement, puis réponds avec l’option qui correspond à ta disponibilité.</p>
+    </section>
 
-    <button class="btn yes" onclick="respond('available')">✅ Oui, je suis disponible</button>
-    <button class="btn maybe" onclick="respond('maybe')">🟡 Peut-être</button>
-    <button class="btn no" onclick="respond('unavailable')">❌ Non, je ne suis pas disponible</button>
+    <section class="body">
+      <div class="info" id="requestInfo">
+        <div class="event-title" id="eventTitle">Chargement...</div>
+        <div class="grid">
+          <div class="item"><div class="label">Travailleur</div><div class="value" id="employeeName">—</div></div>
+          <div class="item"><div class="label">Poste</div><div class="value" id="role">—</div></div>
+          <div class="item"><div class="label">Début</div><div class="value" id="startTime">—</div></div>
+          <div class="item"><div class="label">Fin</div><div class="value" id="endTime">—</div></div>
+          <div class="item"><div class="label">Statut actuel</div><div class="value" id="currentStatus">—</div></div>
+          <div class="item"><div class="label">Demande</div><div class="value" id="requestStatus">—</div></div>
+        </div>
+      </div>
 
-    <div id="status"></div>
-    <div class="small">Crew Scheduler</div>
-  </div>
+      <div class="actions">
+        <button class="btn yes" id="btnYes" onclick="respond('available')">✅ Oui, je suis disponible</button>
+        <button class="btn maybe" id="btnMaybe" onclick="respond('maybe')">🟡 Peut-être</button>
+        <button class="btn no" id="btnNo" onclick="respond('unavailable')">❌ Non, je ne suis pas disponible</button>
+      </div>
+
+      <div class="status" id="status">Chargement de la demande...</div>
+    </section>
+
+    <div class="footer">Cette réponse sera transmise au planificateur.</div>
+  </main>
 
   <script>
     const SUPABASE_URL = "https://yxkdyohscpsmeplbkyqo.supabase.co";
     const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4a2R5b2hzY3BzbWVwbGJreXFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3MTY1NDYsImV4cCI6MjA5MjI5MjU0Nn0.Xx8KjZFqqWnTvJczYqPRINXeX0fp7aq7wRvG30ZF6pE";
+
     const token = new URLSearchParams(window.location.search).get("token");
+    let requestData = null;
 
-    async function respond(status){
-      const statusEl = document.getElementById("status");
+    const statusLabels = {
+      pending: "En attente",
+      available: "Disponible",
+      maybe: "Peut-être",
+      unavailable: "Non disponible",
+      sent: "Envoyée",
+      manual: "Préparée manuellement",
+      draft: "Brouillon"
+    };
 
-      if (!token) {
-        statusEl.innerText = "Erreur : token manquant dans le lien.";
+    function formatDateTime(value){
+      if(!value) return "—";
+      const d = new Date(value);
+      if(Number.isNaN(d.getTime())) return value;
+      return new Intl.DateTimeFormat("fr-CA", {
+        weekday:"long",
+        year:"numeric",
+        month:"long",
+        day:"numeric",
+        hour:"2-digit",
+        minute:"2-digit",
+        hour12:false
+      }).format(d);
+    }
+
+    function setButtonsDisabled(disabled){
+      document.getElementById("btnYes").disabled = disabled;
+      document.getElementById("btnMaybe").disabled = disabled;
+      document.getElementById("btnNo").disabled = disabled;
+    }
+
+    function showInvalid(message){
+      document.getElementById("app").innerHTML = `
+        <div class="error">
+          <div class="eyebrow">Crew Scheduler</div>
+          <h1>Lien de demande invalide</h1>
+          <p style="color:#64748b;line-height:1.5">${message}</p>
+          <a class="back" href="https://gedlp.github.io/crew-scheduler/">Retour à l’application</a>
+        </div>
+      `;
+    }
+
+    async function loadRequest(){
+      if(!token){
+        showInvalid("Aucun token n’a été trouvé dans le lien.");
         return;
       }
 
-      statusEl.innerText = "Envoi de la réponse...";
+      try{
+        const res = await fetch(
+          `${SUPABASE_URL}/rest/v1/assignments?token=eq.${encodeURIComponent(token)}&select=*`,
+          {
+            headers:{
+              "apikey": ANON_KEY,
+              "Authorization": `Bearer ${ANON_KEY}`
+            }
+          }
+        );
+
+        const txt = await res.text();
+        let data = [];
+        try{ data = txt ? JSON.parse(txt) : []; }catch{ data = []; }
+
+        if(!res.ok){
+          showInvalid(`Erreur Supabase ${res.status}: ${txt}`);
+          return;
+        }
+
+        if(!Array.isArray(data) || !data.length){
+          showInvalid("La demande ne peut pas être trouvée. Le lien est peut-être expiré ou incomplet.");
+          return;
+        }
+
+        requestData = data[0];
+        renderRequest();
+      }catch(err){
+        showInvalid(`Erreur réseau: ${String(err)}`);
+      }
+    }
+
+    function renderRequest(){
+      document.getElementById("eventTitle").innerText = requestData.event_title || "Événement";
+      document.getElementById("employeeName").innerText = requestData.employee_name || "—";
+      document.getElementById("role").innerText = requestData.role || "—";
+      document.getElementById("startTime").innerText = formatDateTime(requestData.start_time);
+      document.getElementById("endTime").innerText = formatDateTime(requestData.end_time);
+      document.getElementById("currentStatus").innerText = statusLabels[requestData.response_status] || requestData.response_status || "—";
+      document.getElementById("requestStatus").innerText = statusLabels[requestData.request_status] || requestData.request_status || "—";
+
+      document.getElementById("status").innerText = "Choisis ta réponse ci-dessous.";
+      setButtonsDisabled(false);
+    }
+
+    async function respond(responseStatus){
+      if(!token){
+        document.getElementById("status").innerText = "Erreur : token manquant.";
+        return;
+      }
+
+      setButtonsDisabled(true);
+      document.getElementById("status").innerText = "Envoi de la réponse...";
 
       try{
         const res = await fetch(
           `${SUPABASE_URL}/rest/v1/assignments?token=eq.${encodeURIComponent(token)}`,
           {
-            method: "PATCH",
-            headers: {
+            method:"PATCH",
+            headers:{
               "apikey": ANON_KEY,
               "Authorization": `Bearer ${ANON_KEY}`,
-              "Content-Type": "application/json",
-              "Prefer": "return=representation"
+              "Content-Type":"application/json",
+              "Prefer":"return=representation"
             },
-            body: JSON.stringify({
-              response_status: status
-            })
+            body: JSON.stringify({ response_status: responseStatus })
           }
         );
 
         const txt = await res.text();
-        console.log("PATCH status =", res.status);
-        console.log("PATCH response =", txt);
 
-        if(res.ok){
-          statusEl.innerText = "Réponse envoyée ✅ Merci.";
-        } else {
-          statusEl.innerText = `Erreur ${res.status} ❌\n${txt}`;
+        if(!res.ok){
+          document.getElementById("status").innerText = `Erreur ${res.status} ❌\n${txt}`;
+          setButtonsDisabled(false);
+          return;
         }
-      } catch(err){
-        statusEl.innerText = `Erreur réseau ❌\n${String(err)}`;
-        console.error(err);
+
+        let updated = [];
+        try{ updated = txt ? JSON.parse(txt) : []; }catch{}
+        if(Array.isArray(updated) && updated[0]){
+          requestData = updated[0];
+          renderRequest();
+        }
+
+        const label = statusLabels[responseStatus] || responseStatus;
+        document.getElementById("status").innerText = `Réponse envoyée ✅\nStatut: ${label}`;
+      }catch(err){
+        document.getElementById("status").innerText = `Erreur réseau ❌\n${String(err)}`;
+        setButtonsDisabled(false);
       }
     }
+
+    loadRequest();
   </script>
 </body>
 </html>
