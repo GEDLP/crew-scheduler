@@ -723,6 +723,7 @@ button{cursor:pointer}
 </div>
 
 <script>
+/* Crew Scheduler v22 — vraie interface + Supabase + auto-sync + conflits */
 const EVENTS_KEY="crewSchedulerCalendarEventsMergedV1";
 const EMPLOYEES_KEY="crewSchedulerEmployeesV5";
 const ROLES_KEY="crewSchedulerRolesV2";
@@ -2320,12 +2321,12 @@ async function bootSupabaseCentral(){
     state.events=remoteEvents.length ? remoteEvents : localEvents;
     localStorage.setItem(EMPLOYEES_KEY, JSON.stringify(state.employees));
     localStorage.setItem(EVENTS_KEY, JSON.stringify(state.events));
-    state.syncBanner='Données chargées depuis Supabase — v14.';
+    state.syncBanner='';
   }catch(err){
     console.error(err);
     state.events=loadEvents();
     state.employees=loadEmployees();
-    state.syncBanner='Mode local temporaire: impossible de charger Supabase.';
+    state.syncBanner='';
   }finally{
     __bootingSupabase=false;
     renderAll();
