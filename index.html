@@ -367,6 +367,34 @@ button{cursor:pointer}
 .card-head{padding:16px 20px !important;}
 .card-body{padding-top:16px !important;}
 
+
+
+/* v19 — Interface plus épurée */
+.brand p,
+.sidebar-card .small,
+.hero p,
+.status-row,
+.card-head .sub,
+.hint,
+.small-note,
+.portal-note,
+.preview-meta {
+  display:none !important;
+}
+.sidebar-card{padding:10px 12px}
+.hero{padding:20px 24px}
+.hero h2{margin-bottom:0}
+.card-head{padding:16px 20px}
+.card-body{padding:18px}
+.settings-grid .setting-box{min-height:auto}
+.assignment-card{gap:10px}
+.assignment-actions.clean-actions{padding-top:6px}
+.status-actions{margin-top:8px;padding-top:10px}
+.conflict-box{font-size:13px;line-height:1.45}
+.replacement-panel{border-color:#bfdbfe;background:#f8fbff}
+.replacement-card.best-replacement{border-color:#86efac;background:#f0fdf4}
+.auto-sync-pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;border:1px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;padding:7px 10px;font-size:12px;font-weight:900}
+
 </style>
 </head>
 <body>
@@ -544,7 +572,7 @@ button{cursor:pointer}
             <p>Envoie une demande de travail par courriel ou SMS, suis les réponses, vois les conflits automatiquement et propose un remplacement.</p>
           </div>
           <div class="hero-actions">
-            <button class="btn primary" id="btnRefreshAvailability" type="button">Synchroniser réponses</button>
+            <button class="btn primary" id="btnRefreshAvailability" type="button">Sync maintenant</button>
           </div>
         </div>
         <div class="status-row">
@@ -1828,7 +1856,7 @@ async function setSlotResponse(key,responseStatus){
   saveEvents();
   renderAll();
 }
-function renderAvailabilitySlotCard(item){ const emp=state.employees.find(x=>x.id===item.employeeId); const status=slotVisualState(item.roleItem,item.slotIdx); const conflicts=findEmployeeConflicts(item.employeeId,item.evtId,item.blockId,item.roleIdx); const suggestions=status.cls==='red'?replacementSuggestionsForSlot(item.key):[]; const qty=item.roleItem.quantity||1; return `<div class="assignment-card"><div class="assignment-head"><div><div class="assignment-title">${escapeHtml(item.roleItem.role||'Poste')}${qty>1?` · ${item.slotIdx+1}/${qty}`:''} — ${escapeHtml(emp?.name||'À combler')}</div><div class="assignment-sub">${emp?.email?escapeHtml(emp.email):emp?.phone?escapeHtml(emp.phone):'Aucun contact inscrit'}</div></div><div class="chip-wrap"><span class="status-pill ${status.cls}">${escapeHtml(status.label)}</span>${conflicts.length?`<span class="status-pill red">Conflit</span>`:''}</div></div>${conflicts.length?`<div class="conflict-box">${escapeHtml(emp?.name||'Cette personne')} est déjà booké(e) sur ${conflicts.map(c=>`${c.evt.title} / ${c.block.name}`).join(' · ')}.</div>`:''}<div class="assignment-actions clean-actions">${item.employeeId?`<button class="btn secondary small" type="button" data-open-slot-web="${item.key}">Ouvrir lien web</button><button class="btn secondary small" type="button" data-copy-slot-web="${item.key}">Copier lien web</button><button class="btn secondary small" type="button" data-copy-message-slot="${item.key}">Copier message</button><button class="btn secondary small" type="button" data-open-gmail-slot="${item.key}">Ouvrir courriel</button><button class="btn secondary small" type="button" data-sync-slot="${item.key}">Synchroniser</button>`:''}${status.cls==='red'?`<button class="btn danger small" type="button" data-toggle-replace="${item.key}">Trouver un remplaçant</button>`:''}</div><div class="status-actions"><div class="status-actions-label">Statut manuel</div><button class="btn small ${status.cls==='green'?'primary':'secondary'}" type="button" data-answer-slot-yes="${item.key}">Confirmé</button><button class="btn small ${status.label==='Peut-être'?'primary':'secondary'}" type="button" data-answer-slot-maybe="${item.key}">Peut-être</button><button class="btn small ${status.cls==='red'?'danger':'secondary'}" type="button" data-answer-slot-no="${item.key}">Non dispo</button></div>${status.cls==='red'?`<div id="replace-${item.key}" class="replacement-panel" style="display:none"><div class="replacement-title">Remplacements suggérés</div>${suggestions.length?suggestions.map(s=>`<div class="replacement-card"><div><div class="replacement-name">${escapeHtml(s.emp.name)}</div><div class="replacement-meta">${s.conflicts.length?`Conflit: ${escapeHtml(s.conflicts.map(c=>c.evt.title).join(' · '))}`:'Aucun conflit détecté'}</div><div class="replacement-badges">${s.sameRole?`<span class="mini-badge green">Même poste</span>`:`<span class="mini-badge orange">Autre poste</span>`}${s.conflicts.length?`<span class="mini-badge red">Conflit</span>`:`<span class="mini-badge green">Disponible</span>`}</div></div><button class="btn secondary small" type="button" data-apply-replace="${item.key}" data-emp="${s.emp.id}">Choisir</button></div>`).join(''):`<div class="empty">Aucun remplaçant compatible trouvé.</div>`}</div>`:''}</div>`; }
+function renderAvailabilitySlotCard(item){ const emp=state.employees.find(x=>x.id===item.employeeId); const status=slotVisualState(item.roleItem,item.slotIdx); const conflicts=findEmployeeConflicts(item.employeeId,item.evtId,item.blockId,item.roleIdx); const suggestions=status.cls==='red'?replacementSuggestionsForSlot(item.key):[]; const qty=item.roleItem.quantity||1; return `<div class="assignment-card"><div class="assignment-head"><div><div class="assignment-title">${escapeHtml(item.roleItem.role||'Poste')}${qty>1?` · ${item.slotIdx+1}/${qty}`:''} — ${escapeHtml(emp?.name||'À combler')}</div><div class="assignment-sub">${emp?.email?escapeHtml(emp.email):emp?.phone?escapeHtml(emp.phone):'Aucun contact inscrit'}</div></div><div class="chip-wrap"><span class="status-pill ${status.cls}">${escapeHtml(status.label)}</span>${conflicts.length?`<span class="status-pill red">Conflit</span>`:''}</div></div>${conflicts.length?`<div class="conflict-box">${escapeHtml(emp?.name||'Cette personne')} est déjà booké(e) sur ${conflicts.map(c=>`${c.evt.title} / ${c.block.name}`).join(' · ')}.</div>`:''}<div class="assignment-actions clean-actions">${item.employeeId?`<button class="btn secondary small" type="button" data-open-slot-web="${item.key}">Ouvrir lien web</button><button class="btn secondary small" type="button" data-copy-slot-web="${item.key}">Copier lien web</button><button class="btn secondary small" type="button" data-copy-message-slot="${item.key}">Copier message</button><button class="btn secondary small" type="button" data-open-gmail-slot="${item.key}">Ouvrir courriel</button><button class="btn secondary small" type="button" data-sync-slot="${item.key}">Sync</button>`:''}${status.cls==='red'?`<button class="btn danger small" type="button" data-toggle-replace="${item.key}">Trouver un remplaçant</button>`:''}</div><div class="status-actions"><div class="status-actions-label">Statut manuel</div><button class="btn small ${status.cls==='green'?'primary':'secondary'}" type="button" data-answer-slot-yes="${item.key}">Confirmé</button><button class="btn small ${status.label==='Peut-être'?'primary':'secondary'}" type="button" data-answer-slot-maybe="${item.key}">Peut-être</button><button class="btn small ${status.cls==='red'?'danger':'secondary'}" type="button" data-answer-slot-no="${item.key}">Non dispo</button></div>${status.cls==='red'?`<div id="replace-${item.key}" class="replacement-panel" style="display:none"><div class="replacement-title">Remplacements suggérés</div>${suggestions.length?suggestions.map(s=>`<div class="replacement-card"><div><div class="replacement-name">${escapeHtml(s.emp.name)}</div><div class="replacement-meta">${s.conflicts.length?`Conflit: ${escapeHtml(s.conflicts.map(c=>c.evt.title).join(' · '))}`:'Aucun conflit détecté'}</div><div class="replacement-badges">${s.sameRole?`<span class="mini-badge green">Même poste</span>`:`<span class="mini-badge orange">Autre poste</span>`}${s.conflicts.length?`<span class="mini-badge red">Conflit</span>`:`<span class="mini-badge green">Disponible</span>`}</div></div><button class="btn secondary small" type="button" data-apply-replace="${item.key}" data-emp="${s.emp.id}">Choisir</button></div>`).join(''):`<div class="empty">Aucun remplaçant compatible trouvé.</div>`}</div>`:''}</div>`; }
 function bindAvailabilityActionButtons(root){ root.querySelectorAll('[data-open-slot-web]').forEach(btn=>btn.addEventListener('click',()=>{ const item=getAssignmentSlotByKey(btn.dataset.openSlotWeb); window.open(respondLinkForSlot(item),'_blank'); })); root.querySelectorAll('[data-copy-slot-web]').forEach(btn=>btn.addEventListener('click',()=>{ const item=getAssignmentSlotByKey(btn.dataset.copySlotWeb); copyText(respondLinkForSlot(item)); })); root.querySelectorAll('[data-copy-message-slot]').forEach(btn=>btn.addEventListener('click',()=>copyRequestMessageForSlot(btn.dataset.copyMessageSlot))); root.querySelectorAll('[data-open-gmail-slot]').forEach(btn=>btn.addEventListener('click',()=>openGmailForSlot(btn.dataset.openGmailSlot))); root.querySelectorAll('[data-sync-slot]').forEach(btn=>btn.addEventListener('click',()=>syncAssignmentSlotFromSupabase(btn.dataset.syncSlot).then(()=>renderAll()).catch(err=>alert(err.message||err)))); root.querySelectorAll('[data-answer-slot-yes]').forEach(btn=>btn.addEventListener('click',()=>setSlotResponse(btn.dataset.answerSlotYes,'available'))); root.querySelectorAll('[data-answer-slot-maybe]').forEach(btn=>btn.addEventListener('click',()=>setSlotResponse(btn.dataset.answerSlotMaybe,'maybe'))); root.querySelectorAll('[data-answer-slot-no]').forEach(btn=>btn.addEventListener('click',()=>setSlotResponse(btn.dataset.answerSlotNo,'unavailable'))); root.querySelectorAll('[data-toggle-replace]').forEach(btn=>btn.addEventListener('click',()=>{ const el=document.getElementById(`replace-${btn.dataset.toggleReplace}`); if(el) el.style.display=el.style.display==='none'?'block':'none'; })); root.querySelectorAll('[data-apply-replace]').forEach(btn=>btn.addEventListener('click',()=>applyReplacementForSlot(btn.dataset.applyReplace,btn.dataset.emp))); }
 
 function renderAvailability(){
@@ -2130,9 +2158,9 @@ function renderQuickSummary(){
     const items=eventAssignmentsForSummary(selectedEvt);
     const canSendAny=items.some(item=>!!item.employeeId);
     els.quickSummaryTitle.textContent="Disponibilités de l’événement"; els.quickSummarySub.textContent="Postes regroupés par bloc de travail.";
-    const header=`<div class="row-actions" style="justify-content:flex-start;margin-bottom:10px">${canSendAny?`<button class="btn primary small" type="button" id="btnSendSelectedEventRequests">Envoyer la demande</button>`:""}<button class="btn secondary small" type="button" id="btnSyncSelectedEventRequests">Synchroniser réponses</button></div>`;
+    const header=`<div class="row-actions" style="justify-content:flex-start;margin-bottom:10px">${canSendAny?`<button class="btn primary small" type="button" id="btnSendSelectedEventRequests">Envoyer la demande</button>`:""}<button class="btn secondary small" type="button" id="btnSyncSelectedEventRequests">Sync maintenant</button></div>`;
     if(!items.length){ els.quickSummaryContent.innerHTML=header+`<div class="empty">Aucun poste dans cet événement pour l’instant.</div>`; }
-    else{ const groups=[]; items.forEach(item=>{ let g=groups.find(x=>x.block.id===item.block.id); if(!g){ g={block:item.block,items:[]}; groups.push(g); } g.items.push(item); }); els.quickSummaryContent.innerHTML=header+groups.map(bg=>`<section class="quick-block-group"><div class="quick-block-head"><div class="quick-block-title">${escapeHtml(bg.block.name||'Bloc')}</div><div class="quick-block-time">${escapeHtml(formatBlockRange(bg.block,selectedEvt))}</div></div><div class="quick-block-body">${bg.items.map(item=>{ const suggestions=item.status.cls==='red'?replacementSuggestionsForSlot(item.key):[]; return `<div class="event-card"><div class="event-card-top"><div><div class="event-title">${escapeHtml(item.roleItem.role||'Poste')}${item.roleItem.quantity>1?` ×${item.roleItem.quantity}`:""} — ${escapeHtml(item.employeeName)}</div><div class="event-meta">Slot ${item.slotIdx+1}${item.employeeId?``:` · à combler`}</div></div><span class="status-pill ${item.status.cls}">${escapeHtml(item.status.label)}</span></div><div class="row-actions" style="justify-content:flex-start">${item.employeeId?`<button class="btn secondary small" type="button" data-send-slot="${item.key}">Envoyer la demande</button><button class="btn secondary small" type="button" data-open-gmail-slot="${item.key}">Ouvrir courriel</button><button class="btn secondary small" type="button" data-copy-message-slot="${item.key}">Copier message</button><button class="btn secondary small" type="button" data-sync-slot="${item.key}">Synchroniser</button>`:""}${item.status.cls==='red'?`<button class="btn danger small" type="button" data-toggle-replace="${item.key}">Trouver un remplaçant</button>`:""}</div>${item.status.cls==='red'?`<div id="replace-${item.key}" class="replacement-panel" style="display:none"><div class="replacement-title">Remplacements suggérés</div>${suggestions.length?suggestions.map(s=>`<div class="replacement-card"><div><div class="replacement-name">${escapeHtml(s.emp.name)}</div><div class="replacement-meta">${s.conflicts.length?`Conflit: ${escapeHtml(s.conflicts.map(c=>c.evt.title).join(' · '))}`:'Aucun conflit détecté'}</div><div class="replacement-badges">${s.sameRole?`<span class="mini-badge green">Même poste</span>`:`<span class="mini-badge orange">Autre poste</span>`}${s.conflicts.length?`<span class="mini-badge red">Conflit</span>`:`<span class="mini-badge green">Disponible</span>`}</div></div><button class="btn secondary small" type="button" data-apply-replace="${item.key}" data-emp="${s.emp.id}">Choisir</button></div>`).join(''):`<div class="empty">Aucun remplaçant compatible trouvé.</div>`}</div>`:""}</div>`; }).join('')}</div></section>`).join(''); }
+    else{ const groups=[]; items.forEach(item=>{ let g=groups.find(x=>x.block.id===item.block.id); if(!g){ g={block:item.block,items:[]}; groups.push(g); } g.items.push(item); }); els.quickSummaryContent.innerHTML=header+groups.map(bg=>`<section class="quick-block-group"><div class="quick-block-head"><div class="quick-block-title">${escapeHtml(bg.block.name||'Bloc')}</div><div class="quick-block-time">${escapeHtml(formatBlockRange(bg.block,selectedEvt))}</div></div><div class="quick-block-body">${bg.items.map(item=>{ const suggestions=item.status.cls==='red'?replacementSuggestionsForSlot(item.key):[]; return `<div class="event-card"><div class="event-card-top"><div><div class="event-title">${escapeHtml(item.roleItem.role||'Poste')}${item.roleItem.quantity>1?` ×${item.roleItem.quantity}`:""} — ${escapeHtml(item.employeeName)}</div><div class="event-meta">Slot ${item.slotIdx+1}${item.employeeId?``:` · à combler`}</div></div><span class="status-pill ${item.status.cls}">${escapeHtml(item.status.label)}</span></div><div class="row-actions" style="justify-content:flex-start">${item.employeeId?`<button class="btn secondary small" type="button" data-send-slot="${item.key}">Envoyer la demande</button><button class="btn secondary small" type="button" data-open-gmail-slot="${item.key}">Ouvrir courriel</button><button class="btn secondary small" type="button" data-copy-message-slot="${item.key}">Copier message</button><button class="btn secondary small" type="button" data-sync-slot="${item.key}">Sync</button>`:""}${item.status.cls==='red'?`<button class="btn danger small" type="button" data-toggle-replace="${item.key}">Trouver un remplaçant</button>`:""}</div>${item.status.cls==='red'?`<div id="replace-${item.key}" class="replacement-panel" style="display:none"><div class="replacement-title">Remplacements suggérés</div>${suggestions.length?suggestions.map(s=>`<div class="replacement-card"><div><div class="replacement-name">${escapeHtml(s.emp.name)}</div><div class="replacement-meta">${s.conflicts.length?`Conflit: ${escapeHtml(s.conflicts.map(c=>c.evt.title).join(' · '))}`:'Aucun conflit détecté'}</div><div class="replacement-badges">${s.sameRole?`<span class="mini-badge green">Même poste</span>`:`<span class="mini-badge orange">Autre poste</span>`}${s.conflicts.length?`<span class="mini-badge red">Conflit</span>`:`<span class="mini-badge green">Disponible</span>`}</div></div><button class="btn secondary small" type="button" data-apply-replace="${item.key}" data-emp="${s.emp.id}">Choisir</button></div>`).join(''):`<div class="empty">Aucun remplaçant compatible trouvé.</div>`}</div>`:""}</div>`; }).join('')}</div></section>`).join(''); }
     document.getElementById('btnSendSelectedEventRequests')?.addEventListener('click',sendAllRequestsForSelectedEvent); document.getElementById('btnSyncSelectedEventRequests')?.addEventListener('click',syncAllAssignmentsFromSupabase); bindAvailabilityActionButtons(els.quickSummaryContent); els.quickSummaryContent.querySelectorAll('[data-send-slot]').forEach(btn=>btn.addEventListener('click',()=>sendRealEmailRequestForSlot(btn.dataset.sendSlot))); return;
   }
   els.quickSummaryTitle.textContent="Résumé rapide"; els.quickSummarySub.textContent="Événements, postes et assignations.";
@@ -2534,6 +2562,80 @@ function bindAvailabilityActionButtons(root){
   root.querySelectorAll('[data-toggle-replace]').forEach(btn=>btn.addEventListener('click',()=>{ const el=document.getElementById(`replace-${btn.dataset.toggleReplace}`); if(el) el.style.display=el.style.display==='none'?'block':'none'; }));
   root.querySelectorAll('[data-apply-replace]').forEach(btn=>btn.addEventListener('click',()=>applyReplacementForSlot(btn.dataset.applyReplace,btn.dataset.emp)));
 }
+
+
+/* v19 — Sync automatique + conflits plus clairs */
+let __autoAvailabilitySyncTimer = null;
+let __autoAvailabilitySyncBusy = false;
+let __lastAutoSyncAt = 0;
+
+function conflictLabelForSuggestion(s){
+  if(!s || !Array.isArray(s.conflicts) || !s.conflicts.length) return "Aucun conflit détecté";
+  return "Conflit avec " + s.conflicts.map(c => `${c.evt?.title || "Événement"} (${c.block?.name || "Bloc"})`).join(" · ");
+}
+
+async function autoSyncAvailabilityV19(){
+  if(__autoAvailabilitySyncBusy) return;
+  if(!state || state.activeTab !== 'availability') return;
+  __autoAvailabilitySyncBusy = true;
+  try{
+    const slots = allAssignmentSlots().filter(x => x.employeeId);
+    let changed = 0;
+    for(const item of slots){
+      const ref = getRoleItemRef(item.evtId, item.blockId, item.roleIdx);
+      if(!ref) continue;
+      syncRoleEmployees(ref.roleItem);
+      const slot = ref.roleItem.slotRequests?.[item.slotIdx];
+      if(!slot) continue;
+      const key = slotKeyV10(item);
+      const row = await findAssignmentBySlotKeyV10(key);
+      if(!row) continue;
+      const oldStatus = String(slot.responseStatus || 'pending');
+      const oldReq = String(slot.requestStatus || 'draft');
+      slot.requestStatus = String(row.request_status || slot.requestStatus || 'sent');
+      slot.responseStatus = String(row.response_status || slot.responseStatus || 'pending');
+      slot.requestToken = String(row.token || slot.requestToken || '');
+      slot.backendRequestId = String(row.id || slot.backendRequestId || '');
+      if(slot.responseStatus !== 'pending') slot.respondedAt = row.responded_at || slot.respondedAt || new Date().toISOString();
+      if(oldStatus !== slot.responseStatus || oldReq !== slot.requestStatus) changed++;
+    }
+    __lastAutoSyncAt = Date.now();
+    if(changed){
+      saveEvents();
+      state.syncBanner = `Sync automatique: ${changed} changement(s) détecté(s).`;
+      renderAll();
+    }
+  }catch(err){
+    console.warn('Auto sync disponibilité échouée:', err);
+  }finally{
+    __autoAvailabilitySyncBusy = false;
+  }
+}
+
+function startAutoAvailabilitySyncV19(){
+  if(__autoAvailabilitySyncTimer) return;
+  __autoAvailabilitySyncTimer = setInterval(autoSyncAvailabilityV19, 15000);
+  document.addEventListener('visibilitychange', () => {
+    if(!document.hidden) setTimeout(autoSyncAvailabilityV19, 600);
+  });
+}
+
+// On garde le bouton manuel, mais l'onglet Disponibilités se met aussi à jour tout seul.
+setTimeout(startAutoAvailabilitySyncV19, 1200);
+
+// Amélioration visuelle des remplacements: met en évidence le meilleur candidat sans conflit.
+const __renderAvailabilitySlotCard_original_v19 = renderAvailabilitySlotCard;
+renderAvailabilitySlotCard = function(item){
+  let html = __renderAvailabilitySlotCard_original_v19(item);
+  // Épure le libellé et rend la zone de conflit plus utile visuellement.
+  html = html.replaceAll('Trouver un remplaçant', 'Remplacer');
+  html = html.replaceAll('Remplacements suggérés', 'Suggestions de remplacement');
+  html = html.replaceAll('Aucun remplaçant compatible trouvé.', 'Aucun travailleur compatible sans conflit pour l’instant.');
+  // Marque la première suggestion disponible comme meilleur choix visuel.
+  html = html.replace('class="replacement-card"', 'class="replacement-card best-replacement"');
+  return html;
+};
+
 
 </script>
 </body>
