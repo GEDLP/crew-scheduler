@@ -1,35 +1,701 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Mes disponibilités — Crew Scheduler</title>
-<style>
-:root{--bg:#eef3f9;--panel:#fff;--text:#0f172a;--muted:#64748b;--line:#dbe3ee;--green:#16a34a;--orange:#f59e0b;--red:#dc2626;--blue:#2563eb;--shadow:0 24px 70px rgba(15,23,42,.14)}*{box-sizing:border-box}body{margin:0;min-height:100vh;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:linear-gradient(180deg,#f8fbff 0%,var(--bg) 100%);color:var(--text);padding:16px}.wrap{width:min(100%,920px);margin:0 auto}.card{background:var(--panel);border:1px solid var(--line);border-radius:28px;box-shadow:var(--shadow);overflow:hidden}.top{padding:26px 24px 18px;background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 100%);color:#fff}.eyebrow{font-size:12px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;opacity:.82;margin-bottom:10px}h1{margin:0;font-size:clamp(28px,7vw,42px);line-height:1.05;letter-spacing:-.04em}.subtitle{margin:12px 0 0;color:#dbeafe;font-size:15px;line-height:1.5}.body{padding:22px;display:grid;gap:16px}.panel{border:1px solid var(--line);border-radius:20px;background:#f8fafc;padding:16px;display:grid;gap:12px}.event-title{font-size:22px;font-weight:950;line-height:1.15;letter-spacing:-.03em}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.item{background:#fff;border:1px solid var(--line);border-radius:16px;padding:12px;min-height:68px}.label{font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}.value{font-size:16px;font-weight:800;line-height:1.3;word-break:break-word}.actions{display:grid;gap:12px}.btn{width:100%;min-height:64px;border:0;border-radius:18px;color:white;font-size:18px;font-weight:900;cursor:pointer;padding:17px 16px}.btn:active{transform:scale(.985)}.btn:disabled{opacity:.55;cursor:not-allowed}.yes{background:var(--green)}.maybe{background:var(--orange)}.no{background:var(--red)}.status{min-height:28px;padding:12px 14px;border-radius:16px;background:#f8fafc;border:1px solid var(--line);color:var(--muted);font-size:15px;font-weight:800;text-align:center;white-space:pre-wrap}.footer{color:var(--muted);font-size:12px;text-align:center;padding:0 22px 20px}.month-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.month-head button{border:1px solid var(--line);background:#fff;border-radius:12px;padding:8px 11px;font-weight:900}.month-title{font-size:18px;font-weight:950;text-transform:capitalize}.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:7px}.dow{text-align:center;color:var(--muted);font-size:11px;font-weight:900;text-transform:uppercase;padding:6px}.day{min-height:54px;background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:7px;text-align:center;display:grid;gap:5px;align-content:start;cursor:pointer}.day.out{opacity:.35}.day.today{border-color:#93c5fd;box-shadow:0 0 0 3px rgba(37,99,235,.10)}.day-num{font-weight:900}.dots{display:flex;justify-content:center;gap:3px;flex-wrap:wrap}.dot{width:7px;height:7px;border-radius:999px}.request-list{display:grid;gap:10px}.request-card{border:1px solid var(--line);border-radius:16px;background:#fff;padding:13px;display:grid;gap:8px;cursor:pointer}.request-card.active{border-color:#93c5fd;box-shadow:0 0 0 4px rgba(37,99,235,.10)}.request-title{font-weight:950}.request-meta{font-size:13px;color:var(--muted);line-height:1.45}.pill{display:inline-flex;width:max-content;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:900;color:#fff}.green{background:var(--green)}.orange{background:var(--orange)}.red{background:var(--red)}.blue{background:var(--blue)}.gray{background:#64748b}.error{padding:28px;text-align:center;display:grid;gap:12px}.back{display:inline-flex;justify-content:center;align-items:center;padding:12px 16px;border-radius:14px;background:#f8fafc;border:1px solid var(--line);color:#0f172a;font-weight:900;text-decoration:none;width:max-content;margin:0 auto}@media(max-width:560px){body{padding:10px}.card{border-radius:24px}.body{padding:18px}.grid{grid-template-columns:1fr}.btn{font-size:17px}.cal{gap:5px}.day{min-height:48px;border-radius:12px;padding:6px}}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mes disponibilités — Crew Scheduler</title>
+  <style>
+    :root{
+      --bg:#eef3f9;
+      --panel:#ffffff;
+      --text:#0f172a;
+      --muted:#64748b;
+      --line:#dbe3ee;
+      --green:#16a34a;
+      --orange:#f59e0b;
+      --red:#dc2626;
+      --blue:#1e3a8a;
+      --shadow:0 24px 70px rgba(15,23,42,.14);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100vh;
+      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background:linear-gradient(180deg,#f8fbff 0%, var(--bg) 100%);
+      color:var(--text);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+    }
+    .card{
+      width:min(100%, 720px);
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:28px;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .top{
+      padding:26px 24px 18px;
+      background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 100%);
+      color:white;
+    }
+    .eyebrow{
+      font-size:12px;
+      font-weight:900;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      opacity:.82;
+      margin-bottom:10px;
+    }
+    h1{
+      margin:0;
+      font-size:clamp(28px, 7vw, 42px);
+      line-height:1.05;
+      letter-spacing:-.04em;
+    }
+    .subtitle{
+      margin:12px 0 0;
+      color:#dbeafe;
+      font-size:15px;
+      line-height:1.5;
+    }
+    .body{
+      padding:22px;
+      display:grid;
+      gap:16px;
+    }
+    .calendar{
+      border:1px solid var(--line);
+      border-radius:20px;
+      background:#f8fafc;
+      padding:16px;
+      display:grid;
+      gap:12px;
+    }
+    .cal-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+    }
+    .cal-title{
+      font-size:18px;
+      font-weight:950;
+      letter-spacing:-.03em;
+      text-transform:capitalize;
+    }
+    .cal-nav{
+      border:1px solid var(--line);
+      background:white;
+      color:var(--text);
+      border-radius:12px;
+      width:38px;
+      height:34px;
+      font-size:20px;
+      font-weight:900;
+      cursor:pointer;
+    }
+    .cal-grid{
+      display:grid;
+      grid-template-columns:repeat(7,1fr);
+      gap:6px;
+    }
+    .cal-day-name{
+      font-size:11px;
+      font-weight:950;
+      color:var(--muted);
+      text-align:center;
+      text-transform:uppercase;
+      padding:4px 0;
+    }
+    .cal-cell{
+      min-height:46px;
+      border:1px solid #e2e8f0;
+      background:white;
+      border-radius:12px;
+      padding:7px 5px;
+      text-align:center;
+      cursor:pointer;
+      display:grid;
+      align-content:center;
+      gap:4px;
+    }
+    .cal-cell:hover{filter:brightness(.98)}
+    .cal-cell.empty{background:transparent;border-color:transparent;cursor:default}
+    .cal-num{font-weight:900;font-size:14px}
+    .dots{display:flex;justify-content:center;gap:3px;min-height:7px}
+    .dot{width:7px;height:7px;border-radius:50%}
+    .info{
+      border:1px solid var(--line);
+      border-radius:20px;
+      background:#f8fafc;
+      padding:16px;
+      display:grid;
+      gap:12px;
+    }
+    .event-title{
+      font-size:22px;
+      font-weight:950;
+      line-height:1.15;
+      letter-spacing:-.03em;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+    .item{
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:12px;
+      min-height:68px;
+    }
+    .label{
+      font-size:11px;
+      font-weight:900;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      color:var(--muted);
+      margin-bottom:5px;
+    }
+    .value{
+      font-size:16px;
+      font-weight:800;
+      line-height:1.3;
+      word-break:break-word;
+    }
+    .request-card{
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:14px;
+      background:#fff;
+      cursor:pointer;
+      display:grid;
+      gap:7px;
+      transition:transform .12s ease, box-shadow .12s ease;
+    }
+    .request-card:hover{
+      transform:translateY(-1px);
+      box-shadow:0 10px 22px rgba(15,23,42,.08);
+    }
+    .badge{
+      width:max-content;
+      padding:6px 10px;
+      border-radius:10px;
+      font-weight:900;
+      font-size:12px;
+      color:white;
+    }
+    .back-list{
+      border:1px solid var(--line);
+      background:white;
+      color:var(--text);
+      border-radius:14px;
+      font-weight:900;
+      padding:12px 14px;
+      cursor:pointer;
+      width:max-content;
+    }
+    .actions{display:grid;gap:12px}
+    .btn{
+      width:100%;
+      min-height:66px;
+      border:0;
+      border-radius:18px;
+      color:white;
+      font-size:18px;
+      font-weight:900;
+      cursor:pointer;
+      padding:17px 16px;
+      transition:transform .15s ease, filter .15s ease;
+    }
+    .btn:active{transform:scale(.985)}
+    .btn:disabled{opacity:.55;cursor:not-allowed}
+    .yes{background:var(--green)}
+    .maybe{background:var(--orange)}
+    .no{background:var(--red)}
+    .status{
+      min-height:28px;
+      padding:12px 14px;
+      border-radius:16px;
+      background:#f8fafc;
+      border:1px solid var(--line);
+      color:var(--muted);
+      font-size:15px;
+      font-weight:800;
+      text-align:center;
+      white-space:pre-wrap;
+    }
+    .footer{
+      color:var(--muted);
+      font-size:12px;
+      text-align:center;
+      padding:0 22px 20px;
+    }
+    .error{
+      padding:28px;
+      text-align:center;
+      display:grid;
+      gap:12px;
+    }
+    .error h1{color:#0f172a}
+    .back{
+      display:inline-flex;
+      justify-content:center;
+      align-items:center;
+      padding:12px 16px;
+      border-radius:14px;
+      background:#f8fafc;
+      border:1px solid var(--line);
+      color:#0f172a;
+      font-weight:900;
+      text-decoration:none;
+      width:max-content;
+      margin:0 auto;
+    }
+    @media (max-width:560px){
+      body{padding:10px;align-items:stretch}
+      .card{border-radius:24px}
+      .top{padding:24px 20px 18px}
+      .body{padding:18px}
+      .grid{grid-template-columns:1fr}
+      .btn{font-size:17px;min-height:64px}
+      .cal-cell{min-height:42px;border-radius:10px}
+    }
+  </style>
 </head>
 <body>
-<div class="wrap"><main class="card" id="app"><section class="top"><div class="eyebrow">Crew Scheduler</div><h1>Mes disponibilités</h1><p class="subtitle">Consulte tes demandes, puis indique si tu es disponible, peut-être ou non disponible.</p></section><section class="body"><div class="panel" id="calendarPanel"><div class="month-head"><button id="prevMonth">←</button><div class="month-title" id="monthTitle">—</div><button id="nextMonth">→</button></div><div class="cal" id="calendar"></div></div><div class="panel"><div class="event-title">Mes demandes</div><div class="request-list" id="requestList"></div></div><div class="panel" id="requestInfo"><div class="event-title" id="eventTitle">Chargement...</div><div class="grid"><div class="item"><div class="label">Travailleur</div><div class="value" id="employeeName">—</div></div><div class="item"><div class="label">Poste</div><div class="value" id="role">—</div></div><div class="item"><div class="label">Début</div><div class="value" id="startTime">—</div></div><div class="item"><div class="label">Fin</div><div class="value" id="endTime">—</div></div><div class="item"><div class="label">Statut actuel</div><div class="value" id="currentStatus">—</div></div><div class="item"><div class="label">Lieu</div><div class="value" id="location">—</div></div><div class="item" style="grid-column:1/-1"><div class="label">Note</div><div class="value" id="notes">—</div></div></div></div><div class="actions"><button class="btn yes" id="btnYes">✅ Oui, je suis disponible</button><button class="btn maybe" id="btnMaybe">🟡 Peut-être</button><button class="btn no" id="btnNo">❌ Non, je ne suis pas disponible</button></div><div class="status" id="status">Chargement...</div></section><div class="footer">Cette réponse sera transmise au planificateur.</div></main></div>
-<script>
-const SUPABASE_URL="https://yxkdyohscpsmeplbkyqo.supabase.co";
-const ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4a2R5b2hzY3BzbWVwbGJreXFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3MTY1NDYsImV4cCI6MjA5MjI5MjU0Nn0.Xx8KjZFqqWnTvJczYqPRINXeX0fp7aq7wRvG30ZF6pE";
-const headers={"apikey":ANON_KEY,"Authorization":`Bearer ${ANON_KEY}`}; const jsonHeaders={...headers,"Content-Type":"application/json"};
-const token=new URLSearchParams(location.search).get("token"); let requests=[]; let current=null; let anchor=new Date();
-const $=id=>document.getElementById(id); const esc=s=>String(s??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
-const statusLabels={pending:"En attente",available:"Disponible",maybe:"Peut-être",unavailable:"Non disponible",sent:"Envoyée",manual:"Préparée manuellement",draft:"Brouillon"};
-function clsStatus(v){return v==="available"?"green":v==="maybe"?"orange":v==="unavailable"?"red":v==="pending"?"blue":"gray"}
-function formatDateTime(value){if(!value)return "—";const d=new Date(value);if(Number.isNaN(d.getTime()))return value;return new Intl.DateTimeFormat("fr-CA",{weekday:"long",year:"numeric",month:"long",day:"numeric",hour:"2-digit",minute:"2-digit",hour12:false}).format(d)}
-function dayKey(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`} function startOfDay(d){const x=new Date(d);x.setHours(0,0,0,0);return x} function addDays(d,n){const x=new Date(d);x.setDate(x.getDate()+n);return x} function addMonths(d,n){const x=new Date(d);x.setMonth(x.getMonth()+n);return x} async function readJson(res){const txt=await res.text();let data=[];try{data=txt?JSON.parse(txt):[]}catch{data=txt} if(!res.ok)throw new Error(typeof data==="string"?data:(data?.message||txt||res.status)); return data}
-function setButtonsDisabled(v){["btnYes","btnMaybe","btnNo"].forEach(id=>$(id).disabled=v)}
-function showInvalid(message){$("app").innerHTML=`<div class="error"><div class="eyebrow">Crew Scheduler</div><h1>Lien invalide</h1><p style="color:#64748b;line-height:1.5">${esc(message)}</p><a class="back" href="https://gedlp.github.io/crew-scheduler/">Retour à l’application</a></div>`}
-async function load(){if(!token){showInvalid("Aucun token n’a été trouvé dans le lien.");return}try{const one=await readJson(await fetch(`${SUPABASE_URL}/rest/v1/assignments?token=eq.${encodeURIComponent(token)}&select=*`,{headers}));if(!Array.isArray(one)||!one[0]){showInvalid("La demande ne peut pas être trouvée. Le lien est peut-être expiré ou incomplet.");return}const base=one[0];let q="";if(base.employee_email)q=`employee_email=eq.${encodeURIComponent(base.employee_email)}`;else q=`employee_name=eq.${encodeURIComponent(base.employee_name||"")}`;const all=await readJson(await fetch(`${SUPABASE_URL}/rest/v1/assignments?${q}&select=*,events(id,title,start_date,end_date,location,notes,color,deleted_at)&order=start_time.asc`,{headers}));requests=(Array.isArray(all)?all:[]).filter(r=>r.events && !r.events.deleted_at);dedupe();current=requests.find(r=>r.token===token)||requests[0]||base;anchor=current?.start_time?new Date(current.start_time):new Date();renderAll();}catch(err){showInvalid(`Erreur réseau/Supabase: ${err.message||err}`)}}
-function dedupe(){const m=new Map();for(const r of requests){const k=r.slot_key||`${r.event_id}|${r.employee_email||r.employee_name}|${r.role}|${r.start_time}`;const old=m.get(k);if(!old||new Date(r.updated_at||r.created_at||0)>new Date(old.updated_at||old.created_at||0))m.set(k,r)}requests=[...m.values()]}
-function renderAll(){renderCalendar();renderList();renderCurrent();$("status").textContent=requests.length?"Clique sur une demande pour la consulter ou répondre.":"Aucune demande active.";setButtonsDisabled(!current)}
-function renderCalendar(){const cal=$("calendar");const first=new Date(anchor.getFullYear(),anchor.getMonth(),1);$("monthTitle").textContent=new Intl.DateTimeFormat("fr-CA",{month:"long",year:"numeric"}).format(first);const start=addDays(first,-first.getDay());let html=["Dim","Lun","Mar","Mer","Jeu","Ven","Sam"].map(d=>`<div class="dow">${d}</div>`).join("");for(let i=0;i<42;i++){const day=addDays(start,i);const k=dayKey(day);const ev=requests.filter(r=>r.start_time&&dayKey(new Date(r.start_time))===k);html+=`<div class="day ${day.getMonth()!==first.getMonth()?"out":""} ${k===dayKey(new Date())?"today":""}" data-day="${k}"><div class="day-num">${day.getDate()}</div><div class="dots">${ev.slice(0,5).map(r=>`<span class="dot ${clsStatus(r.response_status)}"></span>`).join("")}</div></div>`}cal.innerHTML=html;cal.querySelectorAll(".day").forEach(el=>el.onclick=()=>{const found=requests.find(r=>r.start_time&&dayKey(new Date(r.start_time))===el.dataset.day);if(found){current=found;renderList();renderCurrent();}})}
-function renderList(){const el=$("requestList");el.innerHTML=requests.length?requests.map(r=>`<div class="request-card ${current?.id===r.id?"active":""}" data-id="${r.id}"><div class="request-title">${esc(r.event_title||r.events?.title||"Événement")}</div><div class="request-meta">${formatDateTime(r.start_time)}<br>${esc(r.role||"Poste")}</div><span class="pill ${clsStatus(r.response_status)}">${esc(statusLabels[r.response_status]||r.response_status||"En attente")}</span></div>`).join(""):`<div class="request-card"><div class="request-meta">Aucune demande active. Les événements supprimés ne sont pas affichés ici.</div></div>`;el.querySelectorAll(".request-card[data-id]").forEach(c=>c.onclick=()=>{current=requests.find(r=>r.id===c.dataset.id);renderList();renderCurrent();});}
-function renderCurrent(){if(!current){$("eventTitle").textContent="Aucune demande";return}$("eventTitle").textContent=current.event_title||current.events?.title||"Événement";$("employeeName").textContent=current.employee_name||"—";$("role").textContent=current.role||"—";$("startTime").textContent=formatDateTime(current.start_time);$("endTime").textContent=formatDateTime(current.end_time);$("currentStatus").textContent=statusLabels[current.response_status]||current.response_status||"—";$("location").textContent=current.event_location||current.events?.location||"À confirmer";$("notes").textContent=current.event_notes||current.events?.notes||"—";}
-async function respond(responseStatus){if(!current?.id){$("status").textContent="Erreur : aucune demande sélectionnée.";return}setButtonsDisabled(true);$("status").textContent="Envoi de la réponse...";try{const res=await fetch(`${SUPABASE_URL}/rest/v1/assignments?id=eq.${encodeURIComponent(current.id)}&select=*`,{method:"PATCH",headers:{...jsonHeaders,"Prefer":"return=representation"},body:JSON.stringify({response_status:responseStatus,request_status:"sent",responded_at:new Date().toISOString(),updated_at:new Date().toISOString()})});const rows=await readJson(res);if(rows[0]){current={...current,...rows[0]};requests=requests.map(r=>r.id===current.id?{...r,...rows[0]}:r)}renderAll();$("status").textContent=`Réponse envoyée ✅\nStatut: ${statusLabels[responseStatus]||responseStatus}`;}catch(err){$("status").textContent=`Erreur réseau ❌\n${err.message||err}`;}finally{setButtonsDisabled(false)}}
-$("btnYes").onclick=()=>respond("available");$("btnMaybe").onclick=()=>respond("maybe");$("btnNo").onclick=()=>respond("unavailable");$("prevMonth").onclick=()=>{anchor=addMonths(anchor,-1);renderCalendar()};$("nextMonth").onclick=()=>{anchor=addMonths(anchor,1);renderCalendar()};load();
-</script>
+  <main class="card" id="app">
+    <section class="top">
+      <div class="eyebrow">Crew Scheduler</div>
+      <h1>Mes disponibilités</h1>
+      <p class="subtitle">Consulte tes demandes, puis indique si tu es disponible, peut-être ou non disponible.</p>
+    </section>
+
+    <section class="body">
+      <div class="calendar" id="calendar"></div>
+
+      <div class="info" id="requestInfo">
+        <div class="event-title" id="eventTitle">Chargement...</div>
+      </div>
+
+      <div class="actions" id="actions" style="display:none;">
+        <button class="back-list" onclick="showList()">← Retour à la liste</button>
+        <button class="btn yes" id="btnYes" onclick="respond('available')">✅ Oui, je suis disponible</button>
+        <button class="btn maybe" id="btnMaybe" onclick="respond('maybe')">🟡 Peut-être</button>
+        <button class="btn no" id="btnNo" onclick="respond('unavailable')">❌ Non, je ne suis pas disponible</button>
+      </div>
+
+      <div class="status" id="status">Chargement des demandes...</div>
+    </section>
+
+    <div class="footer">Tes réponses seront transmises au planificateur.</div>
+  </main>
+
+  <script>
+    const SUPABASE_URL = "https://yxkdyohscpsmeplbkyqo.supabase.co";
+    const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4a2R5b2hzY3BzbWVwbGJreXFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3MTY1NDYsImV4cCI6MjA5MjI5MjU0Nn0.Xx8KjZFqqWnTvJczYqPRINXeX0fp7aq7wRvG30ZF6pE";
+
+    const token = new URLSearchParams(window.location.search).get("token");
+
+    let requestData = null;
+    let allAssignments = [];
+    let calendarDate = new Date();
+
+    const statusLabels = {
+      pending: "En attente",
+      available: "Disponible",
+      maybe: "Peut-être",
+      unavailable: "Non disponible",
+      sent: "Envoyée",
+      manual: "Préparée manuellement",
+      draft: "Brouillon"
+    };
+
+    const statusColors = {
+      available: "#16a34a",
+      maybe: "#f59e0b",
+      unavailable: "#dc2626",
+      pending: "#64748b",
+      sent: "#64748b",
+      manual: "#64748b",
+      draft: "#64748b"
+    };
+
+    function formatDateTime(value){
+      if(!value) return "—";
+      const d = new Date(value);
+      if(Number.isNaN(d.getTime())) return value;
+      return new Intl.DateTimeFormat("fr-CA", {
+        weekday:"long",
+        year:"numeric",
+        month:"long",
+        day:"numeric",
+        hour:"2-digit",
+        minute:"2-digit",
+        hour12:false
+      }).format(d);
+    }
+
+    function dateKey(value){
+      const d = new Date(value);
+      if(Number.isNaN(d.getTime())) return "";
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+    }
+
+    function remoteRowLooksModern(item){
+      // La page de réponse est publique et peut être ouverte sur un autre appareil.
+      // Elle ne doit PAS dépendre du localStorage du Crew Scheduler, sinon le calendrier peut apparaître vide.
+      return !!(item && item.token && item.start_time && item.end_time);
+    }
+
+    function filterDeletedLocalAssignments(list){
+      // Le nettoyage des événements supprimés se fait dans Crew Scheduler / Supabase.
+      // Ici, on affiche seulement les demandes valides qui existent encore dans Supabase.
+      const rows = Array.isArray(list) ? list : [];
+      return rows.filter(remoteRowLooksModern);
+    }
+
+    function dedupeAssignments(list, preferredToken){
+      const rows = Array.isArray(list) ? list : [];
+      const groups = new Map();
+
+      rows.forEach(item => {
+        const key = [
+          item.event_id || item.event_title || "",
+          item.block_id || "",
+          item.employee_id || item.employee_email || item.employee_name || "",
+          item.role || "",
+          item.start_time || "",
+          item.end_time || ""
+        ].map(v => String(v || "").trim()).join("||");
+
+        if(!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(item);
+      });
+
+      const score = item => {
+        let value = 0;
+        if(preferredToken && item.token === preferredToken) value += 1000000000;
+        const time = Date.parse(item.updated_at || item.created_at || item.sent_at || item.responded_at || item.start_time || "") || 0;
+        value += Math.floor(time / 1000);
+        const statusBonus = {available:500, unavailable:500, maybe:400, pending:100, sent:80, manual:60, draft:10}[item.response_status] || 0;
+        value += statusBonus;
+        const idNum = Number(item.id);
+        if(Number.isFinite(idNum)) value += Math.min(idNum, 999999) / 1000000;
+        return value;
+      };
+
+      return [...groups.values()].map(group => group.sort((a,b) => score(b) - score(a))[0]);
+    }
+
+    function setButtonsDisabled(disabled){
+      document.getElementById("btnYes").disabled = disabled;
+      document.getElementById("btnMaybe").disabled = disabled;
+      document.getElementById("btnNo").disabled = disabled;
+    }
+
+    function showInvalid(message){
+      document.getElementById("app").innerHTML = `
+        <div class="error">
+          <div class="eyebrow">Crew Scheduler</div>
+          <h1>Lien de demande invalide</h1>
+          <p style="color:#64748b;line-height:1.5">${message}</p>
+          <a class="back" href="https://gedlp.github.io/crew-scheduler/">Retour à l’application</a>
+        </div>
+      `;
+    }
+
+    async function loadRequest(){
+      if(!token){
+        showInvalid("Aucun token n’a été trouvé dans le lien.");
+        return;
+      }
+
+      try{
+        const selectFields = "*,events!inner(id,deleted_at)";
+        const res = await fetch(
+          `${SUPABASE_URL}/rest/v1/assignments?token=eq.${encodeURIComponent(token)}&event_id=not.is.null&events.deleted_at=is.null&select=${encodeURIComponent(selectFields)}`,
+          {
+            headers:{
+              "apikey": ANON_KEY,
+              "Authorization": `Bearer ${ANON_KEY}`
+            }
+          }
+        );
+
+        const txt = await res.text();
+        let data = [];
+        try{ data = txt ? JSON.parse(txt) : []; }catch{ data = []; }
+
+        if(!res.ok){
+          showInvalid(`Erreur Supabase ${res.status}: ${txt}`);
+          return;
+        }
+
+        if(!Array.isArray(data) || !data.length){
+          showInvalid("La demande ne peut pas être trouvée. Le lien est peut-être expiré, supprimé ou lié à un événement qui n’existe plus.");
+          return;
+        }
+
+        requestData = data[0];
+
+        let filter = "";
+        if(requestData.employee_email){
+          filter = `employee_email=eq.${encodeURIComponent(requestData.employee_email)}`;
+        }else if(requestData.employee_id){
+          filter = `employee_id=eq.${encodeURIComponent(requestData.employee_id)}`;
+        }else{
+          filter = `employee_name=eq.${encodeURIComponent(requestData.employee_name || "")}`;
+        }
+
+        const resAll = await fetch(
+          `${SUPABASE_URL}/rest/v1/assignments?${filter}&event_id=not.is.null&events.deleted_at=is.null&select=${encodeURIComponent(selectFields)}&order=start_time.asc`,
+          {
+            headers:{
+              "apikey": ANON_KEY,
+              "Authorization": `Bearer ${ANON_KEY}`
+            }
+          }
+        );
+
+        const allTxt = await resAll.text();
+        try{ allAssignments = allTxt ? JSON.parse(allTxt) : []; }catch{ allAssignments = []; }
+
+        if(!resAll.ok){
+          showInvalid(`Erreur Supabase ${resAll.status}: ${allTxt}`);
+          return;
+        }
+
+        if(!Array.isArray(allAssignments)) allAssignments = [];
+        allAssignments = dedupeAssignments(allAssignments.filter(x => x.event_id), token);
+
+        const firstEventDate = new Date(requestData.start_time);
+        if(!Number.isNaN(firstEventDate.getTime())) calendarDate = firstEventDate;
+
+        renderCalendar();
+        renderAllRequests(allAssignments);
+
+      }catch(err){
+        showInvalid(`Erreur réseau: ${String(err)}`);
+      }
+    }
+
+    function renderCalendar(){
+      const calendar = document.getElementById("calendar");
+      const year = calendarDate.getFullYear();
+      const month = calendarDate.getMonth();
+
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+      const daysInMonth = lastDay.getDate();
+      const startOffset = firstDay.getDay();
+
+      const monthLabel = firstDay.toLocaleString("fr-CA", { month:"long", year:"numeric" });
+      const dayNames = ["Dim","Lun","Mar","Mer","Jeu","Ven","Sam"];
+
+      let html = `
+        <div class="cal-head">
+          <button class="cal-nav" onclick="changeMonth(-1)">‹</button>
+          <div class="cal-title">${monthLabel}</div>
+          <button class="cal-nav" onclick="changeMonth(1)">›</button>
+        </div>
+        <div class="cal-grid">
+          ${dayNames.map(d => `<div class="cal-day-name">${d}</div>`).join("")}
+      `;
+
+      for(let i=0; i<startOffset; i++){
+        html += `<div class="cal-cell empty"></div>`;
+      }
+
+      for(let d=1; d<=daysInMonth; d++){
+        const cellDate = new Date(year, month, d);
+        const key = dateKey(cellDate);
+        const events = allAssignments.filter(e => dateKey(e.start_time) === key);
+
+        const uniqueStatuses = [...new Set(events.map(e => e.response_status || "pending"))].slice(0,3);
+        const dots = uniqueStatuses.map(s => `<span class="dot" style="background:${statusColors[s] || "#64748b"}"></span>`).join("");
+
+        html += `
+          <div class="cal-cell" onclick="scrollToDate('${key}')">
+            <div class="cal-num">${d}</div>
+            <div class="dots">${dots}</div>
+          </div>
+        `;
+      }
+
+      html += `</div>`;
+      calendar.innerHTML = html;
+    }
+
+    function changeMonth(delta){
+      calendarDate = new Date(calendarDate.getFullYear(), calendarDate.getMonth() + delta, 1);
+      renderCalendar();
+    }
+
+    function renderAllRequests(list){
+      document.getElementById("actions").style.display = "none";
+
+      const container = document.getElementById("requestInfo");
+
+      container.innerHTML = `
+        <div class="event-title">Mes demandes de disponibilité</div>
+        <div style="color:#64748b;font-weight:800;font-size:14px;">Clique sur un événement pour voir les détails et répondre.</div>
+        <div id="eventsList" style="display:grid; gap:12px;"></div>
+      `;
+
+      const listDiv = document.getElementById("eventsList");
+
+      if(!list.length){
+        listDiv.innerHTML = `<div style="color:#64748b;font-weight:800;">Aucune demande trouvée.</div>`;
+        document.getElementById("status").innerText = "";
+        return;
+      }
+
+      list.forEach(item => {
+        const color = statusColors[item.response_status] || "#64748b";
+        const key = dateKey(item.start_time);
+
+        const el = document.createElement("div");
+        el.className = "request-card";
+        el.dataset.date = key;
+
+        el.innerHTML = `
+          <div style="font-weight:950; font-size:17px; letter-spacing:-.02em;">
+            ${item.event_title || "Événement"}
+          </div>
+
+          <div style="font-size:13px; color:#64748b; font-weight:800;">
+            ${formatDateTime(item.start_time)}
+          </div>
+
+          <div class="badge" style="background:${color};">
+            ${statusLabels[item.response_status] || "En attente"}
+          </div>
+        `;
+
+        el.onclick = () => openEvent(item);
+        listDiv.appendChild(el);
+      });
+
+      document.getElementById("status").innerText = "Clique sur une demande pour répondre.";
+    }
+
+    function renderRequest(){
+      document.getElementById("actions").style.display = "grid";
+
+      document.getElementById("requestInfo").innerHTML = `
+        <div class="event-title" id="eventTitle">Événement</div>
+        <div class="grid">
+          <div class="item"><div class="label">Travailleur</div><div class="value" id="employeeName">—</div></div>
+          <div class="item"><div class="label">Poste</div><div class="value" id="role">—</div></div>
+          <div class="item"><div class="label">Début</div><div class="value" id="startTime">—</div></div>
+          <div class="item"><div class="label">Fin</div><div class="value" id="endTime">—</div></div>
+          <div class="item"><div class="label">Statut actuel</div><div class="value" id="currentStatus">—</div></div>
+          <div class="item"><div class="label">Lieu</div><div class="value" id="location">—</div></div>
+          <div class="item"><div class="label">Note</div><div class="value" id="notes">—</div></div>
+        </div>
+      `;
+
+      document.getElementById("eventTitle").innerText = requestData.event_title || "Événement";
+      document.getElementById("employeeName").innerText = requestData.employee_name || "—";
+      document.getElementById("role").innerText = requestData.role || "—";
+      document.getElementById("startTime").innerText = formatDateTime(requestData.start_time);
+      document.getElementById("endTime").innerText = formatDateTime(requestData.end_time);
+      document.getElementById("currentStatus").innerText = statusLabels[requestData.response_status] || requestData.response_status || "—";
+      document.getElementById("location").innerText = requestData.event_location || requestData.location || "À confirmer";
+      document.getElementById("notes").innerText = requestData.event_notes || requestData.notes || "—";
+
+      document.getElementById("status").innerText = "";
+      setButtonsDisabled(false);
+    }
+
+    function openEvent(item){
+      requestData = item;
+      renderRequest();
+      // Pas de scroll automatique: l'utilisateur reste à l'endroit où il a cliqué.
+    }
+
+    function showList(){
+      renderCalendar();
+      renderAllRequests(allAssignments);
+    }
+
+    function scrollToDate(key){
+      const cards = [...document.querySelectorAll("#eventsList > .request-card")];
+      const target = cards.find(card => card.dataset.date === key);
+
+      if(target){
+        target.scrollIntoView({ behavior:"smooth", block:"center" });
+        target.style.outline = "3px solid rgba(30,58,138,.25)";
+        setTimeout(() => target.style.outline = "", 1200);
+      }
+    }
+
+    async function respond(responseStatus){
+      const activeToken = requestData?.token || token;
+
+      if(!activeToken){
+        document.getElementById("status").innerText = "Erreur : token manquant.";
+        return;
+      }
+
+      setButtonsDisabled(true);
+      document.getElementById("status").innerText = "Envoi de la réponse...";
+
+      try{
+        const res = await fetch(
+          `${SUPABASE_URL}/rest/v1/assignments?token=eq.${encodeURIComponent(activeToken)}`,
+          {
+            method:"PATCH",
+            headers:{
+              "apikey": ANON_KEY,
+              "Authorization": `Bearer ${ANON_KEY}`,
+              "Content-Type":"application/json",
+              "Prefer":"return=representation"
+            },
+            body: JSON.stringify({ response_status: responseStatus, request_status:"answered", responded_at:new Date().toISOString(), updated_at:new Date().toISOString() })
+          }
+        );
+
+        const txt = await res.text();
+
+        if(!res.ok){
+          document.getElementById("status").innerText = `Erreur ${res.status} ❌\n${txt}`;
+          setButtonsDisabled(false);
+          return;
+        }
+
+        let updated = [];
+        try{ updated = txt ? JSON.parse(txt) : []; }catch{}
+
+        if(Array.isArray(updated) && updated[0]){
+          requestData = updated[0];
+
+          allAssignments = allAssignments.map(item => {
+            if((item.token && item.token === requestData.token) || (item.id && item.id === requestData.id)){
+              return requestData;
+            }
+            return item;
+          });
+
+          renderCalendar();
+          renderRequest();
+        }
+
+        const label = statusLabels[responseStatus] || responseStatus;
+        document.getElementById("status").innerText = `Réponse envoyée ✅\nStatut: ${label}`;
+      }catch(err){
+        document.getElementById("status").innerText = `Erreur réseau ❌\n${String(err)}`;
+        setButtonsDisabled(false);
+      }
+    }
+
+    loadRequest();
+  </script>
 </body>
 </html>
