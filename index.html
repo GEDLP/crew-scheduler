@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Crew Scheduler – Calendrier + Équipe</title>
+<title>Crew Scheduler v12 – Calendrier + Équipe</title>
 <style>
 :root{
   --bg:#f4f7fb; --panel:#ffffff; --panel2:#f8fafc; --text:#0f172a; --muted:#64748b;
@@ -2062,7 +2062,7 @@ function renderQuickSummary(){
 
 
 
-/* === Supabase centralisé v10 — conserve l'ancienne interface === */
+/* === Supabase centralisé v12 — conserve l'ancienne interface === */
 let __eventsSyncTimer=null;
 let __employeesSyncTimer=null;
 let __bootingSupabase=false;
@@ -2213,7 +2213,7 @@ async function bootSupabaseCentral(){
     state.events=remoteEvents.length ? remoteEvents : localEvents;
     localStorage.setItem(EMPLOYEES_KEY, JSON.stringify(state.employees));
     localStorage.setItem(EVENTS_KEY, JSON.stringify(state.events));
-    state.syncBanner='Données chargées depuis Supabase.';
+    state.syncBanner='Données chargées depuis Supabase — v12.';
   }catch(err){
     console.error(err);
     state.events=loadEvents();
