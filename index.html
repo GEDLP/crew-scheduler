@@ -2008,7 +2008,7 @@ function slotVisualState(roleItem,slotIdx){
   if(slot.responseStatus==="available") return {label:"Confirmé", cls:"green"};
   if(slot.responseStatus==="unavailable") return {label:"Refusé", cls:"red"};
   if(slot.responseStatus==="maybe") return {label:"Peut-être", cls:"orange"};
-  if(slot.requestStatus==="sent" || slot.requestStatus==="answered") return {label:"En attente", cls:"orange"};
+  if(slot.requestStatus==="sent" || slot.requestStatus==="manual" || slot.requestStatus==="answered") return {label:"En attente", cls:"orange"};
   return {label:"Non envoyé", cls:"gray"};
 }
 
@@ -2073,6 +2073,9 @@ async function sendRealEmailRequestForSlot(key){
   syncRoleEmployees(ref.roleItem);
   const emp=state.employees.find(x=>x.id===item.employeeId);
   if(!emp?.email){ alert("Ajoute un courriel à cet employé avant l'envoi réel."); return; }
+  if(!ref.roleItem.slotRequests) ref.roleItem.slotRequests=[];
+  if(!ref.roleItem.slotRequests[item.slotIdx]) ref.roleItem.slotRequests[item.slotIdx]={employeeId:item.employeeId,requestStatus:"draft",responseStatus:"pending"};
+  const slot=ref.roleItem.slotRequests[item.slotIdx];
   const timing=getRoleTiming(item.evt,item.block);
   const payload={
     employee_id: emp.id,
@@ -2082,36 +2085,40 @@ async function sendRealEmailRequestForSlot(key){
     event_id: item.evt.id || item.evtId || "",
     block_id: item.block.id || item.blockId || "",
     event_title: item.evt.title || "Événement",
+    event_location: item.evt.location || "",
+    event_notes: item.evt.notes || "",
     start_time: new Date(`${timing.startDate}T${to24h(timing.startTime)}:00`).toISOString(),
     end_time: new Date(`${timing.endDate}T${to24h(timing.endTime)}:00`).toISOString()
   };
   try{
-    const res=await fetch(APP_CONFIG.sendRequestUrl,{
-      method:"POST",
-      headers:{
-        "apikey": APP_CONFIG.anonKey,
-        "Authorization": `Bearer ${APP_CONFIG.anonKey}`,
-        "Content-Type":"application/json"
-      },
-      body: JSON.stringify(payload)
-    });
-    const raw=await res.text();
-    let data={}; try{ data=raw?JSON.parse(raw):{}; }catch{ data={raw}; }
-    if(!res.ok){ alert(`Envoi réel échoué. ${data.reason||data.error||raw||'Erreur inconnue.'}`); return; }
-    const slot=ref.roleItem.slotRequests[item.slotIdx];
+    const res=await fetch(APP_CONFIG.sendRequestUrl,{method:"POST",headers:{"apikey":APP_CONFIG.anonKey,"Authorization":`Bearer ${APP_CONFIG.anonKey}`,"Content-Type":"application/json"},body:JSON.stringify(payload)});
+    const raw=await res.text(); let data={}; try{ data=raw?JSON.parse(raw):{}; }catch{ data={raw}; }
+    if(!res.ok){
+      const existing=await findExistingRemoteAssignmentForSlot(key);
+      if(existing?.token){
+        slot.requestStatus="sent";
+        slot.responseStatus=String(existing.response_status||slot.responseStatus||"pending");
+        slot.sentAt=String(existing.sent_at||new Date().toISOString());
+        slot.lastChannel="email_api_blocked_resend";
+        slot.requestToken=String(existing.token||"");
+        slot.backendRequestId=String(existing.id||"");
+        saveEvents();
+        state.syncBanner=`Resend a bloqué l'envoi, mais la demande existe. Utilise « Ouvrir courriel » ou « Copier le lien » pour ${emp.name}.`;
+        renderAll();
+      }
+      alert(`Envoi réel échoué. ${data.reason||data.error||raw||'Erreur inconnue.'}
+
+Note: Resend bloque l'envoi aux autres adresses tant que ton domaine n'est pas vérifié. La demande a été conservée si Supabase l'a créée.`);
+      return;
+    }
     slot.requestStatus="sent";
     slot.responseStatus=slot.responseStatus==="available"?"available":"pending";
     slot.sentAt=new Date().toISOString();
     slot.lastChannel="email_api";
     slot.requestToken=String(data.token||slot.requestToken||"");
     slot.backendRequestId=String(data.id||slot.backendRequestId||"");
-    saveEvents();
-    state.syncBanner=`Demande réelle envoyée à ${emp.name}.`;
-    renderAll();
-    alert(`Courriel réel envoyé à ${emp.email}.`);
-  } catch(err){
-    alert(`Erreur réseau pendant l'envoi réel: ${err.message||err}`);
-  }
+    saveEvents(); state.syncBanner=`Demande réelle envoyée à ${emp.name}.`; renderAll(); alert(`Courriel réel envoyé à ${emp.email}.`);
+  } catch(err){ alert(`Erreur réseau pendant l'envoi réel: ${err.message||err}`); }
 }
 
 async function sendAllRequestsForSelectedEvent(){
@@ -2143,34 +2150,66 @@ async function syncAssignmentSlotFromSupabase(key){
 }
 
 
-function remoteAssignmentMatchesLocalEvent(row){
-  const remoteEventId=String(row?.event_id||"");
-  if(remoteEventId){
-    return state.events.some(evt=>String(evt.id)===remoteEventId);
-  }
+function remoteAssignmentKey(row){
+  const startMs = row?.start_time ? new Date(row.start_time).getTime() : 0;
+  const endMs = row?.end_time ? new Date(row.end_time).getTime() : 0;
+  return [
+    String(row?.event_id || ""),
+    String(row?.block_id || ""),
+    String(row?.employee_id || ""),
+    String(row?.role || ""),
+    startMs ? String(startMs) : "",
+    endMs ? String(endMs) : ""
+  ].join("||");
+}
 
-  const remoteToken=String(row?.token||"");
-  if(remoteToken){
-    const localTokens=new Set();
-    state.events.forEach(evt=>{
-      (evt.blocks||[]).forEach(block=>{
-        (block.roles||[]).forEach(roleItem=>{
-          if(roleItem?.requestToken) localTokens.add(String(roleItem.requestToken));
-          if(Array.isArray(roleItem?.slotRequests)){
-            roleItem.slotRequests.forEach(slot=>{
-              if(slot?.requestToken) localTokens.add(String(slot.requestToken));
-            });
-          }
-        });
-      });
+function localAssignmentRowsForCleanup(){
+  return allAssignmentSlots().filter(x=>x.employeeId).map(item=>{
+    const ref=getRoleItemRef(item.evtId,item.blockId,item.roleIdx);
+    if(!ref) return null;
+    syncRoleEmployees(ref.roleItem);
+    const emp=state.employees.find(e=>e.id===item.employeeId);
+    const timing=getRoleTiming(item.evt,item.block);
+    const roleLabel=`${ref.roleItem.role || ""}${(ref.roleItem.quantity||1)>1?` (${item.slotIdx+1}/${ref.roleItem.quantity})`:""}`;
+    return {
+      event_id: item.evt.id || item.evtId || "",
+      block_id: item.block.id || item.blockId || "",
+      employee_id: emp?.id || item.employeeId || "",
+      role: roleLabel,
+      start_time: new Date(`${timing.startDate}T${to24h(timing.startTime)}:00`).toISOString(),
+      end_time: new Date(`${timing.endDate}T${to24h(timing.endTime)}:00`).toISOString()
+    };
+  }).filter(Boolean);
+}
+
+function remoteAssignmentMatchesLocalEvent(row){
+  const localRows=localAssignmentRowsForCleanup();
+  if(!localRows.length) return false;
+
+  const rowKey=remoteAssignmentKey(row);
+  if(localRows.some(local=>remoteAssignmentKey(local)===rowKey)) return true;
+
+  const remoteEventId=String(row?.event_id||"");
+  const remoteEmployeeId=String(row?.employee_id||"");
+  const remoteBlockId=String(row?.block_id||"");
+  const remoteStart=row?.start_time ? new Date(row.start_time).getTime() : 0;
+  const remoteEnd=row?.end_time ? new Date(row.end_time).getTime() : 0;
+  if(remoteEventId && remoteEmployeeId){
+    return localRows.some(local=>{
+      const sameEvent=String(local.event_id||"")===remoteEventId;
+      const sameEmployee=String(local.employee_id||"")===remoteEmployeeId;
+      const sameBlock=!remoteBlockId || String(local.block_id||"")===remoteBlockId;
+      const localStart=new Date(local.start_time).getTime();
+      const localEnd=new Date(local.end_time).getTime();
+      const sameStart=!remoteStart || Math.abs(remoteStart-localStart)<60000;
+      const sameEnd=!remoteEnd || Math.abs(remoteEnd-localEnd)<60000;
+      return sameEvent && sameEmployee && sameBlock && sameStart && sameEnd;
     });
-    if(localTokens.has(remoteToken)) return true;
   }
 
   const title=String(row?.event_title||"").trim();
   const start=row?.start_time ? new Date(row.start_time) : null;
   if(!title || !start || Number.isNaN(start.getTime())) return false;
-
   const startDay=start.toISOString().slice(0,10);
   return state.events.some(evt=>{
     if(String(evt.title||"").trim() !== title) return false;
@@ -2181,6 +2220,35 @@ function remoteAssignmentMatchesLocalEvent(row){
   });
 }
 
+function chooseRemoteAssignmentToKeep(group){
+  const localTokens=new Set();
+  state.events.forEach(evt=>(evt.blocks||[]).forEach(block=>(block.roles||[]).forEach(roleItem=>{
+    syncRoleEmployees(roleItem);
+    (roleItem.slotRequests||[]).forEach(slot=>{ if(slot?.requestToken) localTokens.add(String(slot.requestToken)); });
+  })));
+  const score=row=>{
+    let v=0;
+    if(row?.token && localTokens.has(String(row.token))) v+=1000000000;
+    if(["available","unavailable","maybe"].includes(String(row?.response_status||""))) v+=1000000;
+    v+=Date.parse(row?.updated_at||row?.responded_at||row?.created_at||row?.sent_at||row?.start_time||"")||0;
+    return v;
+  };
+  return [...group].sort((a,b)=>score(b)-score(a))[0];
+}
+
+async function deleteRemoteAssignmentRow(row){
+  const token=String(row.token||"");
+  const id=String(row.id||"");
+  const query=token ? `token=eq.${encodeURIComponent(token)}` : id ? `id=eq.${encodeURIComponent(id)}` : "";
+  if(!query) return {ok:false,error:"Ligne Supabase sans token/id."};
+  const del=await fetch(`${APP_CONFIG.supabaseUrl}/rest/v1/assignments?${query}`,{
+    method:"DELETE",
+    headers:{"apikey":APP_CONFIG.anonKey,"Authorization":`Bearer ${APP_CONFIG.anonKey}`,"Prefer":"return=minimal"}
+  });
+  if(del.ok) return {ok:true};
+  return {ok:false,error:await del.text()};
+}
+
 async function cleanupOrphanSupabaseAssignments(){
   try{
     const res=await fetch(`${APP_CONFIG.supabaseUrl}/rest/v1/assignments?select=*`,{
@@ -2189,19 +2257,26 @@ async function cleanupOrphanSupabaseAssignments(){
     const txt=await res.text(); let rows=[]; try{ rows=txt?JSON.parse(txt):[]; }catch{}
     if(!res.ok || !Array.isArray(rows)) return {deleted:0,errors:res.ok?[]:[txt]};
 
-    const orphans=rows.filter(row=>!remoteAssignmentMatchesLocalEvent(row));
+    const valid=[]; const toDelete=[];
+    rows.forEach(row=>{ remoteAssignmentMatchesLocalEvent(row) ? valid.push(row) : toDelete.push(row); });
+
+    const groups=new Map();
+    valid.forEach(row=>{
+      const key=remoteAssignmentKey(row);
+      if(!groups.has(key)) groups.set(key,[]);
+      groups.get(key).push(row);
+    });
+    groups.forEach(group=>{
+      if(group.length<=1) return;
+      const keep=chooseRemoteAssignmentToKeep(group);
+      group.forEach(row=>{ if(row!==keep) toDelete.push(row); });
+    });
+
     let deleted=0; const errors=[];
-    for(const row of orphans){
-      const token=String(row.token||"");
-      const id=String(row.id||"");
-      const query=token ? `token=eq.${encodeURIComponent(token)}` : id ? `id=eq.${encodeURIComponent(id)}` : "";
-      if(!query) continue;
-      const del=await fetch(`${APP_CONFIG.supabaseUrl}/rest/v1/assignments?${query}`,{
-        method:"DELETE",
-        headers:{"apikey":APP_CONFIG.anonKey,"Authorization":`Bearer ${APP_CONFIG.anonKey}`,"Prefer":"return=minimal"}
-      });
-      if(del.ok) deleted++;
-      else errors.push(await del.text());
+    for(const row of toDelete){
+      const result=await deleteRemoteAssignmentRow(row);
+      if(result.ok) deleted++;
+      else errors.push(result.error);
     }
     return {deleted,errors};
   }catch(err){
@@ -2217,35 +2292,26 @@ async function runOrphanCleanupOnce(){
     state.syncBanner = cleanup.deleted
       ? `Nettoyage automatique: ${cleanup.deleted} ancienne(s) demande(s) supprimée(s).`
       : `Nettoyage automatique tenté, mais aucune ancienne demande supprimée.`;
-    if(cleanup.errors&&cleanup.errors.length){
-      state.syncBanner += ` Erreur: ${cleanup.errors[0]}`;
-    }
-    renderAvailability();
-    renderQuickSummary();
+    if(cleanup.errors&&cleanup.errors.length){ state.syncBanner += ` Erreur: ${cleanup.errors[0]}`; }
+    renderAvailability(); renderQuickSummary();
   }
 }
 
 async function syncAllAssignmentsFromSupabase(){
   const cleanup=await cleanupOrphanSupabaseAssignments();
-
   const withToken=allAssignmentSlots().filter(x=>{
     const ref=getRoleItemRef(x.evtId,x.blockId,x.roleIdx); if(!ref) return false;
     syncRoleEmployees(ref.roleItem);
     return !!ref.roleItem.slotRequests?.[x.slotIdx]?.requestToken;
   });
   if(!withToken.length){
-    state.syncBanner=cleanup.deleted
-      ? `Nettoyage terminé: ${cleanup.deleted} ancienne(s) demande(s) supprimée(s). Aucune demande locale à synchroniser.`
-      : "Aucune demande envoyée par courriel réel à synchroniser pour l'instant.";
-    renderAvailability(); renderQuickSummary();
-    return;
+    state.syncBanner=cleanup.deleted ? `Nettoyage terminé: ${cleanup.deleted} ancienne(s) demande(s) supprimée(s). Aucune demande locale à synchroniser.` : "Aucune demande envoyée par courriel réel à synchroniser pour l'instant.";
+    renderAvailability(); renderQuickSummary(); return;
   }
   let synced=0, missing=0, failed=0;
   for(const item of withToken){
-    try{
-      const result=await syncAssignmentSlotFromSupabase(item.key);
-      if(result.ok) synced++; else missing++;
-    }catch(err){ failed++; console.error(err); }
+    try{ const result=await syncAssignmentSlotFromSupabase(item.key); if(result.ok) synced++; else missing++; }
+    catch(err){ failed++; console.error(err); }
   }
   state.syncBanner=`Synchronisation terminée: ${synced} mise(s) à jour, ${missing} sans changement, ${failed} erreur(s). ${cleanup.deleted} ancienne(s) demande(s) supprimée(s).`;
   renderAll();
