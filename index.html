@@ -525,7 +525,7 @@ button{cursor:pointer}
             <p>Envoie une demande de travail par courriel ou SMS, suis les réponses, vois les conflits automatiquement et propose un remplacement.</p>
           </div>
           <div class="hero-actions">
-            <button class="btn primary" id="btnRefreshAvailability" type="button">Synchroniser réponses</button>
+            <button class="btn primary" id="btnRefreshAvailability" type="button">Synchroniser réponses</button><button class="btn secondary" id="btnCleanupAvailability" type="button">Nettoyer anciennes demandes</button>
           </div>
         </div>
         <div class="status-row">
@@ -705,7 +705,8 @@ const state={
   settings:loadSettings(),
   activeRequestKey:"",
   syncBanner:"",
-  selectedEventId:null
+  selectedEventId:null,
+  orphanCleanupStarted:false
 };
 
 const els={
@@ -1225,6 +1226,22 @@ async function syncAssignmentFromSupabase(key){
   saveEvents();
   return { ok:true, row };
 }
+async function runOrphanCleanupOnce(){
+  if(state.orphanCleanupStarted) return;
+  state.orphanCleanupStarted=true;
+  const cleanup=await cleanupOrphanSupabaseAssignments();
+  if(cleanup.deleted || (cleanup.errors&&cleanup.errors.length)){
+    state.syncBanner = cleanup.deleted
+      ? `Nettoyage automatique: ${cleanup.deleted} ancienne(s) demande(s) supprimée(s).`
+      : `Nettoyage automatique tenté, mais aucune ancienne demande supprimée.`;
+    if(cleanup.errors&&cleanup.errors.length){
+      state.syncBanner += ` Erreur: ${cleanup.errors[0]}`;
+    }
+    renderAvailability();
+    renderQuickSummary();
+  }
+}
+
 async function syncAllAssignmentsFromSupabase(){
   const withToken=allAssignments().filter(x=>x.roleItem.requestToken);
   if(!withToken.length){
@@ -1885,7 +1902,7 @@ function changeAnchor(delta){ if(state.currentView==="month"){ state.anchorDate=
 function goToday(){ state.anchorDate=startOfDay(new Date()); state.selectedDate=startOfDay(new Date()); renderCalendar(); }
 
 function bind(){
-  document.querySelectorAll('.nav button[data-tab]').forEach(btn=>btn.addEventListener('click',()=>{ const tab=btn.dataset.tab; if(["calendar","team","availability","settings"].includes(tab)){ state.activeTab=tab; renderAll(); } }));
+  document.querySelectorAll('.nav button[data-tab]').forEach(btn=>btn.addEventListener('click',()=>{ const tab=btn.dataset.tab; if(["calendar","team","availability","settings"].includes(tab)){ state.activeTab=tab; renderAll(); if(tab==="availability") runOrphanCleanupOnce().catch(err=>{ state.syncBanner=`Nettoyage automatique impossible: ${err.message||String(err)}`; renderAvailability(); }); } }));
   document.getElementById("btnPrev").addEventListener("click",()=>changeAnchor(-1));
   document.getElementById("btnNext").addEventListener("click",()=>changeAnchor(1));
   document.getElementById("btnToday").addEventListener("click",goToday);
@@ -2115,20 +2132,39 @@ async function syncAssignmentSlotFromSupabase(key){
 
 function remoteAssignmentMatchesLocalEvent(row){
   const remoteEventId=String(row?.event_id||"");
-  if(remoteEventId && state.events.some(evt=>String(evt.id)===remoteEventId)) return true;
+  if(remoteEventId){
+    return state.events.some(evt=>String(evt.id)===remoteEventId);
+  }
 
-  const title=String(row?.event_title||"");
+  const remoteToken=String(row?.token||"");
+  if(remoteToken){
+    const localTokens=new Set();
+    state.events.forEach(evt=>{
+      (evt.blocks||[]).forEach(block=>{
+        (block.roles||[]).forEach(roleItem=>{
+          if(roleItem?.requestToken) localTokens.add(String(roleItem.requestToken));
+          if(Array.isArray(roleItem?.slotRequests)){
+            roleItem.slotRequests.forEach(slot=>{
+              if(slot?.requestToken) localTokens.add(String(slot.requestToken));
+            });
+          }
+        });
+      });
+    });
+    if(localTokens.has(remoteToken)) return true;
+  }
+
+  const title=String(row?.event_title||"").trim();
   const start=row?.start_time ? new Date(row.start_time) : null;
   if(!title || !start || Number.isNaN(start.getTime())) return false;
 
+  const startDay=start.toISOString().slice(0,10);
   return state.events.some(evt=>{
-    if(String(evt.title||"") !== title) return false;
+    if(String(evt.title||"").trim() !== title) return false;
     const startDate=evt.startDate || evt.date;
     if(!startDate) return false;
     const endDate=evt.endDate || evt.date || startDate;
-    const a=new Date(`${startDate}T00:00:00`);
-    const b=new Date(`${endDate}T23:59:59`);
-    return start>=a && start<=b;
+    return startDay >= startDate && startDay <= endDate;
   });
 }
 
@@ -2157,6 +2193,22 @@ async function cleanupOrphanSupabaseAssignments(){
     return {deleted,errors};
   }catch(err){
     return {deleted:0,errors:[err.message||String(err)]};
+  }
+}
+
+async function runOrphanCleanupOnce(){
+  if(state.orphanCleanupStarted) return;
+  state.orphanCleanupStarted=true;
+  const cleanup=await cleanupOrphanSupabaseAssignments();
+  if(cleanup.deleted || (cleanup.errors&&cleanup.errors.length)){
+    state.syncBanner = cleanup.deleted
+      ? `Nettoyage automatique: ${cleanup.deleted} ancienne(s) demande(s) supprimée(s).`
+      : `Nettoyage automatique tenté, mais aucune ancienne demande supprimée.`;
+    if(cleanup.errors&&cleanup.errors.length){
+      state.syncBanner += ` Erreur: ${cleanup.errors[0]}`;
+    }
+    renderAvailability();
+    renderQuickSummary();
   }
 }
 
@@ -2355,9 +2407,7 @@ function availabilityButtonImageHtmlForEmail(){
   return `<img src="URL_DE_TON_IMAGE_BOUTON" alt="Ouvrir la demande de disponibilité" style="display:block;border:0;max-width:420px;width:100%;height:auto;">`;
 }
 
-function availabilityButtonTextBlock(link){
-  return `\n\n---\nIMAGE DU BOUTON À INSÉRER DANS LE COURRIEL\nRemplace URL_DE_TON_IMAGE_BOUTON par l'image du bouton. Le lien à associer à l'image est affiché juste en dessous.\n\n${availabilityButtonImageHtmlForEmail()}\n\nLIEN À METTRE SUR L'IMAGE:\n${link}\n---`;
-}
+function availabilityButtonTextBlock(link){ return ``; }
 
 async function buildRequestMessageForSlotAsync(key){
   const item = getAssignmentSlotByKey(key);
@@ -2390,7 +2440,7 @@ ${webLink}
 
 Réponses possibles: Disponible / Peut-être / Non disponible
 
-Merci!${availabilityButtonTextBlock(webLink)}`;
+Merci!`;
   return {subject,body,webLink,employee:emp};
 }
 
