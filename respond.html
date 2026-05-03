@@ -417,9 +417,9 @@
       }
 
       try{
-        const selectFields = "*,events!inner(id,deleted_at)";
+        const selectFields = "*";
         const res = await fetch(
-          `${SUPABASE_URL}/rest/v1/assignments?token=eq.${encodeURIComponent(token)}&event_id=not.is.null&events.deleted_at=is.null&select=${encodeURIComponent(selectFields)}`,
+          `${SUPABASE_URL}/rest/v1/assignments?token=eq.${encodeURIComponent(token)}&event_id=not.is.null&select=${encodeURIComponent(selectFields)}`,
           {
             headers:{
               "apikey": ANON_KEY,
@@ -454,7 +454,7 @@
         }
 
         const resAll = await fetch(
-          `${SUPABASE_URL}/rest/v1/assignments?${filter}&event_id=not.is.null&events.deleted_at=is.null&select=${encodeURIComponent(selectFields)}&order=start_time.asc`,
+          `${SUPABASE_URL}/rest/v1/assignments?${filter}&event_id=not.is.null&select=${encodeURIComponent(selectFields)}&order=start_time.asc`,
           {
             headers:{
               "apikey": ANON_KEY,
