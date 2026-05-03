@@ -2086,7 +2086,6 @@ function eventToSupabaseRow(evt){
     notes: clean.notes || "",
     color: clean.color || COLORS[0],
     event_data: clean,
-    deleted_at: null,
     updated_at: new Date().toISOString()
   };
 }
@@ -2145,7 +2144,7 @@ async function supabaseFetchV10(path, options={}){
   return data;
 }
 async function loadEventsFromSupabaseV10(){
-  const rows=await supabaseFetchV10('events?select=*&deleted_at=is.null&order=start_date.asc');
+  const rows=await supabaseFetchV10('events?select=*&order=start_date.asc');
   return Array.isArray(rows) ? rows.map(eventFromSupabaseRow) : [];
 }
 async function loadEmployeesFromSupabaseV10(){
@@ -2252,7 +2251,6 @@ async function upsertAssignmentForSlotV10(item, ref, emp, token){
     employee_name:emp.name||"",
     employee_email:emp.email||"",
     role:roleLabel,
-    block_id:item.block.id,
     slot_key:key,
     event_title:item.evt.title||"Événement",
     event_location:item.evt.location||"",
