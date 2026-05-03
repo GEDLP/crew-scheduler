@@ -723,7 +723,7 @@ button{cursor:pointer}
 </div>
 
 <script>
-/* Crew Scheduler v22 — vraie interface + Supabase + auto-sync + conflits */
+/* Crew Scheduler v23 — vraie interface + Supabase + auto-sync + conflits + anti-redemande refus */
 const EVENTS_KEY="crewSchedulerCalendarEventsMergedV1";
 const EMPLOYEES_KEY="crewSchedulerEmployeesV5";
 const ROLES_KEY="crewSchedulerRolesV2";
@@ -1824,6 +1824,9 @@ async function setSlotResponse(key,responseStatus){
   slot.requestStatus='answered';
   slot.responseStatus=responseStatus;
   slot.respondedAt=new Date().toISOString();
+  if(responseStatus === 'unavailable'){
+    markEmployeeDeclinedForSlot(ref.roleItem,item.slotIdx,item.employeeId);
+  }
 
   // v18: le statut manuel est maintenant écrit dans Supabase.
   // Donc le bouton Synchroniser ne remettra plus l'ancien statut distant.
@@ -2020,16 +2023,44 @@ function allAssignmentSlots(){
 }
 function getAssignmentSlotByKey(key){ return allAssignmentSlots().find(x=>x.key===key)||null; }
 
+function getDeclinedEmployeeSetForSlot(roleItem, slotIdx){
+  syncRoleEmployees(roleItem);
+  const slot = roleItem.slotRequests?.[slotIdx];
+  const ids = Array.isArray(slot?.declinedEmployeeIds) ? slot.declinedEmployeeIds : [];
+  return new Set(ids.filter(Boolean).map(String));
+}
+
+function markEmployeeDeclinedForSlot(roleItem, slotIdx, employeeId){
+  if(!employeeId) return;
+  syncRoleEmployees(roleItem);
+  if(!roleItem.slotRequests) roleItem.slotRequests = [];
+  if(!roleItem.slotRequests[slotIdx]){
+    roleItem.slotRequests[slotIdx] = {
+      employeeId: employeeId,
+      requestStatus: "draft",
+      responseStatus: "pending",
+      declinedEmployeeIds: []
+    };
+  }
+  const slot = roleItem.slotRequests[slotIdx];
+  if(!Array.isArray(slot.declinedEmployeeIds)) slot.declinedEmployeeIds = [];
+  if(!slot.declinedEmployeeIds.map(String).includes(String(employeeId))){
+    slot.declinedEmployeeIds.push(String(employeeId));
+  }
+}
+
 function replacementSuggestionsForSlot(key){
   const item=getAssignmentSlotByKey(key); if(!item) return [];
   const wantedRole=String(item.roleItem.role||"").trim();
   const alreadyAssigned=new Set((item.roleItem.employeeIds||[]).filter(Boolean));
+  const declinedEmployees=getDeclinedEmployeeSetForSlot(item.roleItem,item.slotIdx);
 
-  // v18: le remplacement suggère maintenant plus large que "même poste seulement".
+  // v23: ne jamais reproposer une personne qui a déjà répondu non pour ce slot.
   // Priorité: même poste + sans conflit, puis même poste avec conflit, puis autres employés sans conflit.
   return state.employees
     .filter(emp=>emp.id!==item.employeeId)
     .filter(emp=>!alreadyAssigned.has(emp.id))
+    .filter(emp=>!declinedEmployees.has(String(emp.id)))
     .map(emp=>{
       const roles=normalizeRoles(emp.roles||[]);
       const sameRole=wantedRole && roles.includes(wantedRole);
@@ -2046,6 +2077,18 @@ function applyReplacementForSlot(key,newEmployeeId){
   const item=getAssignmentSlotByKey(key); if(!item) return;
   const ref=getRoleItemRef(item.evtId,item.blockId,item.roleIdx); if(!ref) return;
   syncRoleEmployees(ref.roleItem);
+
+  const previousSlot = ref.roleItem.slotRequests?.[item.slotIdx];
+  const previousDeclined = Array.isArray(previousSlot?.declinedEmployeeIds) ? [...previousSlot.declinedEmployeeIds] : [];
+
+  // Si la personne actuelle a refusé, on la garde dans l'historique du slot.
+  // Elle ne sera plus reproposée comme remplaçant pour cette même demande.
+  if(item.employeeId && (previousSlot?.responseStatus === "unavailable" || slotVisualState(ref.roleItem,item.slotIdx).cls === "red")){
+    if(!previousDeclined.map(String).includes(String(item.employeeId))){
+      previousDeclined.push(String(item.employeeId));
+    }
+  }
+
   ref.roleItem.employeeIds[item.slotIdx]=newEmployeeId||"";
   if(ref.roleItem.slotRequests?.[item.slotIdx]){
     ref.roleItem.slotRequests[item.slotIdx]={
@@ -2057,7 +2100,8 @@ function applyReplacementForSlot(key,newEmployeeId){
       lastChannel:"",
       lastMessage:"",
       requestToken:"",
-      backendRequestId:""
+      backendRequestId:"",
+      declinedEmployeeIds: previousDeclined
     };
   }
   saveEvents(); renderAll();
@@ -2102,6 +2146,7 @@ async function syncAssignmentSlotFromSupabase(key){
   slot.requestStatus=String(row.request_status||slot.requestStatus||"sent");
   slot.responseStatus=String(row.response_status||slot.responseStatus||"pending");
   slot.backendRequestId=String(row.id||slot.backendRequestId||"");
+  if(slot.responseStatus==="unavailable") markEmployeeDeclinedForSlot(ref.roleItem,item.slotIdx,item.employeeId);
   if(slot.responseStatus!=="pending") slot.respondedAt=new Date().toISOString();
   saveEvents();
   return {ok:true,row};
@@ -2122,6 +2167,7 @@ async function syncAllAssignmentsFromSupabase(){
       slot.responseStatus=String(row.response_status||slot.responseStatus||"pending");
       slot.requestToken=String(row.token||slot.requestToken||"");
       slot.backendRequestId=String(row.id||slot.backendRequestId||"");
+      if(slot.responseStatus==="unavailable") markEmployeeDeclinedForSlot(ref.roleItem,item.slotIdx,item.employeeId);
       if(slot.responseStatus!=="pending") slot.respondedAt=row.responded_at||new Date().toISOString();
       synced++;
     }catch(err){ failed++; console.error(err); }
