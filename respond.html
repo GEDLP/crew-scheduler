@@ -387,6 +387,40 @@
       return (Array.isArray(list) ? list : []).filter(item => assignmentMatchesLocalEvent(item, events));
     }
 
+
+    function dedupeAssignments(list, preferredToken){
+      const rows = Array.isArray(list) ? list : [];
+      const groups = new Map();
+
+      rows.forEach(item => {
+        const key = [
+          item.event_id || item.event_title || "",
+          item.block_id || "",
+          item.employee_id || item.employee_email || item.employee_name || "",
+          item.role || "",
+          item.start_time || "",
+          item.end_time || ""
+        ].map(v => String(v || "").trim()).join("||");
+
+        if(!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(item);
+      });
+
+      const score = item => {
+        let value = 0;
+        if(preferredToken && item.token === preferredToken) value += 1000000000;
+        const time = Date.parse(item.updated_at || item.created_at || item.sent_at || item.responded_at || item.start_time || "") || 0;
+        value += Math.floor(time / 1000);
+        const statusBonus = {available:500, unavailable:500, maybe:400, pending:100, sent:80, manual:60, draft:10}[item.response_status] || 0;
+        value += statusBonus;
+        const idNum = Number(item.id);
+        if(Number.isFinite(idNum)) value += Math.min(idNum, 999999) / 1000000;
+        return value;
+      };
+
+      return [...groups.values()].map(group => group.sort((a,b) => score(b) - score(a))[0]);
+    }
+
     function setButtonsDisabled(disabled){
       document.getElementById("btnYes").disabled = disabled;
       document.getElementById("btnMaybe").disabled = disabled;
@@ -456,7 +490,7 @@
         }
 
         if(!Array.isArray(allAssignments)) allAssignments = [];
-        allAssignments = filterDeletedLocalAssignments(allAssignments);
+        allAssignments = dedupeAssignments(filterDeletedLocalAssignments(allAssignments), token);
 
         requestData = data[0];
         if(!assignmentMatchesLocalEvent(requestData, localSchedulerEvents())){
