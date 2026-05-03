@@ -14,6 +14,7 @@
       --green:#16a34a;
       --orange:#f59e0b;
       --red:#dc2626;
+      --blue:#1e3a8a;
       --shadow:0 24px 70px rgba(15,23,42,.14);
     }
     *{box-sizing:border-box}
@@ -29,7 +30,7 @@
       padding:18px;
     }
     .card{
-      width:min(100%, 620px);
+      width:min(100%, 720px);
       background:var(--panel);
       border:1px solid var(--line);
       border-radius:28px;
@@ -66,6 +67,67 @@
       display:grid;
       gap:16px;
     }
+    .calendar{
+      border:1px solid var(--line);
+      border-radius:20px;
+      background:#f8fafc;
+      padding:16px;
+      display:grid;
+      gap:12px;
+    }
+    .cal-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+    }
+    .cal-title{
+      font-size:18px;
+      font-weight:950;
+      letter-spacing:-.03em;
+      text-transform:capitalize;
+    }
+    .cal-nav{
+      border:1px solid var(--line);
+      background:white;
+      color:var(--text);
+      border-radius:12px;
+      width:38px;
+      height:34px;
+      font-size:20px;
+      font-weight:900;
+      cursor:pointer;
+    }
+    .cal-grid{
+      display:grid;
+      grid-template-columns:repeat(7,1fr);
+      gap:6px;
+    }
+    .cal-day-name{
+      font-size:11px;
+      font-weight:950;
+      color:var(--muted);
+      text-align:center;
+      text-transform:uppercase;
+      padding:4px 0;
+    }
+    .cal-cell{
+      min-height:46px;
+      border:1px solid #e2e8f0;
+      background:white;
+      border-radius:12px;
+      padding:7px 5px;
+      text-align:center;
+      cursor:pointer;
+      display:grid;
+      align-content:center;
+      gap:4px;
+    }
+    .cal-cell:hover{filter:brightness(.98)}
+    .cal-cell.empty{background:transparent;border-color:transparent;cursor:default}
+    .cal-num{font-weight:900;font-size:14px}
+    .dots{display:flex;justify-content:center;gap:3px;min-height:7px}
+    .dot{width:7px;height:7px;border-radius:50%}
     .info{
       border:1px solid var(--line);
       border-radius:20px;
@@ -105,6 +167,38 @@
       font-weight:800;
       line-height:1.3;
       word-break:break-word;
+    }
+    .request-card{
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:14px;
+      background:#fff;
+      cursor:pointer;
+      display:grid;
+      gap:7px;
+      transition:transform .12s ease, box-shadow .12s ease;
+    }
+    .request-card:hover{
+      transform:translateY(-1px);
+      box-shadow:0 10px 22px rgba(15,23,42,.08);
+    }
+    .badge{
+      width:max-content;
+      padding:6px 10px;
+      border-radius:10px;
+      font-weight:900;
+      font-size:12px;
+      color:white;
+    }
+    .back-list{
+      border:1px solid var(--line);
+      background:white;
+      color:var(--text);
+      border-radius:14px;
+      font-weight:900;
+      padding:12px 14px;
+      cursor:pointer;
+      width:max-content;
     }
     .actions{display:grid;gap:12px}
     .btn{
@@ -170,6 +264,7 @@
       .body{padding:18px}
       .grid{grid-template-columns:1fr}
       .btn{font-size:17px;min-height:64px}
+      .cal-cell{min-height:42px;border-radius:10px}
     }
   </style>
 </head>
@@ -177,34 +272,28 @@
   <main class="card" id="app">
     <section class="top">
       <div class="eyebrow">Crew Scheduler</div>
-      <h1>Demande de disponibilité</h1>
-      <p class="subtitle">Vérifie les informations de l’événement, puis réponds avec l’option qui correspond à ta disponibilité.</p>
+      <h1>Mes disponibilités</h1>
+      <p class="subtitle">Consulte tes demandes, puis indique si tu es disponible, peut-être ou non disponible.</p>
     </section>
 
     <section class="body">
+      <div class="calendar" id="calendar"></div>
+
       <div class="info" id="requestInfo">
         <div class="event-title" id="eventTitle">Chargement...</div>
-        <div class="grid">
-          <div class="item"><div class="label">Travailleur</div><div class="value" id="employeeName">—</div></div>
-          <div class="item"><div class="label">Poste</div><div class="value" id="role">—</div></div>
-          <div class="item"><div class="label">Début</div><div class="value" id="startTime">—</div></div>
-          <div class="item"><div class="label">Fin</div><div class="value" id="endTime">—</div></div>
-          <div class="item"><div class="label">Statut actuel</div><div class="value" id="currentStatus">—</div></div>
-          <div class="item"><div class="label">Lieu</div><div class="value" id="location">—</div></div>
-          <div class="item"><div class="label">Note</div><div class="value" id="notes">—</div></div>
-        </div>
       </div>
 
-      <div class="actions">
+      <div class="actions" id="actions" style="display:none;">
+        <button class="back-list" onclick="showList()">← Retour à la liste</button>
         <button class="btn yes" id="btnYes" onclick="respond('available')">✅ Oui, je suis disponible</button>
         <button class="btn maybe" id="btnMaybe" onclick="respond('maybe')">🟡 Peut-être</button>
         <button class="btn no" id="btnNo" onclick="respond('unavailable')">❌ Non, je ne suis pas disponible</button>
       </div>
 
-      <div class="status" id="status">Chargement de la demande...</div>
+      <div class="status" id="status">Chargement des demandes...</div>
     </section>
 
-    <div class="footer">Cette réponse sera transmise au planificateur.</div>
+    <div class="footer">Tes réponses seront transmises au planificateur.</div>
   </main>
 
   <script>
@@ -212,7 +301,10 @@
     const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4a2R5b2hzY3BzbWVwbGJreXFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3MTY1NDYsImV4cCI6MjA5MjI5MjU0Nn0.Xx8KjZFqqWnTvJczYqPRINXeX0fp7aq7wRvG30ZF6pE";
 
     const token = new URLSearchParams(window.location.search).get("token");
+
     let requestData = null;
+    let allAssignments = [];
+    let calendarDate = new Date();
 
     const statusLabels = {
       pending: "En attente",
@@ -222,6 +314,16 @@
       sent: "Envoyée",
       manual: "Préparée manuellement",
       draft: "Brouillon"
+    };
+
+    const statusColors = {
+      available: "#16a34a",
+      maybe: "#f59e0b",
+      unavailable: "#dc2626",
+      pending: "#64748b",
+      sent: "#64748b",
+      manual: "#64748b",
+      draft: "#64748b"
     };
 
     function formatDateTime(value){
@@ -237,6 +339,12 @@
         minute:"2-digit",
         hour12:false
       }).format(d);
+    }
+
+    function dateKey(value){
+      const d = new Date(value);
+      if(Number.isNaN(d.getTime())) return "";
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
     }
 
     function setButtonsDisabled(disabled){
@@ -258,12 +366,11 @@
 
     async function loadRequest(){
       if(!token){
-        showInvalid("Aucun token trouvé.");
+        showInvalid("Aucun token n’a été trouvé dans le lien.");
         return;
       }
 
       try{
-        // 1. Trouver la demande originale via le token
         const res = await fetch(
           `${SUPABASE_URL}/rest/v1/assignments?token=eq.${encodeURIComponent(token)}&select=*`,
           {
@@ -274,19 +381,24 @@
           }
         );
 
-        const data = await res.json();
+        const txt = await res.text();
+        let data = [];
+        try{ data = txt ? JSON.parse(txt) : []; }catch{ data = []; }
 
-        if(!data.length){
-          showInvalid("Demande introuvable.");
+        if(!res.ok){
+          showInvalid(`Erreur Supabase ${res.status}: ${txt}`);
           return;
         }
 
-        // 2. On récupère le nom du travailleur
+        if(!Array.isArray(data) || !data.length){
+          showInvalid("La demande ne peut pas être trouvée. Le lien est peut-être expiré ou incomplet.");
+          return;
+        }
+
         const employeeName = data[0].employee_name;
 
-        // 3. On fetch TOUTES ses demandes
         const resAll = await fetch(
-          `${SUPABASE_URL}/rest/v1/assignments?employee_name=eq.${encodeURIComponent(employeeName)}&select=*`,
+          `${SUPABASE_URL}/rest/v1/assignments?employee_name=eq.${encodeURIComponent(employeeName)}&select=*&order=start_time.asc`,
           {
             headers:{
               "apikey": ANON_KEY,
@@ -295,16 +407,145 @@
           }
         );
 
-        const allAssignments = await resAll.json();
+        const allTxt = await resAll.text();
+        try{ allAssignments = allTxt ? JSON.parse(allTxt) : []; }catch{ allAssignments = []; }
 
+        if(!resAll.ok){
+          showInvalid(`Erreur Supabase ${resAll.status}: ${allTxt}`);
+          return;
+        }
+
+        if(!Array.isArray(allAssignments)) allAssignments = [];
+
+        requestData = data[0];
+
+        const firstEventDate = new Date(requestData.start_time);
+        if(!Number.isNaN(firstEventDate.getTime())) calendarDate = firstEventDate;
+
+        renderCalendar();
         renderAllRequests(allAssignments);
 
       }catch(err){
-        showInvalid(`Erreur: ${err}`);
+        showInvalid(`Erreur réseau: ${String(err)}`);
       }
     }
 
+    function renderCalendar(){
+      const calendar = document.getElementById("calendar");
+      const year = calendarDate.getFullYear();
+      const month = calendarDate.getMonth();
+
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+      const daysInMonth = lastDay.getDate();
+      const startOffset = firstDay.getDay();
+
+      const monthLabel = firstDay.toLocaleString("fr-CA", { month:"long", year:"numeric" });
+      const dayNames = ["Dim","Lun","Mar","Mer","Jeu","Ven","Sam"];
+
+      let html = `
+        <div class="cal-head">
+          <button class="cal-nav" onclick="changeMonth(-1)">‹</button>
+          <div class="cal-title">${monthLabel}</div>
+          <button class="cal-nav" onclick="changeMonth(1)">›</button>
+        </div>
+        <div class="cal-grid">
+          ${dayNames.map(d => `<div class="cal-day-name">${d}</div>`).join("")}
+      `;
+
+      for(let i=0; i<startOffset; i++){
+        html += `<div class="cal-cell empty"></div>`;
+      }
+
+      for(let d=1; d<=daysInMonth; d++){
+        const cellDate = new Date(year, month, d);
+        const key = dateKey(cellDate);
+        const events = allAssignments.filter(e => dateKey(e.start_time) === key);
+
+        const uniqueStatuses = [...new Set(events.map(e => e.response_status || "pending"))].slice(0,3);
+        const dots = uniqueStatuses.map(s => `<span class="dot" style="background:${statusColors[s] || "#64748b"}"></span>`).join("");
+
+        html += `
+          <div class="cal-cell" onclick="scrollToDate('${key}')">
+            <div class="cal-num">${d}</div>
+            <div class="dots">${dots}</div>
+          </div>
+        `;
+      }
+
+      html += `</div>`;
+      calendar.innerHTML = html;
+    }
+
+    function changeMonth(delta){
+      calendarDate = new Date(calendarDate.getFullYear(), calendarDate.getMonth() + delta, 1);
+      renderCalendar();
+    }
+
+    function renderAllRequests(list){
+      document.getElementById("actions").style.display = "none";
+
+      const container = document.getElementById("requestInfo");
+
+      container.innerHTML = `
+        <div class="event-title">Mes demandes de disponibilité</div>
+        <div style="color:#64748b;font-weight:800;font-size:14px;">Clique sur un événement pour voir les détails et répondre.</div>
+        <div id="eventsList" style="display:grid; gap:12px;"></div>
+      `;
+
+      const listDiv = document.getElementById("eventsList");
+
+      if(!list.length){
+        listDiv.innerHTML = `<div style="color:#64748b;font-weight:800;">Aucune demande trouvée.</div>`;
+        document.getElementById("status").innerText = "";
+        return;
+      }
+
+      list.forEach(item => {
+        const color = statusColors[item.response_status] || "#64748b";
+        const key = dateKey(item.start_time);
+
+        const el = document.createElement("div");
+        el.className = "request-card";
+        el.dataset.date = key;
+
+        el.innerHTML = `
+          <div style="font-weight:950; font-size:17px; letter-spacing:-.02em;">
+            ${item.event_title || "Événement"}
+          </div>
+
+          <div style="font-size:13px; color:#64748b; font-weight:800;">
+            ${formatDateTime(item.start_time)}
+          </div>
+
+          <div class="badge" style="background:${color};">
+            ${statusLabels[item.response_status] || "En attente"}
+          </div>
+        `;
+
+        el.onclick = () => openEvent(item);
+        listDiv.appendChild(el);
+      });
+
+      document.getElementById("status").innerText = "Clique sur une demande pour répondre.";
+    }
+
     function renderRequest(){
+      document.getElementById("actions").style.display = "grid";
+
+      document.getElementById("requestInfo").innerHTML = `
+        <div class="event-title" id="eventTitle">Événement</div>
+        <div class="grid">
+          <div class="item"><div class="label">Travailleur</div><div class="value" id="employeeName">—</div></div>
+          <div class="item"><div class="label">Poste</div><div class="value" id="role">—</div></div>
+          <div class="item"><div class="label">Début</div><div class="value" id="startTime">—</div></div>
+          <div class="item"><div class="label">Fin</div><div class="value" id="endTime">—</div></div>
+          <div class="item"><div class="label">Statut actuel</div><div class="value" id="currentStatus">—</div></div>
+          <div class="item"><div class="label">Lieu</div><div class="value" id="location">—</div></div>
+          <div class="item"><div class="label">Note</div><div class="value" id="notes">—</div></div>
+        </div>
+      `;
+
       document.getElementById("eventTitle").innerText = requestData.event_title || "Événement";
       document.getElementById("employeeName").innerText = requestData.employee_name || "—";
       document.getElementById("role").innerText = requestData.role || "—";
@@ -318,74 +559,33 @@
       setButtonsDisabled(false);
     }
 
-    function renderAllRequests(list){
-      const container = document.getElementById("requestInfo");
-
-      container.innerHTML = `
-        <div class="event-title">Mes demandes de disponibilité</div>
-        <div id="eventsList" style="display:grid; gap:12px;"></div>
-      `;
-
-      const listDiv = document.getElementById("eventsList");
-
-      list.forEach(item => {
-        const statusColor = {
-          available: "#16a34a",
-          maybe: "#f59e0b",
-          unavailable: "#dc2626",
-          pending: "#64748b",
-          sent: "#64748b",
-          manual: "#64748b",
-          draft: "#64748b"
-        }[item.response_status] || "#64748b";
-
-        const el = document.createElement("div");
-
-        el.style = `
-          border:1px solid #dbe3ee;
-          border-radius:16px;
-          padding:14px;
-          background:#fff;
-          cursor:pointer;
-        `;
-
-        el.innerHTML = `
-          <div style="font-weight:900; font-size:16px;">
-            ${item.event_title || "Événement"}
-          </div>
-
-          <div style="font-size:13px; color:#64748b; margin-top:4px;">
-            ${formatDateTime(item.start_time)}
-          </div>
-
-          <div style="
-            margin-top:8px;
-            display:inline-block;
-            padding:6px 10px;
-            border-radius:10px;
-            font-weight:800;
-            font-size:12px;
-            color:white;
-            background:${statusColor};
-          ">
-            ${statusLabels[item.response_status] || "En attente"}
-          </div>
-        `;
-
-        el.onclick = () => openEvent(item);
-        listDiv.appendChild(el);
-      });
-
-      document.getElementById("status").innerText = "Clique sur une demande pour répondre.";
+    function openEvent(item){
+      requestData = item;
+      renderRequest();
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
-function openEvent(item){
-  requestData = item;
-  renderRequest();
-  window.scrollTo({ top: 0, behavior: "smooth" });
-}
+    function showList(){
+      renderCalendar();
+      renderAllRequests(allAssignments);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function scrollToDate(key){
+      const cards = [...document.querySelectorAll("#eventsList > .request-card")];
+      const target = cards.find(card => card.dataset.date === key);
+
+      if(target){
+        target.scrollIntoView({ behavior:"smooth", block:"center" });
+        target.style.outline = "3px solid rgba(30,58,138,.25)";
+        setTimeout(() => target.style.outline = "", 1200);
+      }
+    }
+
     async function respond(responseStatus){
-      if(!token){
+      const activeToken = requestData?.token || token;
+
+      if(!activeToken){
         document.getElementById("status").innerText = "Erreur : token manquant.";
         return;
       }
@@ -395,7 +595,7 @@ function openEvent(item){
 
       try{
         const res = await fetch(
-          `${SUPABASE_URL}/rest/v1/assignments?token=eq.${encodeURIComponent(token)}`,
+          `${SUPABASE_URL}/rest/v1/assignments?token=eq.${encodeURIComponent(activeToken)}`,
           {
             method:"PATCH",
             headers:{
@@ -418,8 +618,18 @@ function openEvent(item){
 
         let updated = [];
         try{ updated = txt ? JSON.parse(txt) : []; }catch{}
+
         if(Array.isArray(updated) && updated[0]){
           requestData = updated[0];
+
+          allAssignments = allAssignments.map(item => {
+            if((item.token && item.token === requestData.token) || (item.id && item.id === requestData.id)){
+              return requestData;
+            }
+            return item;
+          });
+
+          renderCalendar();
           renderRequest();
         }
 
