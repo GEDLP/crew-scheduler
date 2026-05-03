@@ -2551,7 +2551,8 @@ async function ensureManualRequestTokenForSlot(key){
   return slot.requestToken;
 }
 function publicRespondLinkFromToken(token){
-  return `https://gedlp.github.io/crew-scheduler/respond.html?token=${encodeURIComponent(token||"")}`;
+  // v= force le téléphone à recharger la dernière version de respond.html au lieu d'une vieille version en cache.
+  return `https://gedlp.github.io/crew-scheduler/respond.html?token=${encodeURIComponent(token||"")}&v=${Date.now()}`;
 }
 
 function availabilityButtonImageHtmlForEmail(){
