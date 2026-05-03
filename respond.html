@@ -258,11 +258,12 @@
 
     async function loadRequest(){
       if(!token){
-        showInvalid("Aucun token n’a été trouvé dans le lien.");
+        showInvalid("Aucun token trouvé.");
         return;
       }
 
       try{
+        // 1. Trouver la demande originale via le token
         const res = await fetch(
           `${SUPABASE_URL}/rest/v1/assignments?token=eq.${encodeURIComponent(token)}&select=*`,
           {
@@ -273,24 +274,33 @@
           }
         );
 
-        const txt = await res.text();
-        let data = [];
-        try{ data = txt ? JSON.parse(txt) : []; }catch{ data = []; }
+        const data = await res.json();
 
-        if(!res.ok){
-          showInvalid(`Erreur Supabase ${res.status}: ${txt}`);
+        if(!data.length){
+          showInvalid("Demande introuvable.");
           return;
         }
 
-        if(!Array.isArray(data) || !data.length){
-          showInvalid("La demande ne peut pas être trouvée. Le lien est peut-être expiré ou incomplet.");
-          return;
-        }
+        // 2. On récupère le nom du travailleur
+        const employeeName = data[0].employee_name;
 
-        requestData = data[0];
-        renderRequest();
+        // 3. On fetch TOUTES ses demandes
+        const resAll = await fetch(
+          `${SUPABASE_URL}/rest/v1/assignments?employee_name=eq.${encodeURIComponent(employeeName)}&select=*`,
+          {
+            headers:{
+              "apikey": ANON_KEY,
+              "Authorization": `Bearer ${ANON_KEY}`
+            }
+          }
+        );
+
+        const allAssignments = await resAll.json();
+
+        renderAllRequests(allAssignments);
+
       }catch(err){
-        showInvalid(`Erreur réseau: ${String(err)}`);
+        showInvalid(`Erreur: ${err}`);
       }
     }
 
@@ -308,6 +318,72 @@
       setButtonsDisabled(false);
     }
 
+    function renderAllRequests(list){
+      const container = document.getElementById("requestInfo");
+
+      container.innerHTML = `
+        <div class="event-title">Mes demandes de disponibilité</div>
+        <div id="eventsList" style="display:grid; gap:12px;"></div>
+      `;
+
+      const listDiv = document.getElementById("eventsList");
+
+      list.forEach(item => {
+        const statusColor = {
+          available: "#16a34a",
+          maybe: "#f59e0b",
+          unavailable: "#dc2626",
+          pending: "#64748b",
+          sent: "#64748b",
+          manual: "#64748b",
+          draft: "#64748b"
+        }[item.response_status] || "#64748b";
+
+        const el = document.createElement("div");
+
+        el.style = `
+          border:1px solid #dbe3ee;
+          border-radius:16px;
+          padding:14px;
+          background:#fff;
+          cursor:pointer;
+        `;
+
+        el.innerHTML = `
+          <div style="font-weight:900; font-size:16px;">
+            ${item.event_title || "Événement"}
+          </div>
+
+          <div style="font-size:13px; color:#64748b; margin-top:4px;">
+            ${formatDateTime(item.start_time)}
+          </div>
+
+          <div style="
+            margin-top:8px;
+            display:inline-block;
+            padding:6px 10px;
+            border-radius:10px;
+            font-weight:800;
+            font-size:12px;
+            color:white;
+            background:${statusColor};
+          ">
+            ${statusLabels[item.response_status] || "En attente"}
+          </div>
+        `;
+
+        el.onclick = () => openEvent(item);
+        listDiv.appendChild(el);
+      });
+
+      document.getElementById("status").innerText = "Clique sur une demande pour répondre.";
+    }
+
+function openEvent(item){
+  requestData = item;
+  renderRequest();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
     async function respond(responseStatus){
       if(!token){
         document.getElementById("status").innerText = "Erreur : token manquant.";
