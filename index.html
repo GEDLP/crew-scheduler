@@ -1163,6 +1163,8 @@ async function sendRealEmailRequest(key){
     employee_name: emp.name || "",
     employee_email: emp.email || "",
     role: ref.roleItem.role || "",
+    event_id: item.evt.id || item.evtId || "",
+    block_id: item.block.id || item.blockId || "",
     event_title: item.evt.title || "Événement",
     start_time: new Date(`${timing.startDate}T${to24h(timing.startTime)}:00`).toISOString(),
     end_time: new Date(`${timing.endDate}T${to24h(timing.endTime)}:00`).toISOString()
@@ -1699,26 +1701,80 @@ async function deleteSupabaseAssignmentsByTokens(tokens){
   return {deleted,errors};
 }
 
+async function deleteSupabaseAssignmentsForEvent(evt){
+  const errors=[];
+  let deleted=0;
+
+  const headers={
+    "apikey": APP_CONFIG.anonKey,
+    "Authorization": `Bearer ${APP_CONFIG.anonKey}`,
+    "Prefer":"return=representation"
+  };
+
+  async function attempt(label, query){
+    try{
+      const res=await fetch(`${APP_CONFIG.supabaseUrl}/rest/v1/assignments?${query}`,{method:"DELETE",headers});
+      const txt=await res.text();
+      if(!res.ok){
+        // event_id/block_id may not exist in older Supabase schemas. Ignore that fallback and continue.
+        if(txt.includes("Could not find") || txt.includes("PGRST204")) return;
+        errors.push(`${label}: ${res.status} ${txt}`);
+        return;
+      }
+      try{
+        const rows=txt?JSON.parse(txt):[];
+        if(Array.isArray(rows)) deleted += rows.length;
+      }catch{}
+    }catch(err){
+      errors.push(`${label}: ${err.message||String(err)}`);
+    }
+  }
+
+  // Newer records: best match, if the assignments table has event_id.
+  if(evt?.id){
+    await attempt("event_id", `event_id=eq.${encodeURIComponent(evt.id)}`);
+  }
+
+  // Older records: match by event title + assignment start_time within the event date range.
+  // This removes the stale availability requests that remained after deleting an event locally.
+  if(evt?.title && (evt.startDate || evt.date)){
+    const startDate=evt.startDate || evt.date;
+    const endDate=evt.endDate || evt.date || startDate;
+    const startIso=new Date(`${startDate}T00:00:00`).toISOString();
+    const endIso=new Date(`${endDate}T23:59:59`).toISOString();
+    const q=[
+      `event_title=eq.${encodeURIComponent(evt.title)}`,
+      `start_time=gte.${encodeURIComponent(startIso)}`,
+      `start_time=lte.${encodeURIComponent(endIso)}`
+    ].join("&");
+    await attempt("event_title/date", q);
+  }
+
+  return {deleted,errors};
+}
+
 async function deleteEvent(id){
   const evt=state.events.find(x=>x.id===id);
   if(!evt) return;
   if(!confirm(`Supprimer "${evt.title}" ?\n\nLes demandes de disponibilité liées à cet événement seront aussi supprimées.`)) return;
 
   const tokens=collectRequestTokensFromEvent(evt);
-  if(tokens.length){
-    const result=await deleteSupabaseAssignmentsByTokens(tokens);
-    if(result.errors.length){
-      const proceed=confirm(`L'événement peut être supprimé localement, mais certaines demandes Supabase n'ont pas pu être supprimées.\n\n${result.errors.slice(0,3).join("\n")}\n\nContinuer quand même?`);
-      if(!proceed) return;
-    }
+  const resultTokens=await deleteSupabaseAssignmentsByTokens(tokens);
+  const resultEvent=await deleteSupabaseAssignmentsForEvent(evt);
+  const allErrors=[...(resultTokens.errors||[]), ...(resultEvent.errors||[])];
+
+  if(allErrors.length){
+    const proceed=confirm(`L'événement peut être supprimé localement, mais certaines demandes Supabase n'ont pas pu être supprimées.\n\n${allErrors.slice(0,4).join("\n")}\n\nContinuer quand même?`);
+    if(!proceed) return;
   }
 
   state.events=state.events.filter(x=>x.id!==id);
   saveEvents();
   if(state.editingId===id) closeModal();
-  state.syncBanner=tokens.length
-    ? `Événement supprimé. ${tokens.length} demande(s) de disponibilité liée(s) retirée(s) de Supabase.`
-    : `Événement supprimé. Aucune demande Supabase liée n'était enregistrée localement.`;
+  const removedCount=(resultTokens.deleted||0)+(resultEvent.deleted||0);
+  state.syncBanner=removedCount
+    ? `Événement supprimé. ${removedCount} demande(s) de disponibilité liée(s) retirée(s) de Supabase.`
+    : `Événement supprimé. Aucune demande Supabase liée trouvée.`;
   renderAll();
 }
 
@@ -1993,6 +2049,8 @@ async function sendRealEmailRequestForSlot(key){
     employee_name: emp.name || "",
     employee_email: emp.email || "",
     role: `${ref.roleItem.role || ""}${(ref.roleItem.quantity||1)>1?` (${item.slotIdx+1}/${ref.roleItem.quantity})`:""}`,
+    event_id: item.evt.id || item.evtId || "",
+    block_id: item.block.id || item.blockId || "",
     event_title: item.evt.title || "Événement",
     start_time: new Date(`${timing.startDate}T${to24h(timing.startTime)}:00`).toISOString(),
     end_time: new Date(`${timing.endDate}T${to24h(timing.endTime)}:00`).toISOString()
@@ -2054,14 +2112,66 @@ async function syncAssignmentSlotFromSupabase(key){
   return {ok:true,row};
 }
 
+
+function remoteAssignmentMatchesLocalEvent(row){
+  const remoteEventId=String(row?.event_id||"");
+  if(remoteEventId && state.events.some(evt=>String(evt.id)===remoteEventId)) return true;
+
+  const title=String(row?.event_title||"");
+  const start=row?.start_time ? new Date(row.start_time) : null;
+  if(!title || !start || Number.isNaN(start.getTime())) return false;
+
+  return state.events.some(evt=>{
+    if(String(evt.title||"") !== title) return false;
+    const startDate=evt.startDate || evt.date;
+    if(!startDate) return false;
+    const endDate=evt.endDate || evt.date || startDate;
+    const a=new Date(`${startDate}T00:00:00`);
+    const b=new Date(`${endDate}T23:59:59`);
+    return start>=a && start<=b;
+  });
+}
+
+async function cleanupOrphanSupabaseAssignments(){
+  try{
+    const res=await fetch(`${APP_CONFIG.supabaseUrl}/rest/v1/assignments?select=*`,{
+      headers:{"apikey":APP_CONFIG.anonKey,"Authorization":`Bearer ${APP_CONFIG.anonKey}`}
+    });
+    const txt=await res.text(); let rows=[]; try{ rows=txt?JSON.parse(txt):[]; }catch{}
+    if(!res.ok || !Array.isArray(rows)) return {deleted:0,errors:res.ok?[]:[txt]};
+
+    const orphans=rows.filter(row=>!remoteAssignmentMatchesLocalEvent(row));
+    let deleted=0; const errors=[];
+    for(const row of orphans){
+      const token=String(row.token||"");
+      const id=String(row.id||"");
+      const query=token ? `token=eq.${encodeURIComponent(token)}` : id ? `id=eq.${encodeURIComponent(id)}` : "";
+      if(!query) continue;
+      const del=await fetch(`${APP_CONFIG.supabaseUrl}/rest/v1/assignments?${query}`,{
+        method:"DELETE",
+        headers:{"apikey":APP_CONFIG.anonKey,"Authorization":`Bearer ${APP_CONFIG.anonKey}`,"Prefer":"return=minimal"}
+      });
+      if(del.ok) deleted++;
+      else errors.push(await del.text());
+    }
+    return {deleted,errors};
+  }catch(err){
+    return {deleted:0,errors:[err.message||String(err)]};
+  }
+}
+
 async function syncAllAssignmentsFromSupabase(){
+  const cleanup=await cleanupOrphanSupabaseAssignments();
+
   const withToken=allAssignmentSlots().filter(x=>{
     const ref=getRoleItemRef(x.evtId,x.blockId,x.roleIdx); if(!ref) return false;
     syncRoleEmployees(ref.roleItem);
     return !!ref.roleItem.slotRequests?.[x.slotIdx]?.requestToken;
   });
   if(!withToken.length){
-    state.syncBanner="Aucune demande envoyée par courriel réel à synchroniser pour l'instant.";
+    state.syncBanner=cleanup.deleted
+      ? `Nettoyage terminé: ${cleanup.deleted} ancienne(s) demande(s) supprimée(s). Aucune demande locale à synchroniser.`
+      : "Aucune demande envoyée par courriel réel à synchroniser pour l'instant.";
     renderAvailability(); renderQuickSummary();
     return;
   }
@@ -2072,7 +2182,7 @@ async function syncAllAssignmentsFromSupabase(){
       if(result.ok) synced++; else missing++;
     }catch(err){ failed++; console.error(err); }
   }
-  state.syncBanner=`Synchronisation terminée: ${synced} mise(s) à jour, ${missing} sans changement, ${failed} erreur(s).`;
+  state.syncBanner=`Synchronisation terminée: ${synced} mise(s) à jour, ${missing} sans changement, ${failed} erreur(s). ${cleanup.deleted} ancienne(s) demande(s) supprimée(s).`;
   renderAll();
 }
 
@@ -2204,6 +2314,8 @@ async function ensureManualRequestTokenForSlot(key){
     employee_name: emp.name || "",
     employee_email: emp.email || "",
     role: `${ref.roleItem.role || ""}${(ref.roleItem.quantity||1)>1?` (${item.slotIdx+1}/${ref.roleItem.quantity})`:""}`,
+    event_id: item.evt.id || item.evtId || "",
+    block_id: item.block.id || item.blockId || "",
     event_title: item.evt.title || "Événement",
     event_location: item.evt.location,
     event_notes: item.evt.notes,
@@ -2239,15 +2351,12 @@ function publicRespondLinkFromToken(token){
   return `https://gedlp.github.io/crew-scheduler/respond.html?token=${encodeURIComponent(token||"")}`;
 }
 
-function availabilityButtonHtmlForEmail(link){
-  const safeLink=String(link||"");
-  return `<a href="${safeLink}" style="text-decoration:none;display:inline-block;">
-  <img src="URL_DE_TON_IMAGE_BOUTON" alt="Ouvrir la demande de disponibilité" style="display:block;border:0;max-width:420px;width:100%;height:auto;">
-</a>`;
+function availabilityButtonImageHtmlForEmail(){
+  return `<img src="URL_DE_TON_IMAGE_BOUTON" alt="Ouvrir la demande de disponibilité" style="display:block;border:0;max-width:420px;width:100%;height:auto;">`;
 }
 
 function availabilityButtonTextBlock(link){
-  return `\n\n---\nHTML POUR TON IMAGE DE BOUTON\nCopie ce bloc, puis remplace URL_DE_TON_IMAGE_BOUTON par l'image du bouton si nécessaire.\n\n${availabilityButtonHtmlForEmail(link)}\n---`;
+  return `\n\n---\nIMAGE DU BOUTON À INSÉRER DANS LE COURRIEL\nRemplace URL_DE_TON_IMAGE_BOUTON par l'image du bouton. Le lien à associer à l'image est affiché juste en dessous.\n\n${availabilityButtonImageHtmlForEmail()}\n\nLIEN À METTRE SUR L'IMAGE:\n${link}\n---`;
 }
 
 async function buildRequestMessageForSlotAsync(key){
