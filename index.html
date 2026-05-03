@@ -723,7 +723,7 @@ button{cursor:pointer}
 </div>
 
 <script>
-/* Crew Scheduler v23 — vraie interface + Supabase + auto-sync + conflits + anti-redemande refus */
+/* Crew Scheduler v24 — vraie interface + Supabase + anti-redemande globale après refus */
 const EVENTS_KEY="crewSchedulerCalendarEventsMergedV1";
 const EMPLOYEES_KEY="crewSchedulerEmployeesV5";
 const ROLES_KEY="crewSchedulerRolesV2";
@@ -2049,6 +2049,28 @@ function markEmployeeDeclinedForSlot(roleItem, slotIdx, employeeId){
   }
 }
 
+function employeeHasAlreadyRefusedSimilarSlot(empId, item){
+  if(!empId || !item) return false;
+  const wantedStart = new Date(item.start);
+  const wantedEnd = new Date(item.end);
+  const wantedRole = String(item.role || "");
+  const wantedEventId = String(item.evtId || "");
+
+  return allAssignmentSlots().some(slot => {
+    if(String(slot.employeeId || "") !== String(empId)) return false;
+    if(String(slot.evtId || "") !== wantedEventId) return false;
+    if(String(slot.role || "") !== wantedRole) return false;
+
+    const state = slotVisualState(slot.roleItem, slot.slotIdx);
+    const response = String(slot.slotRequest?.responseStatus || "");
+    if(response !== "unavailable" && state.cls !== "red") return false;
+
+    const s = new Date(slot.start);
+    const e = new Date(slot.end);
+    return datesOverlap(wantedStart, wantedEnd, s, e);
+  });
+}
+
 function replacementSuggestionsForSlot(key){
   const item=getAssignmentSlotByKey(key); if(!item) return [];
   const wantedRole=String(item.roleItem.role||"").trim();
@@ -2061,6 +2083,7 @@ function replacementSuggestionsForSlot(key){
     .filter(emp=>emp.id!==item.employeeId)
     .filter(emp=>!alreadyAssigned.has(emp.id))
     .filter(emp=>!declinedEmployees.has(String(emp.id)))
+    .filter(emp=>!employeeHasAlreadyRefusedSimilarSlot(emp.id,item))
     .map(emp=>{
       const roles=normalizeRoles(emp.roles||[]);
       const sameRole=wantedRole && roles.includes(wantedRole);
