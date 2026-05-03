@@ -1656,7 +1656,71 @@ function saveEventFromModal(){
   else state.events.push({id:cryptoRandomId(),...payload});
   saveEvents(); state.selectedDate=parseLocalDate(payload.startDate); state.anchorDate=parseLocalDate(payload.startDate); closeModal(); renderAll();
 }
-function deleteEvent(id){ const evt=state.events.find(x=>x.id===id); if(!evt) return; if(!confirm(`Supprimer "${evt.title}" ?`)) return; state.events=state.events.filter(x=>x.id!==id); saveEvents(); if(state.editingId===id) closeModal(); renderAll(); }
+function collectRequestTokensFromEvent(evt){
+  const tokens=[];
+  (evt?.blocks||[]).forEach(block=>{
+    (block.roles||[]).forEach(roleItem=>{
+      if(roleItem?.requestToken) tokens.push(String(roleItem.requestToken));
+      if(Array.isArray(roleItem?.slotRequests)){
+        roleItem.slotRequests.forEach(slot=>{
+          if(slot?.requestToken) tokens.push(String(slot.requestToken));
+        });
+      }
+    });
+  });
+  return [...new Set(tokens.filter(Boolean))];
+}
+
+async function deleteSupabaseAssignmentsByTokens(tokens){
+  const unique=[...new Set((tokens||[]).map(String).filter(Boolean))];
+  if(!unique.length) return {deleted:0,errors:[]};
+  const errors=[];
+  let deleted=0;
+  for(const token of unique){
+    try{
+      const res=await fetch(`${APP_CONFIG.supabaseUrl}/rest/v1/assignments?token=eq.${encodeURIComponent(token)}`,{
+        method:"DELETE",
+        headers:{
+          "apikey": APP_CONFIG.anonKey,
+          "Authorization": `Bearer ${APP_CONFIG.anonKey}`,
+          "Prefer": "return=minimal"
+        }
+      });
+      if(!res.ok){
+        const txt=await res.text();
+        errors.push(`Token ${token}: ${res.status} ${txt}`);
+      }else{
+        deleted++;
+      }
+    }catch(err){
+      errors.push(`Token ${token}: ${err.message||String(err)}`);
+    }
+  }
+  return {deleted,errors};
+}
+
+async function deleteEvent(id){
+  const evt=state.events.find(x=>x.id===id);
+  if(!evt) return;
+  if(!confirm(`Supprimer "${evt.title}" ?\n\nLes demandes de disponibilité liées à cet événement seront aussi supprimées.`)) return;
+
+  const tokens=collectRequestTokensFromEvent(evt);
+  if(tokens.length){
+    const result=await deleteSupabaseAssignmentsByTokens(tokens);
+    if(result.errors.length){
+      const proceed=confirm(`L'événement peut être supprimé localement, mais certaines demandes Supabase n'ont pas pu être supprimées.\n\n${result.errors.slice(0,3).join("\n")}\n\nContinuer quand même?`);
+      if(!proceed) return;
+    }
+  }
+
+  state.events=state.events.filter(x=>x.id!==id);
+  saveEvents();
+  if(state.editingId===id) closeModal();
+  state.syncBanner=tokens.length
+    ? `Événement supprimé. ${tokens.length} demande(s) de disponibilité liée(s) retirée(s) de Supabase.`
+    : `Événement supprimé. Aucune demande Supabase liée n'était enregistrée localement.`;
+  renderAll();
+}
 
 function renderDrawer(){ els.rolesDrawer.classList.toggle("open", !!state.rolesDrawerOpen); els.btnToggleRolesAdmin.classList.toggle("active", !!state.rolesDrawerOpen); }
 function buildTeamRoleFilterOptions(){
@@ -2175,6 +2239,17 @@ function publicRespondLinkFromToken(token){
   return `https://gedlp.github.io/crew-scheduler/respond.html?token=${encodeURIComponent(token||"")}`;
 }
 
+function availabilityButtonHtmlForEmail(link){
+  const safeLink=String(link||"");
+  return `<a href="${safeLink}" style="text-decoration:none;display:inline-block;">
+  <img src="URL_DE_TON_IMAGE_BOUTON" alt="Ouvrir la demande de disponibilité" style="display:block;border:0;max-width:420px;width:100%;height:auto;">
+</a>`;
+}
+
+function availabilityButtonTextBlock(link){
+  return `\n\n---\nHTML POUR TON IMAGE DE BOUTON\nCopie ce bloc, puis remplace URL_DE_TON_IMAGE_BOUTON par l'image du bouton si nécessaire.\n\n${availabilityButtonHtmlForEmail(link)}\n---`;
+}
+
 async function buildRequestMessageForSlotAsync(key){
   const item = getAssignmentSlotByKey(key);
   if(!item || !item.employeeId) return null;
@@ -2206,7 +2281,7 @@ ${webLink}
 
 Réponses possibles: Disponible / Peut-être / Non disponible
 
-Merci!`;
+Merci!${availabilityButtonTextBlock(webLink)}`;
   return {subject,body,webLink,employee:emp};
 }
 
