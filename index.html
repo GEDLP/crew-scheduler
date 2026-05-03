@@ -2213,7 +2213,7 @@ async function bootSupabaseCentral(){
     state.events=remoteEvents.length ? remoteEvents : localEvents;
     localStorage.setItem(EMPLOYEES_KEY, JSON.stringify(state.employees));
     localStorage.setItem(EVENTS_KEY, JSON.stringify(state.events));
-    state.syncBanner='Données chargées depuis Supabase — v12.';
+    state.syncBanner='Données chargées depuis Supabase — v14.';
   }catch(err){
     console.error(err);
     state.events=loadEvents();
