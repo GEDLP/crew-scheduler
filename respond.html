@@ -381,10 +381,19 @@
       });
     }
 
+    function remoteRowLooksModern(item){
+      // La page publique sur cellulaire n'a pas accès au localStorage du scheduler.
+      // On masque donc les très vieilles lignes de test qui n'avaient pas event_id/block_id.
+      return !!(item && item.event_id && item.block_id && item.token && item.start_time && item.end_time);
+    }
+
     function filterDeletedLocalAssignments(list){
+      const rows = Array.isArray(list) ? list : [];
       const events = localSchedulerEvents();
-      if(events === null) return Array.isArray(list) ? list : [];
-      return (Array.isArray(list) ? list : []).filter(item => assignmentMatchesLocalEvent(item, events));
+      if(events === null){
+        return rows.filter(remoteRowLooksModern);
+      }
+      return rows.filter(item => remoteRowLooksModern(item) && assignmentMatchesLocalEvent(item, events));
     }
 
 
