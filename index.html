@@ -723,7 +723,7 @@ button{cursor:pointer}
 </div>
 
 <script>
-/* Crew Scheduler v29 — fix remplacement: reset statut nouveau travailleur + sync plus réactive */
+/* Crew Scheduler v30 — auto refresh disponibilité après réponse */
 const EVENTS_KEY="crewSchedulerCalendarEventsMergedV1";
 const EMPLOYEES_KEY="crewSchedulerEmployeesV5";
 const ROLES_KEY="crewSchedulerRolesV2";
@@ -2887,7 +2887,12 @@ async function autoSyncAvailabilityV19(){
 
 function startAutoAvailabilitySyncV19(){
   if(__autoAvailabilitySyncTimer) return;
-  __autoAvailabilitySyncTimer = setInterval(autoSyncAvailabilityV19, 5000);
+  __autoAvailabilitySyncTimer = setInterval(async()=>{
+  await autoSyncAvailabilityV19();
+  // v30: si une réponse distante change un statut vers refusé/confirmé,
+  // on rerender immédiatement les cartes de disponibilité.
+  if(state.activeTab==="availability") renderAvailability();
+}, 2000);
   document.addEventListener('visibilitychange', () => {
     if(!document.hidden) setTimeout(autoSyncAvailabilityV19, 600);
   });
