@@ -402,8 +402,8 @@ button{cursor:pointer}
 <div class="app">
   <aside class="sidebar">
     <div class="brand">
-      <h1>Crew Scheduler</h1>
-      <p>Planifier une équipe par événement avec des profils employés clairs, premium et prêts pour GitHub.</p>
+      <h1 id="brandTitle">Crew Scheduler</h1>
+      <p>Planification d’équipe par événement.</p>
     </div>
     <div class="nav">
       <button class="active" data-tab="calendar" type="button">Calendrier</button>
@@ -422,7 +422,7 @@ button{cursor:pointer}
       <section class="hero">
         <div class="hero-top">
           <div>
-            <h2>Calendrier Crew Scheduler</h2>
+            <h2 id="calendarHeroTitle">Calendrier Crew Scheduler</h2>
             <p>Événements multi-jours, blocs de travail, assignation d’employés par poste, le tout relié à la base Équipe.</p>
           </div>
           <div class="hero-actions">
@@ -507,7 +507,7 @@ button{cursor:pointer}
       <section class="hero">
         <div class="hero-top">
           <div>
-            <h2>Équipe Crew Scheduler</h2>
+            <h2 id="teamHeroTitle">Équipe</h2>
             <p>Cette section garde le style de ta version préférée. Les postes et employés créés ici alimentent directement le calendrier.</p>
           </div>
           <div class="hero-actions">
@@ -614,7 +614,7 @@ button{cursor:pointer}
       <section class="hero">
         <div class="hero-top">
           <div>
-            <h2>Paramètres Crew Scheduler</h2>
+            <h2 id="settingsHeroTitle">Paramètres</h2>
             <p>Règles globales pour les demandes, les conflits et le comportement du prototype GitHub.</p>
           </div>
         </div>
@@ -638,7 +638,7 @@ button{cursor:pointer}
               <div class="small-note">En mode blocage, les remplaçants en conflit ne seront pas proposés comme choix principal.</div>
             </div>
             <div class="setting-box">
-              <div class="field"><label for="settingCompanyName">Nom affiché de l'équipe</label><input id="settingCompanyName" type="text" placeholder="Ex: Crew Scheduler / Nom de compagnie"/></div>
+              <div class="field"><label for="settingCompanyName">Nom affiché de l'équipe</label><input id="settingCompanyName" type="text" placeholder="Ex: Nom de l’équipe / compagnie"/></div>
               <div class="small-note">Utilisé dans le texte généré pour les courriels et SMS de demande de travail.</div>
             </div>
             <div class="setting-box" style="align-content:end">
@@ -723,7 +723,7 @@ button{cursor:pointer}
 </div>
 
 <script>
-/* Crew Scheduler v30 — auto refresh disponibilité après réponse */
+/* Crew Scheduler v31 — liens travailleurs avec accès calendrier */
 const EVENTS_KEY="crewSchedulerCalendarEventsMergedV1";
 const EMPLOYEES_KEY="crewSchedulerEmployeesV5";
 const ROLES_KEY="crewSchedulerRolesV2";
@@ -826,6 +826,28 @@ const els={
 function defaultSettings(){ return {defaultChannel:"email",conflictMode:"warn",companyName:"Crew Scheduler"}; }
 function loadSettings(){ try{ const raw=JSON.parse(localStorage.getItem(SETTINGS_KEY)||"null"); return {...defaultSettings(), ...(raw||{})}; }catch{return defaultSettings();} }
 function saveSettings(){ localStorage.setItem(SETTINGS_KEY, JSON.stringify(state.settings)); }
+
+function teamDisplayName(){
+  return String(state?.settings?.companyName || "Crew Scheduler").trim() || "Crew Scheduler";
+}
+
+function updateTeamBranding(){
+  const name = teamDisplayName();
+  document.title = `${name} – Calendrier + Équipe`;
+  const brand = document.getElementById("brandTitle");
+  if(brand) brand.textContent = name;
+
+  const calendarTitle = document.getElementById("calendarHeroTitle");
+  if(calendarTitle) calendarTitle.textContent = `Calendrier ${name}`;
+
+  const teamTitle = document.getElementById("teamHeroTitle");
+  if(teamTitle) teamTitle.textContent = `Équipe ${name}`;
+
+  const settingsTitle = document.getElementById("settingsHeroTitle");
+  if(settingsTitle) settingsTitle.textContent = `Paramètres ${name}`;
+
+  document.querySelectorAll("[data-team-name-text]").forEach(el=>{ el.textContent = name; });
+}
 function normalizeRoleRequest(item){
   const qtyRaw=Number(item?.quantity??1);
   const quantity=Number.isFinite(qtyRaw) && qtyRaw>0 ? Math.max(1, Math.round(qtyRaw)) : 1;
@@ -991,6 +1013,19 @@ function roleVisualState(item){
 }
 function currentAppBaseUrl(){ return `${window.location.origin}${window.location.pathname}`; }
 function currentPublicRespondUrl(){ return `${APP_CONFIG.githubBaseUrl.replace(/\/$/, "")}/respond.html`; }
+function workerQueryParamsForEmployee(emp){
+  if(!emp) return "";
+  const params = new URLSearchParams();
+  if(emp.id) params.set("employee_id", emp.id);
+  if(emp.email) params.set("employee_email", emp.email);
+  if(emp.name) params.set("employee_name", emp.name);
+  return params.toString();
+}
+function appendWorkerParams(url, emp){
+  const extra = workerQueryParamsForEmployee(emp);
+  if(!extra) return url;
+  return url + (url.includes("?") ? "&" : "?") + extra;
+}
 function encodePortalPayload(obj){ try{return btoa(unescape(encodeURIComponent(JSON.stringify(obj))));}catch(e){return "";} }
 function decodePortalPayload(str){ try{return JSON.parse(decodeURIComponent(escape(atob(str))));}catch(e){return null;} }
 function portalPayloadFromItem(item){
@@ -1122,7 +1157,10 @@ function respondLinkForSlot(slotItem){
   if(ref){
     syncRoleEmployees(ref.roleItem);
     const token=ref.roleItem.slotRequests?.[slotItem.slotIdx]?.requestToken || "";
-    if(token) return `${currentPublicRespondUrl()}?token=${encodeURIComponent(token)}`;
+    if(token){
+      const emp=state.employees.find(x=>x.id===slotItem.employeeId);
+      return appendWorkerParams(`${currentPublicRespondUrl()}?token=${encodeURIComponent(token)}`, emp);
+    }
   }
   return buildPortalUrl(slotItem.key);
 }
@@ -1931,7 +1969,7 @@ function renderCalendar(){
   renderQuickSummary();
 }
 function renderTeam(){ buildTeamRoleFilterOptions(); renderDrawer(); renderGlobalRoles(); renderTeamEmployees(); }
-function renderAll(){ renderTabs(); renderCalendar(); renderTeam(); renderAvailability(); renderSettings(); }
+function renderAll(){ updateTeamBranding(); renderTabs(); renderCalendar(); renderTeam(); renderAvailability(); renderSettings(); }
 
 function changeAnchor(delta){ if(state.currentView==="month"){ state.anchorDate=new Date(state.anchorDate.getFullYear(),state.anchorDate.getMonth()+delta,1); } else if(state.currentView==="week"){ state.anchorDate=addDays(state.anchorDate,7*delta); state.selectedDate=addDays(state.selectedDate,7*delta); } else { state.anchorDate=addDays(state.anchorDate,delta); state.selectedDate=addDays(state.selectedDate,delta); } renderCalendar(); }
 function goToday(){ state.anchorDate=startOfDay(new Date()); state.selectedDate=startOfDay(new Date()); renderCalendar(); }
@@ -2733,8 +2771,8 @@ async function ensureManualRequestTokenForSlot(key){
   return slot.requestToken;
 }
 
-function publicRespondLinkFromToken(token){
-  return `https://gedlp.github.io/crew-scheduler/respond.html?token=${encodeURIComponent(token||"")}`;
+function publicRespondLinkFromToken(token, emp=null){
+  return appendWorkerParams(`https://gedlp.github.io/crew-scheduler/respond.html?token=${encodeURIComponent(token||"")}`, emp);
 }
 
 async function buildRequestMessageForSlotAsync(key){
@@ -2748,7 +2786,7 @@ async function buildRequestMessageForSlotAsync(key){
   const timing = getRoleTiming(item.evt,item.block);
   const company = state.settings.companyName || "Crew Scheduler";
   const roleLabel = `${ref.roleItem.role || "Poste"}${(ref.roleItem.quantity||1)>1?` (${item.slotIdx+1}/${ref.roleItem.quantity})`:""}`;
-  const webLink = publicRespondLinkFromToken(token);
+  const webLink = publicRespondLinkFromToken(token, emp);
   const subject = `Demande de travail — ${item.evt.title}`;
   const body = `Bonjour ${emp?.name||""},
 
