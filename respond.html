@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>v12 - Mes disponibilités — Crew Scheduler</title>
+  <title>Mes disponibilités — Crew Scheduler</title>
   <style>
     :root{
       --bg:#eef3f9;
@@ -271,7 +271,7 @@
 <body>
   <main class="card" id="app">
     <section class="top">
-      <div class="eyebrow">Crew Scheduler</div>
+      <div class="eyebrow">Disponibilités</div>
       <h1>Mes disponibilités</h1>
       <p class="subtitle">Consulte tes demandes, puis indique si tu es disponible, peut-être ou non disponible.</p>
     </section>
@@ -300,7 +300,12 @@
     const SUPABASE_URL = "https://yxkdyohscpsmeplbkyqo.supabase.co";
     const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4a2R5b2hzY3BzbWVwbGJreXFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3MTY1NDYsImV4cCI6MjA5MjI5MjU0Nn0.Xx8KjZFqqWnTvJczYqPRINXeX0fp7aq7wRvG30ZF6pE";
 
-    const token = new URLSearchParams(window.location.search).get("token");
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token");
+    const workerIdParam = params.get("employee_id") || "";
+    const workerEmailParam = params.get("employee_email") || "";
+    const workerNameParam = params.get("employee_name") || "";
+    const WORKER_PROFILE_KEY = "crewSchedulerWorkerProfileV1";
 
     let requestData = null;
     let allAssignments = [];
@@ -399,20 +404,112 @@
       document.getElementById("btnNo").disabled = disabled;
     }
 
+    function saveWorkerProfile(row){
+      if(!row) return;
+      const profile = {
+        employee_id: row.employee_id || workerIdParam || "",
+        employee_email: row.employee_email || workerEmailParam || "",
+        employee_name: row.employee_name || workerNameParam || ""
+      };
+      try{ localStorage.setItem(WORKER_PROFILE_KEY, JSON.stringify(profile)); }catch{}
+    }
+
+    function getWorkerProfile(){
+      let saved = {};
+      try{ saved = JSON.parse(localStorage.getItem(WORKER_PROFILE_KEY) || "{}") || {}; }catch{}
+      return {
+        employee_id: workerIdParam || saved.employee_id || "",
+        employee_email: workerEmailParam || saved.employee_email || "",
+        employee_name: workerNameParam || saved.employee_name || ""
+      };
+    }
+
+    function workerFilterFromProfile(profile){
+      if(profile.employee_email) return `employee_email=eq.${encodeURIComponent(profile.employee_email)}`;
+      if(profile.employee_id) return `employee_id=eq.${encodeURIComponent(profile.employee_id)}`;
+      if(profile.employee_name) return `employee_name=eq.${encodeURIComponent(profile.employee_name)}`;
+      return "";
+    }
+
+    async function loadWorkerCalendarOnly(){
+      const profile = getWorkerProfile();
+      const filter = workerFilterFromProfile(profile);
+      if(!filter){
+        showInvalid("Impossible d’identifier le calendrier du travailleur à partir de ce lien.");
+        return;
+      }
+
+      try{
+        const selectFields = "*";
+        const resAll = await fetch(
+          `${SUPABASE_URL}/rest/v1/assignments?${filter}&event_id=not.is.null&select=${encodeURIComponent(selectFields)}&order=start_time.asc`,
+          {
+            headers:{
+              "apikey": ANON_KEY,
+              "Authorization": `Bearer ${ANON_KEY}`
+            }
+          }
+        );
+
+        const allTxt = await resAll.text();
+        try{ allAssignments = allTxt ? JSON.parse(allTxt) : []; }catch{ allAssignments = []; }
+
+        if(!resAll.ok){
+          showInvalid(`Erreur Supabase ${resAll.status}: ${allTxt}`);
+          return;
+        }
+
+        if(!Array.isArray(allAssignments)) allAssignments = [];
+        allAssignments = dedupeAssignments(allAssignments.filter(x => x.event_id), token);
+
+        document.getElementById("app").innerHTML = `
+          <section class="top">
+            <div class="eyebrow">Disponibilités</div>
+            <h1>Mon calendrier</h1>
+            <p class="subtitle">Voici tes demandes actives et les informations à jour.</p>
+          </section>
+          <section class="body">
+            <div class="calendar" id="calendar"></div>
+            <div class="info" id="requestInfo">
+              <div class="event-title">Chargement...</div>
+            </div>
+            <div class="actions" id="actions" style="display:none;">
+              <button class="back-list" onclick="showList()">← Retour à la liste</button>
+              <button class="btn yes" id="btnYes" onclick="respond('available')">✅ Oui, je suis disponible</button>
+              <button class="btn maybe" id="btnMaybe" onclick="respond('maybe')">🟡 Peut-être</button>
+              <button class="btn no" id="btnNo" onclick="respond('unavailable')">❌ Non, je ne suis pas disponible</button>
+            </div>
+            <div class="status" id="status"></div>
+          </section>
+          <div class="footer">Tes réponses seront transmises au planificateur.</div>
+        `;
+
+        if(allAssignments[0]?.start_time){
+          const firstEventDate = new Date(allAssignments[0].start_time);
+          if(!Number.isNaN(firstEventDate.getTime())) calendarDate = firstEventDate;
+        }
+
+        renderCalendar();
+        renderAllRequests(allAssignments);
+      }catch(err){
+        showInvalid(`Erreur réseau: ${String(err)}`);
+      }
+    }
+
     function showInvalid(message){
       document.getElementById("app").innerHTML = `
         <div class="error">
-          <div class="eyebrow">Crew Scheduler</div>
+          <div class="eyebrow">Disponibilités</div>
           <h1>Lien de demande invalide</h1>
           <p style="color:#64748b;line-height:1.5">${message}</p>
-          <a class="back" href="https://gedlp.github.io/crew-scheduler/">Retour à l’application</a>
+          <button class="back" type="button" onclick="loadWorkerCalendarOnly()">Voir mon calendrier</button>
         </div>
       `;
     }
 
     async function loadRequest(){
       if(!token){
-        showInvalid("Aucun token n’a été trouvé dans le lien.");
+        await loadWorkerCalendarOnly();
         return;
       }
 
@@ -438,11 +535,17 @@
         }
 
         if(!Array.isArray(data) || !data.length){
+          const profile = getWorkerProfile();
+          if(workerFilterFromProfile(profile)){
+            await loadWorkerCalendarOnly();
+            return;
+          }
           showInvalid("La demande ne peut pas être trouvée. Le lien est peut-être expiré, supprimé ou lié à un événement qui n’existe plus.");
           return;
         }
 
         requestData = data[0];
+        saveWorkerProfile(requestData);
 
         let filter = "";
         if(requestData.employee_email){
