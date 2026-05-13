@@ -723,7 +723,7 @@ button{cursor:pointer}
 </div>
 
 <script>
-/* Crew Scheduler v26 — remplacement: tous les candidats + statuts clairs */
+/* Crew Scheduler v27 — refus persistants + remplacements cohérents calendrier/disponibilités */
 const EVENTS_KEY="crewSchedulerCalendarEventsMergedV1";
 const EMPLOYEES_KEY="crewSchedulerEmployeesV5";
 const ROLES_KEY="crewSchedulerRolesV2";
@@ -1321,6 +1321,7 @@ function setAssignmentResponse(key,responseStatus){
   // v26: un statut manuel doit compter comme une vraie réponse.
   syncRoleEmployees(ref.roleItem);
   const empId=ref.roleItem.employeeId || ref.roleItem.employeeIds?.[0] || "";
+  registerEmployeeResponseForItem({...item, slotIdx:0, employeeId:empId},empId,responseStatus);
   addReplacementHistory(ref.roleItem,0,empId,responseStatus);
   if(responseStatus === "unavailable") markEmployeeDeclinedForSlot(ref.roleItem,0,empId);
 
@@ -1852,6 +1853,7 @@ async function setSlotResponse(key,responseStatus){
   slot.requestStatus='answered';
   slot.responseStatus=responseStatus;
   slot.respondedAt=new Date().toISOString();
+  registerEmployeeResponseForItem(item,item.employeeId,responseStatus);
   addReplacementHistory(ref.roleItem,item.slotIdx,item.employeeId,responseStatus);
   if(responseStatus === 'unavailable'){
     markEmployeeDeclinedForSlot(ref.roleItem,item.slotIdx,item.employeeId);
@@ -2078,6 +2080,55 @@ function priorReplacementStatus(roleItem, slotIdx, employeeId){
   return anyAnswered?.status || "";
 }
 
+const RESPONSE_REGISTRY_KEY = "crewSchedulerReplacementResponseRegistryV1";
+
+function loadResponseRegistry(){
+  try{
+    const raw=JSON.parse(localStorage.getItem(RESPONSE_REGISTRY_KEY)||"{}");
+    return raw && typeof raw === "object" ? raw : {};
+  }catch{return {};}
+}
+
+function saveResponseRegistry(registry){
+  localStorage.setItem(RESPONSE_REGISTRY_KEY, JSON.stringify(registry||{}));
+}
+
+function responseRegistryBaseKey(item){
+  if(!item) return "";
+  const timing=getRoleTiming(item.evt,item.block);
+  const role=String(item.roleItem?.role || item.role || "").trim();
+  return [
+    String(item.evtId || item.evt?.id || ""),
+    String(item.blockId || item.block?.id || ""),
+    role,
+    String(timing.startDate || ""),
+    String(timing.startTime || ""),
+    String(timing.endDate || ""),
+    String(timing.endTime || "")
+  ].join("__");
+}
+
+function responseRegistryKey(item, employeeId){
+  return `${responseRegistryBaseKey(item)}__${String(employeeId||"")}`;
+}
+
+function registerEmployeeResponseForItem(item, employeeId, status){
+  if(!item || !employeeId || !status) return;
+  const registry=loadResponseRegistry();
+  registry[responseRegistryKey(item,employeeId)] = {
+    employeeId:String(employeeId),
+    status:String(status),
+    at:new Date().toISOString()
+  };
+  saveResponseRegistry(registry);
+}
+
+function priorRegisteredStatusForItem(item, employeeId){
+  if(!item || !employeeId) return "";
+  const registry=loadResponseRegistry();
+  return String(registry[responseRegistryKey(item,employeeId)]?.status || "");
+}
+
 function replacementStatusLabel(status){
   return {
     available:"Déjà confirmé",
@@ -2150,7 +2201,7 @@ function replacementSuggestionsForSlot(key){
       const roles=normalizeRoles(emp.roles||[]);
       const sameRole=wantedRole && roles.includes(wantedRole);
       const conflicts=findEmployeeConflicts(emp.id,item.evtId,item.blockId,item.roleIdx);
-      const priorStatus=priorReplacementStatus(item.roleItem,item.slotIdx,emp.id) || (employeeHasAlreadyRefusedSimilarSlot(emp.id,item) ? "unavailable" : "");
+      const priorStatus=priorRegisteredStatusForItem(item,emp.id) || priorReplacementStatus(item.roleItem,item.slotIdx,emp.id) || (employeeHasAlreadyRefusedSimilarSlot(emp.id,item) ? "unavailable" : "");
       const alreadyInThisRole=alreadyAssigned.has(emp.id);
       const blocked=priorStatus==="unavailable";
       const score=(blocked?100:0)+(sameRole?0:10)+(conflicts.length?5:0)+(alreadyInThisRole?20:0);
@@ -2174,6 +2225,7 @@ function applyReplacementForSlot(key,newEmployeeId){
     if(!previousDeclined.map(String).includes(String(item.employeeId))){
       previousDeclined.push(String(item.employeeId));
     }
+    registerEmployeeResponseForItem(item,item.employeeId,"unavailable");
     addReplacementHistory(ref.roleItem,item.slotIdx,item.employeeId,"unavailable");
   }
 
@@ -2234,7 +2286,10 @@ async function syncAssignmentSlotFromSupabase(key){
   slot.requestStatus=String(row.request_status||slot.requestStatus||"sent");
   slot.responseStatus=String(row.response_status||slot.responseStatus||"pending");
   slot.backendRequestId=String(row.id||slot.backendRequestId||"");
-  if(slot.responseStatus && slot.responseStatus!=="pending") addReplacementHistory(ref.roleItem,item.slotIdx,item.employeeId,slot.responseStatus);
+  if(slot.responseStatus && slot.responseStatus!=="pending"){
+    registerEmployeeResponseForItem(item,item.employeeId,slot.responseStatus);
+    addReplacementHistory(ref.roleItem,item.slotIdx,item.employeeId,slot.responseStatus);
+  }
   if(slot.responseStatus==="unavailable") markEmployeeDeclinedForSlot(ref.roleItem,item.slotIdx,item.employeeId);
   if(slot.responseStatus!=="pending") slot.respondedAt=new Date().toISOString();
   saveEvents();
@@ -2256,7 +2311,10 @@ async function syncAllAssignmentsFromSupabase(){
       slot.responseStatus=String(row.response_status||slot.responseStatus||"pending");
       slot.requestToken=String(row.token||slot.requestToken||"");
       slot.backendRequestId=String(row.id||slot.backendRequestId||"");
-      if(slot.responseStatus && slot.responseStatus!=="pending") addReplacementHistory(ref.roleItem,item.slotIdx,item.employeeId,slot.responseStatus);
+      if(slot.responseStatus && slot.responseStatus!=="pending"){
+        registerEmployeeResponseForItem(item,item.employeeId,slot.responseStatus);
+        addReplacementHistory(ref.roleItem,item.slotIdx,item.employeeId,slot.responseStatus);
+      }
       if(slot.responseStatus==="unavailable") markEmployeeDeclinedForSlot(ref.roleItem,item.slotIdx,item.employeeId);
       if(slot.responseStatus!=="pending") slot.respondedAt=row.responded_at||new Date().toISOString();
       synced++;
@@ -2297,7 +2355,7 @@ function renderQuickSummary(){
     els.quickSummaryTitle.textContent="Disponibilités de l’événement"; els.quickSummarySub.textContent="Postes regroupés par bloc de travail.";
     const header=`<div class="row-actions" style="justify-content:flex-start;margin-bottom:10px">${canSendAny?`<button class="btn primary small" type="button" id="btnSendSelectedEventRequests">Envoyer la demande</button>`:""}<button class="btn secondary small" type="button" id="btnSyncSelectedEventRequests">Sync maintenant</button></div>`;
     if(!items.length){ els.quickSummaryContent.innerHTML=header+`<div class="empty">Aucun poste dans cet événement pour l’instant.</div>`; }
-    else{ const groups=[]; items.forEach(item=>{ let g=groups.find(x=>x.block.id===item.block.id); if(!g){ g={block:item.block,items:[]}; groups.push(g); } g.items.push(item); }); els.quickSummaryContent.innerHTML=header+groups.map(bg=>`<section class="quick-block-group"><div class="quick-block-head"><div class="quick-block-title">${escapeHtml(bg.block.name||'Bloc')}</div><div class="quick-block-time">${escapeHtml(formatBlockRange(bg.block,selectedEvt))}</div></div><div class="quick-block-body">${bg.items.map(item=>{ const suggestions=item.status.cls==='red'?replacementSuggestionsForSlot(item.key):[]; return `<div class="event-card"><div class="event-card-top"><div><div class="event-title">${escapeHtml(item.roleItem.role||'Poste')}${item.roleItem.quantity>1?` ×${item.roleItem.quantity}`:""} — ${escapeHtml(item.employeeName)}</div><div class="event-meta">Slot ${item.slotIdx+1}${item.employeeId?``:` · à combler`}</div></div><span class="status-pill ${item.status.cls}">${escapeHtml(item.status.label)}</span></div><div class="row-actions" style="justify-content:flex-start">${item.employeeId?`<button class="btn secondary small" type="button" data-send-slot="${item.key}">Envoyer la demande</button><button class="btn secondary small" type="button" data-open-gmail-slot="${item.key}">Ouvrir courriel</button><button class="btn secondary small" type="button" data-copy-message-slot="${item.key}">Copier message</button><button class="btn secondary small" type="button" data-sync-slot="${item.key}">Sync</button>`:""}${item.status.cls==='red'?`<button class="btn danger small" type="button" data-toggle-replace="${item.key}">Trouver un remplaçant</button>`:""}</div>${item.status.cls==='red'?`<div id="replace-${item.key}" class="replacement-panel" style="display:none"><div class="replacement-title">Remplacements suggérés</div>${suggestions.length?suggestions.map(s=>`<div class="replacement-card"><div><div class="replacement-name">${escapeHtml(s.emp.name)}</div><div class="replacement-meta">${s.conflicts.length?`Conflit: ${escapeHtml(s.conflicts.map(c=>c.evt.title).join(' · '))}`:'Aucun conflit détecté'}</div><div class="replacement-badges">${s.sameRole?`<span class="mini-badge green">Même poste</span>`:`<span class="mini-badge orange">Autre poste</span>`}${s.conflicts.length?`<span class="mini-badge red">Conflit</span>`:`<span class="mini-badge green">Disponible</span>`}</div></div><button class="btn secondary small" type="button" data-apply-replace="${item.key}" data-emp="${s.emp.id}">Choisir</button></div>`).join(''):`<div class="empty">Aucun remplaçant compatible trouvé.</div>`}</div>`:""}</div>`; }).join('')}</div></section>`).join(''); }
+    else{ const groups=[]; items.forEach(item=>{ let g=groups.find(x=>x.block.id===item.block.id); if(!g){ g={block:item.block,items:[]}; groups.push(g); } g.items.push(item); }); els.quickSummaryContent.innerHTML=header+groups.map(bg=>`<section class="quick-block-group"><div class="quick-block-head"><div class="quick-block-title">${escapeHtml(bg.block.name||'Bloc')}</div><div class="quick-block-time">${escapeHtml(formatBlockRange(bg.block,selectedEvt))}</div></div><div class="quick-block-body">${bg.items.map(item=>{ const suggestions=item.status.cls==='red'?replacementSuggestionsForSlot(item.key):[]; return `<div class="event-card"><div class="event-card-top"><div><div class="event-title">${escapeHtml(item.roleItem.role||'Poste')}${item.roleItem.quantity>1?` ×${item.roleItem.quantity}`:""} — ${escapeHtml(item.employeeName)}</div><div class="event-meta">Slot ${item.slotIdx+1}${item.employeeId?``:` · à combler`}</div></div><span class="status-pill ${item.status.cls}">${escapeHtml(item.status.label)}</span></div><div class="row-actions" style="justify-content:flex-start">${item.employeeId?`<button class="btn secondary small" type="button" data-send-slot="${item.key}">Envoyer la demande</button><button class="btn secondary small" type="button" data-open-gmail-slot="${item.key}">Ouvrir courriel</button><button class="btn secondary small" type="button" data-copy-message-slot="${item.key}">Copier message</button><button class="btn secondary small" type="button" data-sync-slot="${item.key}">Sync</button>`:""}${item.status.cls==='red'?`<button class="btn danger small" type="button" data-toggle-replace="${item.key}">Trouver un remplaçant</button>`:""}</div>${item.status.cls==='red'?`<div id="replace-${item.key}" class="replacement-panel" style="display:none"><div class="replacement-title">Possibilités de remplacement</div>${suggestions.length?suggestions.map(s=>`<div class="replacement-card" style="${s.blocked?'opacity:.72;background:#fff7f7':''}"><div><div class="replacement-name">${escapeHtml(s.emp.name)}</div><div class="replacement-meta">${s.priorStatus?escapeHtml(replacementStatusLabel(s.priorStatus)):s.conflicts.length?`Conflit: ${escapeHtml(s.conflicts.map(c=>c.evt.title).join(' · '))}`:'Aucun conflit détecté'}</div><div class="replacement-badges">${s.sameRole?`<span class="mini-badge green">Même poste</span>`:`<span class="mini-badge orange">Autre poste</span>`}${s.priorStatus?`<span class="mini-badge ${s.priorStatus==='unavailable'?'red':s.priorStatus==='available'?'green':'orange'}">${escapeHtml(replacementStatusLabel(s.priorStatus))}</span>`:''}${s.alreadyInThisRole?`<span class="mini-badge orange">Déjà dans ce bloc</span>`:''}${s.conflicts.length?`<span class="mini-badge red">Conflit horaire</span>`:`<span class="mini-badge green">Aucun conflit</span>`}</div></div>${s.blocked?`<button class="btn secondary small" type="button" disabled>Déjà refusé</button>`:`<button class="btn secondary small" type="button" data-apply-replace="${item.key}" data-emp="${s.emp.id}">Choisir</button>`}</div>`).join(''):`<div class="empty">Aucun autre travailleur dans la liste d'équipe.</div>`}</div>`:""}</div>`; }).join('')}</div></section>`).join(''); }
     document.getElementById('btnSendSelectedEventRequests')?.addEventListener('click',sendAllRequestsForSelectedEvent); document.getElementById('btnSyncSelectedEventRequests')?.addEventListener('click',syncAllAssignmentsFromSupabase); bindAvailabilityActionButtons(els.quickSummaryContent); els.quickSummaryContent.querySelectorAll('[data-send-slot]').forEach(btn=>btn.addEventListener('click',()=>sendRealEmailRequestForSlot(btn.dataset.sendSlot))); return;
   }
   els.quickSummaryTitle.textContent="Résumé rapide"; els.quickSummarySub.textContent="Événements, postes et assignations.";
@@ -2733,7 +2791,12 @@ async function autoSyncAvailabilityV19(){
       slot.responseStatus = String(row.response_status || slot.responseStatus || 'pending');
       slot.requestToken = String(row.token || slot.requestToken || '');
       slot.backendRequestId = String(row.id || slot.backendRequestId || '');
-      if(slot.responseStatus !== 'pending') slot.respondedAt = row.responded_at || slot.respondedAt || new Date().toISOString();
+      if(slot.responseStatus !== 'pending'){
+        registerEmployeeResponseForItem(item,item.employeeId,slot.responseStatus);
+        addReplacementHistory(ref.roleItem,item.slotIdx,item.employeeId,slot.responseStatus);
+        if(slot.responseStatus === 'unavailable') markEmployeeDeclinedForSlot(ref.roleItem,item.slotIdx,item.employeeId);
+        slot.respondedAt = row.responded_at || slot.respondedAt || new Date().toISOString();
+      }
       if(oldStatus !== slot.responseStatus || oldReq !== slot.requestStatus) changed++;
     }
     __lastAutoSyncAt = Date.now();
