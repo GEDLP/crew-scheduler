@@ -723,7 +723,7 @@ button{cursor:pointer}
 </div>
 
 <script>
-/* Crew Scheduler v28 — priorite automatique par experience poste + historique */
+/* Crew Scheduler v29 — fix remplacement: reset statut nouveau travailleur + sync plus réactive */
 const EVENTS_KEY="crewSchedulerCalendarEventsMergedV1";
 const EMPLOYEES_KEY="crewSchedulerEmployeesV5";
 const ROLES_KEY="crewSchedulerRolesV2";
@@ -1264,7 +1264,7 @@ async function syncAssignmentFromSupabase(key){
   const ref=getRoleItemRef(item.evtId,item.blockId,item.roleIdx); if(!ref) return { ok:false, reason:"Assignation locale introuvable." };
   const token=ref.roleItem.requestToken||"";
   if(!token) return { ok:false, reason:"Aucun token associé à cette demande." };
-  const url=`${APP_CONFIG.supabaseUrl}/rest/v1/assignments?select=id,token,request_status,response_status,conflict_status&token=eq.${encodeURIComponent(token)}`;
+  const url=`${APP_CONFIG.supabaseUrl}/rest/v1/assignments?select=id,token,employee_id,request_status,response_status,conflict_status&token=eq.${encodeURIComponent(token)}`;
   const res=await fetch(url,{
     headers:{
       "apikey": APP_CONFIG.anonKey,
@@ -1892,7 +1892,11 @@ async function setSlotResponse(key,responseStatus){
   renderAll();
 }
 function renderAvailabilitySlotCard(item){ const emp=state.employees.find(x=>x.id===item.employeeId); const status=slotVisualState(item.roleItem,item.slotIdx); const conflicts=findEmployeeConflicts(item.employeeId,item.evtId,item.blockId,item.roleIdx); const suggestions=status.cls==='red'?replacementSuggestionsForSlot(item.key):[]; const qty=item.roleItem.quantity||1; return `<div class="assignment-card"><div class="assignment-head"><div><div class="assignment-title">${escapeHtml(item.roleItem.role||'Poste')}${qty>1?` · ${item.slotIdx+1}/${qty}`:''} — ${escapeHtml(emp?.name||'À combler')}</div><div class="assignment-sub">${emp?.email?escapeHtml(emp.email):emp?.phone?escapeHtml(emp.phone):'Aucun contact inscrit'}</div></div><div class="chip-wrap"><span class="status-pill ${status.cls}">${escapeHtml(status.label)}</span>${conflicts.length?`<span class="status-pill red">Conflit</span>`:''}</div></div>${conflicts.length?`<div class="conflict-box">${escapeHtml(emp?.name||'Cette personne')} est déjà booké(e) sur ${conflicts.map(c=>`${c.evt.title} / ${c.block.name}`).join(' · ')}.</div>`:''}<div class="assignment-actions clean-actions">${item.employeeId?`<button class="btn secondary small" type="button" data-open-slot-web="${item.key}">Ouvrir lien web</button><button class="btn secondary small" type="button" data-copy-slot-web="${item.key}">Copier lien web</button><button class="btn secondary small" type="button" data-copy-message-slot="${item.key}">Copier message</button><button class="btn secondary small" type="button" data-open-gmail-slot="${item.key}">Ouvrir courriel</button><button class="btn secondary small" type="button" data-sync-slot="${item.key}">Sync</button>`:''}${status.cls==='red'?`<button class="btn danger small" type="button" data-toggle-replace="${item.key}">Trouver un remplaçant</button>`:''}</div><div class="status-actions"><div class="status-actions-label">Statut manuel</div><button class="btn small ${status.cls==='green'?'primary':'secondary'}" type="button" data-answer-slot-yes="${item.key}">Confirmé</button><button class="btn small ${status.label==='Peut-être'?'primary':'secondary'}" type="button" data-answer-slot-maybe="${item.key}">Peut-être</button><button class="btn small ${status.cls==='red'?'danger':'secondary'}" type="button" data-answer-slot-no="${item.key}">Non dispo</button></div>${status.cls==='red'?`<div id="replace-${item.key}" class="replacement-panel" style="display:none"><div class="replacement-title">Possibilités de remplacement · priorité automatique</div>${suggestions.length?suggestions.map(s=>`<div class="replacement-card" style="${s.blocked?'opacity:.72;background:#fff7f7':''}"><div><div class="replacement-name">${escapeHtml(s.emp.name)}</div><div class="replacement-meta">${s.priorStatus?escapeHtml(replacementStatusLabel(s.priorStatus)):s.conflicts.length?`Conflit: ${escapeHtml(s.conflicts.map(c=>c.evt.title).join(' · '))}`:'Aucun conflit détecté'}</div><div class="replacement-badges">${s.sameRole?`<span class="mini-badge green">Même poste</span>`:`<span class="mini-badge orange">Autre poste</span>`}${s.priorStatus?`<span class="mini-badge ${s.priorStatus==='unavailable'?'red':s.priorStatus==='available'?'green':'orange'}">${escapeHtml(replacementStatusLabel(s.priorStatus))}</span>`:''}${s.alreadyInThisRole?`<span class="mini-badge orange">Déjà dans ce bloc</span>`:''}<span class="mini-badge ${s.stats?.assigned?'green':'orange'}">${escapeHtml(employeeRoleStatsLabel(s.stats))}</span>${s.conflicts.length?`<span class="mini-badge red">Conflit horaire</span>`:`<span class="mini-badge green">Aucun conflit</span>`}</div></div>${s.blocked?`<button class="btn secondary small" type="button" disabled>Déjà refusé</button>`:`<button class="btn secondary small" type="button" data-apply-replace="${item.key}" data-emp="${s.emp.id}">Choisir</button>`}</div>`).join(''):`<div class="empty">Aucun autre travailleur dans la liste d'équipe.</div>`}</div>`:''}</div>`; }
-function bindAvailabilityActionButtons(root){ root.querySelectorAll('[data-open-slot-web]').forEach(btn=>btn.addEventListener('click',()=>{ const item=getAssignmentSlotByKey(btn.dataset.openSlotWeb); window.open(respondLinkForSlot(item),'_blank'); })); root.querySelectorAll('[data-copy-slot-web]').forEach(btn=>btn.addEventListener('click',()=>{ const item=getAssignmentSlotByKey(btn.dataset.copySlotWeb); copyText(respondLinkForSlot(item)); })); root.querySelectorAll('[data-copy-message-slot]').forEach(btn=>btn.addEventListener('click',()=>copyRequestMessageForSlot(btn.dataset.copyMessageSlot))); root.querySelectorAll('[data-open-gmail-slot]').forEach(btn=>btn.addEventListener('click',()=>openGmailForSlot(btn.dataset.openGmailSlot))); root.querySelectorAll('[data-sync-slot]').forEach(btn=>btn.addEventListener('click',()=>syncAssignmentSlotFromSupabase(btn.dataset.syncSlot).then(()=>renderAll()).catch(err=>alert(err.message||err)))); root.querySelectorAll('[data-answer-slot-yes]').forEach(btn=>btn.addEventListener('click',()=>setSlotResponse(btn.dataset.answerSlotYes,'available'))); root.querySelectorAll('[data-answer-slot-maybe]').forEach(btn=>btn.addEventListener('click',()=>setSlotResponse(btn.dataset.answerSlotMaybe,'maybe'))); root.querySelectorAll('[data-answer-slot-no]').forEach(btn=>btn.addEventListener('click',()=>setSlotResponse(btn.dataset.answerSlotNo,'unavailable'))); root.querySelectorAll('[data-toggle-replace]').forEach(btn=>btn.addEventListener('click',()=>{ const el=document.getElementById(`replace-${btn.dataset.toggleReplace}`); if(el) el.style.display=el.style.display==='none'?'block':'none'; })); root.querySelectorAll('[data-apply-replace]').forEach(btn=>btn.addEventListener('click',()=>applyReplacementForSlot(btn.dataset.applyReplace,btn.dataset.emp))); }
+function bindAvailabilityActionButtons(root){ root.querySelectorAll('[data-open-slot-web]').forEach(btn=>btn.addEventListener('click',()=>{ const item=getAssignmentSlotByKey(btn.dataset.openSlotWeb); window.open(respondLinkForSlot(item),'_blank'); })); root.querySelectorAll('[data-copy-slot-web]').forEach(btn=>btn.addEventListener('click',()=>{ const item=getAssignmentSlotByKey(btn.dataset.copySlotWeb); copyText(respondLinkForSlot(item)); })); root.querySelectorAll('[data-copy-message-slot]').forEach(btn=>btn.addEventListener('click',()=>copyRequestMessageForSlot(btn.dataset.copyMessageSlot))); root.querySelectorAll('[data-open-gmail-slot]').forEach(btn=>btn.addEventListener('click',()=>openGmailForSlot(btn.dataset.openGmailSlot))); root.querySelectorAll('[data-sync-slot]').forEach(btn=>btn.addEventListener('click',()=>syncAssignmentSlotFromSupabase(btn.dataset.syncSlot).then(()=>renderAll()).catch(err=>alert(err.message||err)))); root.querySelectorAll('[data-answer-slot-yes]').forEach(btn=>btn.addEventListener('click',()=>setSlotResponse(btn.dataset.answerSlotYes,'available'))); root.querySelectorAll('[data-answer-slot-maybe]').forEach(btn=>btn.addEventListener('click',()=>setSlotResponse(btn.dataset.answerSlotMaybe,'maybe'))); root.querySelectorAll('[data-answer-slot-no]').forEach(btn=>btn.addEventListener('click',()=>setSlotResponse(btn.dataset.answerSlotNo,'unavailable'))); root.querySelectorAll('[data-toggle-replace]').forEach(btn=>btn.addEventListener('click',async()=>{ 
+    try{ await autoSyncAvailabilityV19(); }catch(e){ console.warn(e); }
+    const el=document.getElementById(`replace-${btn.dataset.toggleReplace}`); 
+    if(el) el.style.display=el.style.display==='none'?'block':'none'; 
+  })); root.querySelectorAll('[data-apply-replace]').forEach(btn=>btn.addEventListener('click',()=>applyReplacementForSlot(btn.dataset.applyReplace,btn.dataset.emp))); }
 
 function renderAvailability(){
   const items=allAssignmentSlots().sort((a,b)=>`${a.evt.startDate} ${a.block.startDate} ${a.block.startTime}`.localeCompare(`${b.evt.startDate} ${b.block.startDate} ${b.block.startTime}`));
@@ -1933,7 +1937,14 @@ function changeAnchor(delta){ if(state.currentView==="month"){ state.anchorDate=
 function goToday(){ state.anchorDate=startOfDay(new Date()); state.selectedDate=startOfDay(new Date()); renderCalendar(); }
 
 function bind(){
-  document.querySelectorAll('.nav button[data-tab]').forEach(btn=>btn.addEventListener('click',()=>{ const tab=btn.dataset.tab; if(["calendar","team","availability","settings"].includes(tab)){ state.activeTab=tab; renderAll(); } }));
+  document.querySelectorAll('.nav button[data-tab]').forEach(btn=>btn.addEventListener('click',()=>{ 
+    const tab=btn.dataset.tab; 
+    if(["calendar","team","availability","settings"].includes(tab)){ 
+      state.activeTab=tab; 
+      renderAll(); 
+      if(tab==="availability") setTimeout(autoSyncAvailabilityV19, 250);
+    } 
+  }));
   document.getElementById("btnPrev").addEventListener("click",()=>changeAnchor(-1));
   document.getElementById("btnNext").addEventListener("click",()=>changeAnchor(1));
   document.getElementById("btnToday").addEventListener("click",goToday);
@@ -2287,7 +2298,10 @@ function applyReplacementForSlot(key,newEmployeeId){
       declinedEmployeeIds: previousDeclined
     };
   }
-  saveEvents(); renderAll();
+  // Force l'interface à redevenir prête pour une nouvelle demande.
+  state.activeRequestKey=item.key;
+  saveEvents();
+  renderAll();
 }
 
 async function sendRealEmailRequestForSlot(key){
@@ -2326,6 +2340,9 @@ async function syncAssignmentSlotFromSupabase(key){
   if(!res.ok) throw new Error(data?.message||raw||"Erreur de synchronisation.");
   const row=Array.isArray(data)?data[0]:null;
   if(!row) return {ok:false, reason:"Aucune réponse distante trouvée."};
+  if(row.employee_id && String(row.employee_id) !== String(item.employeeId || "")){
+    return {ok:false, reason:"Réponse distante ignorée: elle appartient à l'ancien travailleur remplacé."};
+  }
   slot.requestStatus=String(row.request_status||slot.requestStatus||"sent");
   slot.responseStatus=String(row.response_status||slot.responseStatus||"pending");
   slot.backendRequestId=String(row.id||slot.backendRequestId||"");
@@ -2589,7 +2606,12 @@ async function upsertAssignmentForSlotV10(item, ref, emp, token){
   const roleLabel=`${ref.roleItem.role || ""}${(ref.roleItem.quantity||1)>1?` (${item.slotIdx+1}/${ref.roleItem.quantity})`:""}`;
   const key=slotKeyV10(item);
   const existing=await findAssignmentBySlotKeyV10(key).catch(()=>null);
-  const finalToken=existing?.token || token || makeTokenV10();
+
+  // v29: si on remplace par un autre travailleur, on NE doit PAS garder
+  // l'ancien statut "unavailable/refusé" ni l'ancien token.
+  const sameEmployee = existing && String(existing.employee_id || "") === String(emp.id || "");
+  const finalToken = sameEmployee ? (existing.token || token || makeTokenV10()) : (token || makeTokenV10());
+
   const payload={
     event_id:item.evt.id,
     employee_id:emp.id,
@@ -2602,10 +2624,11 @@ async function upsertAssignmentForSlotV10(item, ref, emp, token){
     event_notes:item.evt.notes||"",
     start_time:new Date(`${timing.startDate}T${to24h(timing.startTime)}:00`).toISOString(),
     end_time:new Date(`${timing.endDate}T${to24h(timing.endTime)}:00`).toISOString(),
-    request_status: existing?.request_status || 'manual',
-    response_status: existing?.response_status || 'pending',
+    request_status: sameEmployee ? (existing?.request_status || 'manual') : 'manual',
+    response_status: sameEmployee ? (existing?.response_status || 'pending') : 'pending',
     token: finalToken,
-    sent_at: existing?.sent_at || new Date().toISOString(),
+    sent_at: sameEmployee ? (existing?.sent_at || new Date().toISOString()) : new Date().toISOString(),
+    responded_at: sameEmployee ? (existing?.responded_at || null) : null,
     updated_at:new Date().toISOString()
   };
   const rows=await supabaseFetchV10('assignments?on_conflict=slot_key',{
@@ -2797,7 +2820,11 @@ function bindAvailabilityActionButtons(root){
   root.querySelectorAll('[data-answer-slot-yes]').forEach(btn=>btn.addEventListener('click',()=>setSlotResponse(btn.dataset.answerSlotYes,'available')));
   root.querySelectorAll('[data-answer-slot-maybe]').forEach(btn=>btn.addEventListener('click',()=>setSlotResponse(btn.dataset.answerSlotMaybe,'maybe')));
   root.querySelectorAll('[data-answer-slot-no]').forEach(btn=>btn.addEventListener('click',()=>setSlotResponse(btn.dataset.answerSlotNo,'unavailable')));
-  root.querySelectorAll('[data-toggle-replace]').forEach(btn=>btn.addEventListener('click',()=>{ const el=document.getElementById(`replace-${btn.dataset.toggleReplace}`); if(el) el.style.display=el.style.display==='none'?'block':'none'; }));
+  root.querySelectorAll('[data-toggle-replace]').forEach(btn=>btn.addEventListener('click',async()=>{ 
+    try{ await autoSyncAvailabilityV19(); }catch(e){ console.warn(e); }
+    const el=document.getElementById(`replace-${btn.dataset.toggleReplace}`); 
+    if(el) el.style.display=el.style.display==='none'?'block':'none'; 
+  }));
   root.querySelectorAll('[data-apply-replace]').forEach(btn=>btn.addEventListener('click',()=>applyReplacementForSlot(btn.dataset.applyReplace,btn.dataset.emp)));
 }
 
@@ -2828,6 +2855,9 @@ async function autoSyncAvailabilityV19(){
       const key = slotKeyV10(item);
       const row = await findAssignmentBySlotKeyV10(key);
       if(!row) continue;
+      // v29: si le slot a été remplacé localement mais que l'ancienne ligne Supabase
+      // existe encore pour l'ancien employé, on ne doit pas recopier son refus.
+      if(row.employee_id && String(row.employee_id) !== String(item.employeeId || "")) continue;
       const oldStatus = String(slot.responseStatus || 'pending');
       const oldReq = String(slot.requestStatus || 'draft');
       slot.requestStatus = String(row.request_status || slot.requestStatus || 'sent');
@@ -2857,7 +2887,7 @@ async function autoSyncAvailabilityV19(){
 
 function startAutoAvailabilitySyncV19(){
   if(__autoAvailabilitySyncTimer) return;
-  __autoAvailabilitySyncTimer = setInterval(autoSyncAvailabilityV19, 15000);
+  __autoAvailabilitySyncTimer = setInterval(autoSyncAvailabilityV19, 5000);
   document.addEventListener('visibilitychange', () => {
     if(!document.hidden) setTimeout(autoSyncAvailabilityV19, 600);
   });
