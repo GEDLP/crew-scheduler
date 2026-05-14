@@ -799,7 +799,7 @@ button{cursor:pointer}
 </div>
 
 <script>
-/* Crew Scheduler v35 — Magic Link syntax hardened */
+/* Crew Scheduler v36 — Magic Link redirect fixed */
 const EVENTS_KEY="crewSchedulerCalendarEventsMergedV1";
 const EMPLOYEES_KEY="crewSchedulerEmployeesV5";
 const ROLES_KEY="crewSchedulerRolesV2";
@@ -2683,7 +2683,9 @@ async function fetchCurrentUserV33(){
 }
 
 async function sendMagicLinkV33(email){
-  const redirectTo=window.location.href.split("#")[0];
+  // v36: on force toujours le retour vers le repo GitHub Pages du projet.
+  // L'API REST Supabase attend email_redirect_to au niveau principal du JSON.
+  const redirectTo = `${APP_CONFIG.githubBaseUrl.replace(/\/$/, "")}/`;
   const res=await fetch(`${APP_CONFIG.supabaseUrl}/auth/v1/otp`,{
     method:"POST",
     headers:{
@@ -2693,7 +2695,7 @@ async function sendMagicLinkV33(email){
     body:JSON.stringify({
       email,
       create_user:true,
-      options:{email_redirect_to:redirectTo}
+      email_redirect_to: redirectTo
     })
   });
   const txt=await res.text();
