@@ -395,9 +395,78 @@ button{cursor:pointer}
 .replacement-card.best-replacement{border-color:#86efac;background:#f0fdf4}
 .auto-sync-pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;border:1px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;padding:7px 10px;font-size:12px;font-weight:900}
 
+
+.auth-overlay{
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  background:linear-gradient(135deg,#0f172a,#1e3a8a);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+}
+.auth-card{
+  width:min(100%,460px);
+  background:#fff;
+  color:#0f172a;
+  border-radius:28px;
+  padding:28px;
+  box-shadow:0 30px 90px rgba(0,0,0,.35);
+}
+.auth-card h2{margin:0 0 8px;font-size:32px;letter-spacing:-.04em}
+.auth-card p{margin:0 0 18px;color:#64748b;line-height:1.45}
+.auth-card input{
+  width:100%;
+  border:1px solid #dbe3ee;
+  border-radius:16px;
+  padding:14px 14px;
+  font-size:16px;
+  outline:none;
+}
+.auth-card .auth-actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+.auth-status{font-size:13px;color:#64748b;margin-top:12px;line-height:1.4}
+.cloud-bar{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:12px;
+  font-size:12px;
+  color:#64748b;
+}
+.cloud-bar select{
+  border:1px solid #dbe3ee;
+  border-radius:12px;
+  padding:7px 9px;
+  background:#fff;
+}
+.cloud-bar button{
+  border:1px solid #dbe3ee;
+  background:#fff;
+  border-radius:12px;
+  padding:7px 9px;
+  cursor:pointer;
+}
+
 </style>
 </head>
 <body>
+
+<div class="auth-overlay" id="authOverlay">
+  <div class="auth-card">
+    <div class="eyebrow">Crew Scheduler Cloud</div>
+    <h2>Connexion admin</h2>
+    <p>Entre ton courriel. Supabase t’enverra un lien magique pour ouvrir ton Crew Scheduler sécurisé.</p>
+    <input id="authEmail" type="email" placeholder="toncourriel@compagnie.com" autocomplete="email">
+    <div class="auth-actions">
+      <button class="btn primary" id="btnSendMagicLink" type="button">Recevoir le lien magique</button>
+      <button class="btn secondary" id="btnUseLocalFallback" type="button">Mode local temporaire</button>
+    </div>
+    <div class="auth-status" id="authStatus">Tu devras ouvrir le lien reçu dans le même navigateur ou sur l’ordinateur que tu veux utiliser.</div>
+  </div>
+</div>
+
 <div id="portalMount" style="display:none"></div>
 <div class="app">
   <aside class="sidebar">
@@ -429,6 +498,13 @@ button{cursor:pointer}
             <button class="btn primary" id="btnAddTop" type="button">+ Nouvel événement</button>
             <button class="btn secondary" id="btnToday" type="button">Aujourd’hui</button>
           </div>
+        </div>
+
+        <div class="cloud-bar">
+          <span>Cloud:</span>
+          <select id="workspaceSelect"><option>Chargement...</option></select>
+          <button id="btnLogout" type="button">Déconnexion</button>
+          <span id="cloudStatus">Non connecté</span>
         </div>
         <div class="status-row">
           <div class="pill">Vue mois continue</div>
@@ -753,7 +829,13 @@ const state={
   settings:loadSettings(),
   activeRequestKey:"",
   syncBanner:"",
-  selectedEventId:null
+  selectedEventId:null,
+  session:null,
+  currentUser:null,
+  currentWorkspaceId:"",
+  workspaces:[],
+  cloudReady:false,
+  localFallback:false
 };
 
 const els={
@@ -1969,7 +2051,7 @@ function renderCalendar(){
   renderQuickSummary();
 }
 function renderTeam(){ buildTeamRoleFilterOptions(); renderDrawer(); renderGlobalRoles(); renderTeamEmployees(); }
-function renderAll(){ updateTeamBranding(); renderTabs(); renderCalendar(); renderTeam(); renderAvailability(); renderSettings(); }
+function renderAll(){ updateTeamBranding(); updateWorkspaceSelectV33(); renderTabs(); renderCalendar(); renderTeam(); renderAvailability(); renderSettings(); }
 
 function changeAnchor(delta){ if(state.currentView==="month"){ state.anchorDate=new Date(state.anchorDate.getFullYear(),state.anchorDate.getMonth()+delta,1); } else if(state.currentView==="week"){ state.anchorDate=addDays(state.anchorDate,7*delta); state.selectedDate=addDays(state.selectedDate,7*delta); } else { state.anchorDate=addDays(state.anchorDate,delta); state.selectedDate=addDays(state.selectedDate,delta); } renderCalendar(); }
 function goToday(){ state.anchorDate=startOfDay(new Date()); state.selectedDate=startOfDay(new Date()); renderCalendar(); }
@@ -2022,6 +2104,28 @@ function bind(){
   document.getElementById("btnClearTeamFilters").addEventListener("click",()=>{ els.teamSearchInput.value=""; els.teamRoleFilter.value="all"; els.teamContactFilter.value="all"; renderTeam(); });
   els.newCatalogRole.addEventListener("keydown",(e)=>{ if(e.key==="Enter"){ e.preventDefault(); addGlobalRole(); } });
 
+
+  document.getElementById("btnSendMagicLink")?.addEventListener("click",async()=>{
+    const email=(document.getElementById("authEmail")?.value||"").trim();
+    const status=document.getElementById("authStatus");
+    if(!email){ if(status) status.textContent="Entre ton courriel."; return; }
+    try{
+      if(status) status.textContent="Envoi du lien magique...";
+      await sendMagicLinkV33(email);
+      if(status) status.textContent="Lien envoyé. Ouvre le courriel et clique sur le lien pour te connecter.";
+    }catch(err){ if(status) status.textContent=err.message||String(err); }
+  });
+  document.getElementById("btnUseLocalFallback")?.addEventListener("click",()=>{
+    state.localFallback=true;
+    showAuthOverlay(false);
+    bootSupabaseCentral();
+  });
+  document.getElementById("btnLogout")?.addEventListener("click",logoutV33);
+  document.getElementById("workspaceSelect")?.addEventListener("change",async(e)=>{
+    state.currentWorkspaceId=e.target.value;
+    localStorage.setItem("crewSchedulerWorkspaceId", state.currentWorkspaceId);
+    await bootSupabaseCentral();
+  });
 
   window.addEventListener("keydown",(e)=>{ if(e.key==="Escape"){ if(els.modalWrap.style.display==="flex") closeModal(); if(els.teamModalWrap.style.display==="flex") closeTeamModal(); } });
 }
@@ -2477,6 +2581,7 @@ function eventToSupabaseRow(evt){
   const clean={...evt, id:ensureUuidV10(evt.id)};
   return {
     id: clean.id,
+    workspace_id: state.currentWorkspaceId || '00000000-0000-4000-8000-000000000001',
     title: clean.title || "Événement",
     start_date: clean.startDate || clean.date || null,
     end_date: clean.endDate || clean.date || clean.startDate || null,
@@ -2528,12 +2633,15 @@ function employeeFromSupabaseRow(row){
     notes: row.notes || ""
   };
 }
-async function supabaseFetchV10(path, options={}){
+async function supabaseAuthToken(){
+  return state.session?.access_token || localStorage.getItem("crewSchedulerAccessToken") || APP_CONFIG.anonKey;
+}
+function supabaseFetchV10(path, options={}){
   const res=await fetch(`${APP_CONFIG.supabaseUrl}/rest/v1/${path}`,{
     ...options,
     headers:{
       "apikey": APP_CONFIG.anonKey,
-      "Authorization": `Bearer ${APP_CONFIG.anonKey}`,
+      "Authorization": `Bearer ${supabaseAuthToken()}`,
       ...(options.headers||{})
     }
   });
@@ -2543,12 +2651,122 @@ async function supabaseFetchV10(path, options={}){
   if(!res.ok) throw new Error((data&&data.message)||raw||`Erreur Supabase ${res.status}`);
   return data;
 }
+
+function showAuthOverlay(show=true){
+  const overlay=document.getElementById("authOverlay");
+  if(overlay) overlay.style.display=show?"flex":"none";
+}
+
+function parseAuthHashV33(){
+  const hash=new URLSearchParams((window.location.hash||"").replace(/^#/,""));
+  const access_token=hash.get("access_token");
+  const refresh_token=hash.get("refresh_token");
+  if(access_token){
+    localStorage.setItem("crewSchedulerAccessToken", access_token);
+    if(refresh_token) localStorage.setItem("crewSchedulerRefreshToken", refresh_token);
+    history.replaceState(null, document.title, window.location.pathname + window.location.search);
+    return {access_token, refresh_token};
+  }
+  const saved=localStorage.getItem("crewSchedulerAccessToken");
+  return saved ? {access_token:saved, refresh_token:localStorage.getItem("crewSchedulerRefreshToken")||""} : null;
+}
+
+async function fetchCurrentUserV33(){
+  const token=supabaseAuthToken();
+  if(!token || token===APP_CONFIG.anonKey) return null;
+  const res=await fetch(`${APP_CONFIG.supabaseUrl}/auth/v1/user`,{
+    headers:{apikey:APP_CONFIG.anonKey, Authorization:`Bearer ${token}`}
+  });
+  if(!res.ok) return null;
+  return await res.json();
+}
+
+async function sendMagicLinkV33(email){
+  const redirectTo=window.location.href.split("#")[0];
+  const res=await fetch(`${APP_CONFIG.supabaseUrl}/auth/v1/otp`,{
+    method:"POST",
+    headers:{
+      apikey:APP_CONFIG.anonKey,
+      "Content-Type":"application/json"
+    },
+    body:JSON.stringify({
+      email,
+      create_user:true,
+      options:{email_redirect_to:redirectTo}
+    })
+  });
+  const txt=await res.text();
+  if(!res.ok) throw new Error(txt || "Impossible d'envoyer le lien magique.");
+  return true;
+}
+
+async function rpcV33(name, body={}){
+  const res=await fetch(`${APP_CONFIG.supabaseUrl}/rest/v1/rpc/${name}`,{
+    method:"POST",
+    headers:{
+      apikey:APP_CONFIG.anonKey,
+      Authorization:`Bearer ${supabaseAuthToken()}`,
+      "Content-Type":"application/json"
+    },
+    body:JSON.stringify(body)
+  });
+  const raw=await res.text();
+  let data=null; try{data=raw?JSON.parse(raw):null;}catch{data=raw;}
+  if(!res.ok) throw new Error((data&&data.message)||raw||`Erreur RPC ${name}`);
+  return data;
+}
+
+async function bootstrapCloudV33(){
+  state.session=parseAuthHashV33();
+  state.currentUser=await fetchCurrentUserV33();
+  if(!state.currentUser && !state.localFallback){
+    showAuthOverlay(true);
+    return false;
+  }
+  if(state.currentUser){
+    showAuthOverlay(false);
+    await rpcV33("bootstrap_current_user",{});
+    const workspaces=await rpcV33("get_my_workspaces",{});
+    state.workspaces=Array.isArray(workspaces)?workspaces:[];
+    state.currentWorkspaceId=localStorage.getItem("crewSchedulerWorkspaceId") || state.workspaces[0]?.id || "00000000-0000-4000-8000-000000000001";
+    if(!state.workspaces.some(w=>w.id===state.currentWorkspaceId) && state.workspaces[0]){
+      state.currentWorkspaceId=state.workspaces[0].id;
+    }
+    localStorage.setItem("crewSchedulerWorkspaceId", state.currentWorkspaceId);
+    state.cloudReady=true;
+    updateWorkspaceSelectV33();
+    return true;
+  }
+  return false;
+}
+
+function updateWorkspaceSelectV33(){
+  const select=document.getElementById("workspaceSelect");
+  const status=document.getElementById("cloudStatus");
+  if(select){
+    select.innerHTML=(state.workspaces||[]).map(w=>`<option value="${escapeHtml(w.id)}">${escapeHtml(w.name||"Workspace")}</option>`).join("") || `<option value="">Aucun workspace</option>`;
+    select.value=state.currentWorkspaceId||"";
+  }
+  if(status){
+    status.textContent=state.currentUser?.email ? `Connecté: ${state.currentUser.email}` : (state.localFallback?"Mode local":"Non connecté");
+  }
+}
+
+async function logoutV33(){
+  localStorage.removeItem("crewSchedulerAccessToken");
+  localStorage.removeItem("crewSchedulerRefreshToken");
+  state.session=null; state.currentUser=null; state.cloudReady=false;
+  showAuthOverlay(true);
+}
+
 async function loadEventsFromSupabaseV10(){
-  const rows=await supabaseFetchV10('events?select=*&order=start_date.asc');
+  const ws=encodeURIComponent(state.currentWorkspaceId||'');
+  const rows=await supabaseFetchV10(`events?workspace_id=eq.${ws}&select=*&order=start_date.asc`);
   return Array.isArray(rows) ? rows.map(eventFromSupabaseRow) : [];
 }
 async function loadEmployeesFromSupabaseV10(){
-  const rows=await supabaseFetchV10('employees?select=*&order=name.asc');
+  const ws=encodeURIComponent(state.currentWorkspaceId||'');
+  const rows=await supabaseFetchV10(`employees?workspace_id=eq.${ws}&select=*&order=name.asc`);
   return Array.isArray(rows) ? rows.map(employeeFromSupabaseRow) : [];
 }
 async function upsertEventToSupabaseV10(evt){
@@ -2570,12 +2788,12 @@ async function upsertEmployeeToSupabaseV10(emp){
   return Array.isArray(result)&&result[0] ? employeeFromSupabaseRow(result[0]) : emp;
 }
 function queueSupabaseEventsSync(){
-  if(__bootingSupabase) return;
+  if(__bootingSupabase || (!state.cloudReady && !state.localFallback)) return;
   clearTimeout(__eventsSyncTimer);
   __eventsSyncTimer=setTimeout(syncEventsToSupabaseV10, 450);
 }
 function queueSupabaseEmployeesSync(){
-  if(__bootingSupabase) return;
+  if(__bootingSupabase || (!state.cloudReady && !state.localFallback)) return;
   clearTimeout(__employeesSyncTimer);
   __employeesSyncTimer=setTimeout(syncEmployeesToSupabaseV10, 450);
 }
@@ -2598,14 +2816,19 @@ async function syncEmployeesToSupabaseV10(){
 async function bootSupabaseCentral(){
   __bootingSupabase=true;
   try{
+    const cloudOk = await bootstrapCloudV33();
+    if(!cloudOk && !state.localFallback){
+      __bootingSupabase=false;
+      return;
+    }
     const localEvents=loadEvents();
     const localEmployees=loadEmployees();
-    let [remoteEvents,remoteEmployees]=await Promise.all([loadEventsFromSupabaseV10(), loadEmployeesFromSupabaseV10()]);
-    if(!remoteEmployees.length && localEmployees.length){
+    let [remoteEvents,remoteEmployees]= state.localFallback ? [[],[]] : await Promise.all([loadEventsFromSupabaseV10(), loadEmployeesFromSupabaseV10()]);
+    if(!state.localFallback && !remoteEmployees.length && localEmployees.length){
       for(const emp of localEmployees){ await upsertEmployeeToSupabaseV10(emp); }
       remoteEmployees=await loadEmployeesFromSupabaseV10();
     }
-    if(!remoteEvents.length && localEvents.length){
+    if(!state.localFallback && !remoteEvents.length && localEvents.length){
       for(const evt of localEvents){ await upsertEventToSupabaseV10(evt); }
       remoteEvents=await loadEventsFromSupabaseV10();
     }
@@ -2651,6 +2874,7 @@ async function upsertAssignmentForSlotV10(item, ref, emp, token){
   const finalToken = sameEmployee ? (existing.token || token || makeTokenV10()) : (token || makeTokenV10());
 
   const payload={
+    workspace_id: state.currentWorkspaceId || item.evt.workspace_id || '00000000-0000-4000-8000-000000000001',
     event_id:item.evt.id,
     employee_id:emp.id,
     employee_name:emp.name||"",
