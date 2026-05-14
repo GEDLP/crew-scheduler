@@ -2633,10 +2633,10 @@ function employeeFromSupabaseRow(row){
     notes: row.notes || ""
   };
 }
-async function supabaseAuthToken(){
+function supabaseAuthToken(){
   return state.session?.access_token || localStorage.getItem("crewSchedulerAccessToken") || APP_CONFIG.anonKey;
 }
-function supabaseFetchV10(path, options={}){
+async function supabaseFetchV10(path, options={}){
   const res=await fetch(`${APP_CONFIG.supabaseUrl}/rest/v1/${path}`,{
     ...options,
     headers:{
