@@ -799,7 +799,7 @@ button{cursor:pointer}
 </div>
 
 <script>
-/* Crew Scheduler v31 — liens travailleurs avec accès calendrier */
+/* Crew Scheduler v35 — Magic Link syntax hardened */
 const EVENTS_KEY="crewSchedulerCalendarEventsMergedV1";
 const EMPLOYEES_KEY="crewSchedulerEmployeesV5";
 const ROLES_KEY="crewSchedulerRolesV2";
@@ -2636,20 +2636,21 @@ function employeeFromSupabaseRow(row){
 function supabaseAuthToken(){
   return state.session?.access_token || localStorage.getItem("crewSchedulerAccessToken") || APP_CONFIG.anonKey;
 }
-async function supabaseFetchV10(path, options={}){
-  const res=await fetch(`${APP_CONFIG.supabaseUrl}/rest/v1/${path}`,{
+function supabaseFetchV10(path, options={}){
+  return fetch(`${APP_CONFIG.supabaseUrl}/rest/v1/${path}`,{
     ...options,
     headers:{
       "apikey": APP_CONFIG.anonKey,
       "Authorization": `Bearer ${supabaseAuthToken()}`,
       ...(options.headers||{})
     }
+  }).then(async (res)=>{
+    const raw=await res.text();
+    let data=null;
+    try{ data=raw?JSON.parse(raw):null; }catch{ data=raw; }
+    if(!res.ok) throw new Error((data&&data.message)||raw||`Erreur Supabase ${res.status}`);
+    return data;
   });
-  const raw=await res.text();
-  let data=null;
-  try{ data=raw?JSON.parse(raw):null; }catch{ data=raw; }
-  if(!res.ok) throw new Error((data&&data.message)||raw||`Erreur Supabase ${res.status}`);
-  return data;
 }
 
 function showAuthOverlay(show=true){
