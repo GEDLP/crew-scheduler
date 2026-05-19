@@ -799,7 +799,7 @@ button{cursor:pointer}
 </div>
 
 <script>
-/* Crew Scheduler v36 — Magic Link redirect fixed */
+/* Crew Scheduler v37 — Magic Link redirect_to query fix */
 const EVENTS_KEY="crewSchedulerCalendarEventsMergedV1";
 const EMPLOYEES_KEY="crewSchedulerEmployeesV5";
 const ROLES_KEY="crewSchedulerRolesV2";
@@ -2683,23 +2683,23 @@ async function fetchCurrentUserV33(){
 }
 
 async function sendMagicLinkV33(email){
-  // v36: on force toujours le retour vers le repo GitHub Pages du projet.
-  // L'API REST Supabase attend email_redirect_to au niveau principal du JSON.
+  // v37: Supabase GoTrue REST attend le redirect dans l'URL:
+  // /auth/v1/otp?redirect_to=...
   const redirectTo = "https://gedlp.github.io/crew-scheduler/";
-  const res=await fetch(`${APP_CONFIG.supabaseUrl}/auth/v1/otp`,{
+  const url = `${APP_CONFIG.supabaseUrl}/auth/v1/otp?redirect_to=${encodeURIComponent(redirectTo)}`;
+
+  const res = await fetch(url,{
     method:"POST",
     headers:{
       apikey:APP_CONFIG.anonKey,
       "Content-Type":"application/json"
     },
     body:JSON.stringify({
-  email,
-  create_user:true,
-  options:{
-    emailRedirectTo: redirectTo
-  }
-})
+      email,
+      create_user:true
+    })
   });
+
   const txt=await res.text();
   if(!res.ok) throw new Error(txt || "Impossible d'envoyer le lien magique.");
   return true;
