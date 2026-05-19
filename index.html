@@ -2685,7 +2685,7 @@ async function fetchCurrentUserV33(){
 async function sendMagicLinkV33(email){
   // v36: on force toujours le retour vers le repo GitHub Pages du projet.
   // L'API REST Supabase attend email_redirect_to au niveau principal du JSON.
-  const redirectTo = `${APP_CONFIG.githubBaseUrl.replace(/\/$/, "")}/`;
+  const redirectTo = "https://gedlp.github.io/crew-scheduler/";
   const res=await fetch(`${APP_CONFIG.supabaseUrl}/auth/v1/otp`,{
     method:"POST",
     headers:{
