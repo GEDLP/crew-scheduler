@@ -2693,10 +2693,12 @@ async function sendMagicLinkV33(email){
       "Content-Type":"application/json"
     },
     body:JSON.stringify({
-      email,
-      create_user:true,
-      email_redirect_to: redirectTo
-    })
+  email,
+  create_user:true,
+  options:{
+    emailRedirectTo: redirectTo
+  }
+})
   });
   const txt=await res.text();
   if(!res.ok) throw new Error(txt || "Impossible d'envoyer le lien magique.");
