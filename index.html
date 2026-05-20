@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Crew Scheduler v38 – Sessions</title>
+<title>Crew Scheduler v39 – Sessions</title>
 <style>
 :root{
   --bg:#f4f7fb; --panel:#ffffff; --panel2:#f8fafc; --text:#0f172a; --muted:#64748b;
@@ -580,7 +580,7 @@ button{cursor:pointer}
         <div class="cloud-bar">
           <span>Cloud:</span>
           <select id="workspaceSelect"><option>Chargement...</option></select>
-          <button id="btnLogout" type="button">Déconnexion</button>
+          <button id="btnCreateAdminInvite" type="button">Inviter admin</button><button id="btnLogout" type="button">Déconnexion</button>
           <span id="cloudStatus">Non connecté</span>
         </div>
         <div class="status-row">
@@ -876,7 +876,7 @@ button{cursor:pointer}
 </div>
 
 <script>
-/* Crew Scheduler v38 — sessions/workspaces onboarding */
+/* Crew Scheduler v39 — sessions vierges + invitation admin */
 const EVENTS_KEY="crewSchedulerCalendarEventsMergedV1";
 const EMPLOYEES_KEY="crewSchedulerEmployeesV5";
 const ROLES_KEY="crewSchedulerRolesV2";
@@ -2211,6 +2211,7 @@ function bind(){
     showAuthOverlay(false);
     bootSupabaseCentral();
   });
+  document.getElementById("btnCreateAdminInvite")?.addEventListener("click",createAdminInviteV39);
   document.getElementById("btnLogout")?.addEventListener("click",logoutV33);
   document.getElementById("workspaceSelect")?.addEventListener("change",async(e)=>{
     state.currentWorkspaceId=e.target.value;
@@ -2944,6 +2945,29 @@ async function redeemInviteV38(){
   }
 }
 
+async function createAdminInviteV39(){
+  if(!state.currentWorkspaceId){
+    alert("Ouvre d’abord une session/workspace.");
+    return;
+  }
+  try{
+    const role=prompt("Rôle à inviter : admin, planner ou viewer", "admin") || "admin";
+    const result=await rpcV33("create_workspace_invite",{
+      target_workspace_id: state.currentWorkspaceId,
+      invite_role: role
+    });
+    const code=result?.code || "";
+    if(code){
+      await navigator.clipboard?.writeText(code).catch(()=>{});
+      alert(`Code d’invitation créé : ${code}\n\nEnvoie ce code à l'autre admin. Il devra se connecter, puis choisir "Rejoindre avec un code".`);
+    }else{
+      alert("Invitation créée, mais aucun code n’a été retourné.");
+    }
+  }catch(err){
+    alert("Impossible de créer l’invitation : " + (err.message||String(err)));
+  }
+}
+
 async function logoutV33(){
   localStorage.removeItem("crewSchedulerAccessToken");
   localStorage.removeItem("crewSchedulerRefreshToken");
@@ -3017,16 +3041,16 @@ async function bootSupabaseCentral(){
     const localEvents=loadEvents();
     const localEmployees=loadEmployees();
     let [remoteEvents,remoteEmployees]= state.localFallback ? [[],[]] : await Promise.all([loadEventsFromSupabaseV10(), loadEmployeesFromSupabaseV10()]);
-    if(!state.localFallback && !remoteEmployees.length && localEmployees.length){
-      for(const emp of localEmployees){ await upsertEmployeeToSupabaseV10(emp); }
-      remoteEmployees=await loadEmployeesFromSupabaseV10();
+
+    // v39: une nouvelle session/workspace doit être vierge.
+    // On ne copie plus automatiquement les anciens événements/employés du localStorage vers un nouveau workspace.
+    if(state.localFallback){
+      state.employees=localEmployees;
+      state.events=localEvents;
+    }else{
+      state.employees=remoteEmployees;
+      state.events=remoteEvents;
     }
-    if(!state.localFallback && !remoteEvents.length && localEvents.length){
-      for(const evt of localEvents){ await upsertEventToSupabaseV10(evt); }
-      remoteEvents=await loadEventsFromSupabaseV10();
-    }
-    state.employees=remoteEmployees.length ? remoteEmployees : localEmployees;
-    state.events=remoteEvents.length ? remoteEvents : localEvents;
     localStorage.setItem(EMPLOYEES_KEY, JSON.stringify(state.employees));
     localStorage.setItem(EVENTS_KEY, JSON.stringify(state.events));
     state.syncBanner='';
