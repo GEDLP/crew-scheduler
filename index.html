@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Crew Scheduler v12 – Calendrier + Équipe</title>
+<title>Crew Scheduler v38 – Sessions</title>
 <style>
 :root{
   --bg:#f4f7fb; --panel:#ffffff; --panel2:#f8fafc; --text:#0f172a; --muted:#64748b;
@@ -449,6 +449,61 @@ button{cursor:pointer}
   cursor:pointer;
 }
 
+
+.workspace-overlay{
+  position:fixed;
+  inset:0;
+  z-index:9998;
+  background:linear-gradient(135deg,#0f172a,#1e3a8a);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+}
+.workspace-card{
+  width:min(100%,620px);
+  background:#fff;
+  color:#0f172a;
+  border-radius:28px;
+  padding:28px;
+  box-shadow:0 30px 90px rgba(0,0,0,.35);
+}
+.workspace-card h2{margin:0 0 8px;font-size:32px;letter-spacing:-.04em}
+.workspace-card p{margin:0 0 18px;color:#64748b;line-height:1.45}
+.workspace-grid{display:grid;gap:12px;margin-top:16px}
+.workspace-option{
+  border:1px solid #dbe3ee;
+  border-radius:18px;
+  padding:14px;
+  background:#f8fafc;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+.workspace-option strong{display:block}
+.workspace-option span{font-size:13px;color:#64748b}
+.workspace-form{
+  margin-top:14px;
+  display:grid;
+  gap:10px;
+}
+.workspace-form input{
+  width:100%;
+  border:1px solid #dbe3ee;
+  border-radius:16px;
+  padding:13px 14px;
+  font-size:15px;
+}
+.auth-mode-row{
+  display:flex;
+  gap:8px;
+  margin-bottom:14px;
+}
+.auth-mode-row button{
+  flex:1;
+}
+
 </style>
 </head>
 <body>
@@ -456,14 +511,36 @@ button{cursor:pointer}
 <div class="auth-overlay" id="authOverlay">
   <div class="auth-card">
     <div class="eyebrow">Crew Scheduler Cloud</div>
-    <h2>Connexion admin</h2>
-    <p>Entre ton courriel. Supabase t’enverra un lien magique pour ouvrir ton Crew Scheduler sécurisé.</p>
+    <h2>Se connecter</h2>
+    <p>Entre ton courriel. Si tu as déjà une session, tu pourras l’ouvrir. Sinon, tu pourras créer une nouvelle session après connexion.</p>
+    <div class="auth-mode-row">
+      <button class="btn primary" type="button" id="authModeLogin">Se connecter</button>
+      <button class="btn secondary" type="button" id="authModeCreate">Créer une session</button>
+    </div>
     <input id="authEmail" type="email" placeholder="toncourriel@compagnie.com" autocomplete="email">
     <div class="auth-actions">
       <button class="btn primary" id="btnSendMagicLink" type="button">Recevoir le lien magique</button>
       <button class="btn secondary" id="btnUseLocalFallback" type="button">Mode local temporaire</button>
     </div>
-    <div class="auth-status" id="authStatus">Tu devras ouvrir le lien reçu dans le même navigateur ou sur l’ordinateur que tu veux utiliser.</div>
+    <div class="auth-status" id="authStatus">Le lien magique sert à confirmer ton identité. Les sessions seront séparées ensuite.</div>
+  </div>
+</div>
+
+<div class="workspace-overlay" id="workspaceOverlay">
+  <div class="workspace-card">
+    <div class="eyebrow">Sessions Crew Scheduler</div>
+    <h2>Choisir ou créer une session</h2>
+    <p>Chaque session a ses propres événements, employés et paramètres. Technique et Jeux gonflables peuvent donc être complètement séparés.</p>
+    <div id="workspaceList" class="workspace-grid"></div>
+    <div class="workspace-form">
+      <input id="newWorkspaceName" type="text" placeholder="Nom de la nouvelle session ex: Technique, Jeux gonflables">
+      <button class="btn primary" id="btnCreateWorkspace" type="button">Créer une session</button>
+    </div>
+    <div class="workspace-form">
+      <input id="inviteCodeInput" type="text" placeholder="Code d’invitation">
+      <button class="btn secondary" id="btnRedeemInvite" type="button">Rejoindre avec un code</button>
+    </div>
+    <div class="auth-status" id="workspaceStatus">Tu es connecté. Choisis une session pour continuer.</div>
   </div>
 </div>
 
@@ -799,7 +876,7 @@ button{cursor:pointer}
 </div>
 
 <script>
-/* Crew Scheduler v37 — Magic Link redirect_to query fix */
+/* Crew Scheduler v38 — sessions/workspaces onboarding */
 const EVENTS_KEY="crewSchedulerCalendarEventsMergedV1";
 const EMPLOYEES_KEY="crewSchedulerEmployeesV5";
 const ROLES_KEY="crewSchedulerRolesV2";
@@ -2105,15 +2182,29 @@ function bind(){
   els.newCatalogRole.addEventListener("keydown",(e)=>{ if(e.key==="Enter"){ e.preventDefault(); addGlobalRole(); } });
 
 
+  document.getElementById("authModeLogin")?.addEventListener("click",()=>{
+    const status=document.getElementById("authStatus");
+    if(status) status.textContent="Connexion: entre ton courriel pour recevoir un lien magique.";
+  });
+  document.getElementById("authModeCreate")?.addEventListener("click",()=>{
+    const status=document.getElementById("authStatus");
+    if(status) status.textContent="Création: connecte-toi d’abord; tu pourras créer une session ensuite.";
+  });
   document.getElementById("btnSendMagicLink")?.addEventListener("click",async()=>{
     const email=(document.getElementById("authEmail")?.value||"").trim();
     const status=document.getElementById("authStatus");
+    const btn=document.getElementById("btnSendMagicLink");
     if(!email){ if(status) status.textContent="Entre ton courriel."; return; }
     try{
+      if(btn) btn.disabled=true;
       if(status) status.textContent="Envoi du lien magique...";
       await sendMagicLinkV33(email);
-      if(status) status.textContent="Lien envoyé. Ouvre le courriel et clique sur le lien pour te connecter.";
-    }catch(err){ if(status) status.textContent=err.message||String(err); }
+      if(status) status.textContent="Lien envoyé. Vérifie ton courriel et utilise le dernier lien reçu.";
+      setTimeout(()=>{ if(btn) btn.disabled=false; }, 60000);
+    }catch(err){
+      if(status) status.textContent=String(err.message||err).includes("429") ? "Trop de tentatives. Attends quelques minutes avant de redemander un lien." : (err.message||String(err));
+      setTimeout(()=>{ if(btn) btn.disabled=false; }, 10000);
+    }
   });
   document.getElementById("btnUseLocalFallback")?.addEventListener("click",()=>{
     state.localFallback=true;
@@ -2126,6 +2217,8 @@ function bind(){
     localStorage.setItem("crewSchedulerWorkspaceId", state.currentWorkspaceId);
     await bootSupabaseCentral();
   });
+  document.getElementById("btnCreateWorkspace")?.addEventListener("click",createWorkspaceV38);
+  document.getElementById("btnRedeemInvite")?.addEventListener("click",redeemInviteV38);
 
   window.addEventListener("keydown",(e)=>{ if(e.key==="Escape"){ if(els.modalWrap.style.display==="flex") closeModal(); if(els.teamModalWrap.style.display==="flex") closeTeamModal(); } });
 }
@@ -2726,19 +2819,39 @@ async function bootstrapCloudV33(){
   state.currentUser=await fetchCurrentUserV33();
   if(!state.currentUser && !state.localFallback){
     showAuthOverlay(true);
+    showWorkspaceOverlay(false);
     return false;
   }
   if(state.currentUser){
     showAuthOverlay(false);
     await rpcV33("bootstrap_current_user",{});
-    const workspaces=await rpcV33("get_my_workspaces",{});
-    state.workspaces=Array.isArray(workspaces)?workspaces:[];
-    state.currentWorkspaceId=localStorage.getItem("crewSchedulerWorkspaceId") || state.workspaces[0]?.id || "00000000-0000-4000-8000-000000000001";
-    if(!state.workspaces.some(w=>w.id===state.currentWorkspaceId) && state.workspaces[0]){
-      state.currentWorkspaceId=state.workspaces[0].id;
+    await refreshWorkspacesV38();
+
+    if(!state.workspaces.length){
+      state.currentWorkspaceId="";
+      state.cloudReady=false;
+      renderWorkspaceOverlayV38();
+      showWorkspaceOverlay(true);
+      return false;
     }
+
+    const saved=localStorage.getItem("crewSchedulerWorkspaceId") || "";
+    state.currentWorkspaceId = state.workspaces.some(w=>w.id===saved) ? saved : "";
+
+    if(!state.currentWorkspaceId){
+      state.currentWorkspaceId=state.workspaces[0]?.id || "";
+      localStorage.setItem("crewSchedulerWorkspaceId", state.currentWorkspaceId);
+      // On affiche quand même le choix si plusieurs sessions existent.
+      if(state.workspaces.length>1){
+        renderWorkspaceOverlayV38();
+        showWorkspaceOverlay(true);
+        return false;
+      }
+    }
+
     localStorage.setItem("crewSchedulerWorkspaceId", state.currentWorkspaceId);
     state.cloudReady=true;
+    showWorkspaceOverlay(false);
     updateWorkspaceSelectV33();
     return true;
   }
@@ -2757,10 +2870,85 @@ function updateWorkspaceSelectV33(){
   }
 }
 
+function showWorkspaceOverlay(show=true){
+  const overlay=document.getElementById("workspaceOverlay");
+  if(overlay) overlay.style.display=show?"flex":"none";
+}
+
+function renderWorkspaceOverlayV38(){
+  const list=document.getElementById("workspaceList");
+  if(!list) return;
+  const rows=state.workspaces||[];
+  if(!rows.length){
+    list.innerHTML=`<div class="workspace-option"><div><strong>Aucune session associée</strong><span>Crée une nouvelle session ou entre un code d’invitation.</span></div></div>`;
+    return;
+  }
+  list.innerHTML=rows.map(w=>`
+    <div class="workspace-option">
+      <div>
+        <strong>${escapeHtml(w.name||"Session")}</strong>
+        <span>Rôle: ${escapeHtml(w.role||"membre")} · Statut: ${escapeHtml(w.status||"active")}</span>
+      </div>
+      <button class="btn primary small" type="button" data-open-workspace="${escapeHtml(w.id)}">Ouvrir</button>
+    </div>
+  `).join("");
+  list.querySelectorAll("[data-open-workspace]").forEach(btn=>btn.addEventListener("click",async()=>{
+    state.currentWorkspaceId=btn.dataset.openWorkspace;
+    localStorage.setItem("crewSchedulerWorkspaceId", state.currentWorkspaceId);
+    showWorkspaceOverlay(false);
+    await bootSupabaseCentral();
+  }));
+}
+
+async function refreshWorkspacesV38(){
+  const workspaces=await rpcV33("get_my_workspaces",{});
+  state.workspaces=Array.isArray(workspaces)?workspaces:[];
+  updateWorkspaceSelectV33();
+  renderWorkspaceOverlayV38();
+  return state.workspaces;
+}
+
+async function createWorkspaceV38(){
+  const input=document.getElementById("newWorkspaceName");
+  const status=document.getElementById("workspaceStatus");
+  const name=(input?.value||"").trim();
+  if(!name){ if(status) status.textContent="Entre un nom de session."; return; }
+  try{
+    if(status) status.textContent="Création de la session...";
+    const result=await rpcV33("create_my_workspace",{workspace_name:name});
+    await refreshWorkspacesV38();
+    state.currentWorkspaceId=result?.workspace_id || state.workspaces[0]?.id || "";
+    localStorage.setItem("crewSchedulerWorkspaceId", state.currentWorkspaceId);
+    showWorkspaceOverlay(false);
+    await bootSupabaseCentral();
+  }catch(err){
+    if(status) status.textContent=err.message||String(err);
+  }
+}
+
+async function redeemInviteV38(){
+  const input=document.getElementById("inviteCodeInput");
+  const status=document.getElementById("workspaceStatus");
+  const code=(input?.value||"").trim();
+  if(!code){ if(status) status.textContent="Entre un code d’invitation."; return; }
+  try{
+    if(status) status.textContent="Validation du code...";
+    const result=await rpcV33("redeem_workspace_invite",{invite_code:code});
+    await refreshWorkspacesV38();
+    state.currentWorkspaceId=result?.workspace_id || state.workspaces[0]?.id || "";
+    localStorage.setItem("crewSchedulerWorkspaceId", state.currentWorkspaceId);
+    showWorkspaceOverlay(false);
+    await bootSupabaseCentral();
+  }catch(err){
+    if(status) status.textContent=err.message||String(err);
+  }
+}
+
 async function logoutV33(){
   localStorage.removeItem("crewSchedulerAccessToken");
   localStorage.removeItem("crewSchedulerRefreshToken");
-  state.session=null; state.currentUser=null; state.cloudReady=false;
+  state.session=null; state.currentUser=null; state.cloudReady=false; state.currentWorkspaceId="";
+  showWorkspaceOverlay(false);
   showAuthOverlay(true);
 }
 
