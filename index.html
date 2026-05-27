@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Crew Scheduler v40 – Session</title>
+<title>Crew Scheduler v41 – Session</title>
 <style>
 :root{
   --bg:#f4f7fb; --panel:#ffffff; --panel2:#f8fafc; --text:#0f172a; --muted:#64748b;
@@ -848,8 +848,8 @@ button{cursor:pointer}
               <div class="small-note">En mode blocage, les remplaçants en conflit ne seront pas proposés comme choix principal.</div>
             </div>
             <div class="setting-box">
-              <div class="field"><label for="settingCompanyName">Nom affiché de l'équipe</label><input id="settingCompanyName" type="text" placeholder="Ex: Nom de l’équipe / compagnie"/></div>
-              <div class="small-note">Utilisé dans le texte généré pour les courriels et SMS de demande de travail.</div>
+              <div class="field"><label for="settingCompanyName">Nom affiché dans cette session</label><input id="settingCompanyName" type="text" placeholder="Ex: Nom de l’équipe / compagnie"/></div>
+              <div class="small-note">Propre à la session ouverte. Utilisé dans le menu, les courriels et SMS.</div>
             </div>
             <div class="setting-box" style="align-content:end">
               <button class="btn primary" id="btnSaveSettings" type="button">Enregistrer les paramètres</button>
@@ -872,10 +872,14 @@ button{cursor:pointer}
               <h4 style="margin:0">Session actuelle</h4>
               <div class="session-kv">
                 <div>Nom : <strong id="sessionNameText">—</strong></div>
-                <div>Workspace ID : <strong id="sessionIdText">—</strong></div>
                 <div>Ton rôle : <strong id="sessionRoleText">—</strong></div>
                 <div>Statut : <strong id="sessionStatusText">—</strong></div>
               </div>
+              <div class="field" style="margin:0">
+                <label for="sessionNameInput">Renommer la session</label>
+                <input id="sessionNameInput" type="text" placeholder="Nom de la session">
+              </div>
+              <button class="btn secondary" type="button" id="btnRenameWorkspace">Enregistrer le nom de session</button>
               <button class="btn secondary" type="button" id="btnOpenWorkspaceChooser">Changer de session</button>
             </div>
 
@@ -991,7 +995,7 @@ button{cursor:pointer}
 </div>
 
 <script>
-/* Crew Scheduler v40 — paramètres session + postes compacts */
+/* Crew Scheduler v41 — settings par session + RLS employees fix */
 const EVENTS_KEY="crewSchedulerCalendarEventsMergedV1";
 const EMPLOYEES_KEY="crewSchedulerEmployeesV5";
 const ROLES_KEY="crewSchedulerRolesV2";
@@ -1096,7 +1100,6 @@ const els={
   settingCompanyName:document.getElementById("settingCompanyName"),
   settingsSavedMsg:document.getElementById("settingsSavedMsg"),
   sessionNameText:document.getElementById("sessionNameText"),
-  sessionIdText:document.getElementById("sessionIdText"),
   sessionRoleText:document.getElementById("sessionRoleText"),
   sessionStatusText:document.getElementById("sessionStatusText"),
   workspaceMembersList:document.getElementById("workspaceMembersList"),
@@ -2277,7 +2280,8 @@ async function renderWorkspaceMembersV40(){
 function renderSessionSettingsV40(){
   const ws=currentWorkspaceInfoV40();
   if(els.sessionNameText) els.sessionNameText.textContent=ws?.name || "—";
-  if(els.sessionIdText) els.sessionIdText.textContent=state.currentWorkspaceId || "—";
+  const sessionNameInput=document.getElementById("sessionNameInput");
+  if(sessionNameInput && document.activeElement!==sessionNameInput) sessionNameInput.value=ws?.name || "";
   if(els.sessionRoleText) els.sessionRoleText.textContent=ws?.role || "—";
   if(els.sessionStatusText) els.sessionStatusText.textContent=ws?.status || "—";
   renderWorkspaceMembersV40();
@@ -2340,8 +2344,23 @@ function bind(){
 
 
   document.getElementById("btnRefreshAvailability")?.addEventListener("click",()=>syncAllAssignmentsFromSupabase());
-  document.getElementById("btnSaveSettings")?.addEventListener("click",()=>{ state.settings.defaultChannel=els.settingDefaultChannel.value; state.settings.conflictMode=els.settingConflictMode.value; state.settings.companyName=els.settingCompanyName.value.trim()||"Crew Scheduler"; saveSettings(); els.settingsSavedMsg.textContent="Paramètres enregistrés."; renderAll(); });
+  document.getElementById("btnSaveSettings")?.addEventListener("click",async()=>{ 
+    state.settings.defaultChannel=els.settingDefaultChannel.value; 
+    state.settings.conflictMode=els.settingConflictMode.value; 
+    state.settings.companyName=els.settingCompanyName.value.trim()||"Crew Scheduler"; 
+    saveSettings(); 
+    try{ await saveWorkspaceSettingsV41(); els.settingsSavedMsg.textContent="Paramètres enregistrés pour cette session."; }
+    catch(err){ els.settingsSavedMsg.textContent="Sauvegarde locale OK, mais erreur Supabase: "+(err.message||err); }
+    renderAll(); 
+  });
   document.getElementById("btnOpenWorkspaceChooser")?.addEventListener("click",()=>{ renderWorkspaceOverlayV38(); showWorkspaceOverlay(true); });
+  document.getElementById("btnRenameWorkspace")?.addEventListener("click",async()=>{
+    const input=document.getElementById("sessionNameInput");
+    try{
+      await renameCurrentWorkspaceV41(input?.value||"");
+      renderAll();
+    }catch(err){ alert(err.message||String(err)); }
+  });
   document.getElementById("btnCreateInviteSettings")?.addEventListener("click",async()=>{
     const role=document.getElementById("inviteRoleSelect")?.value||"admin";
     try{
@@ -2904,6 +2923,7 @@ function employeeToSupabaseRow(emp){
   const clean={...emp, id:ensureUuidV10(emp.id)};
   return {
     id: clean.id,
+    workspace_id: state.currentWorkspaceId || '00000000-0000-4000-8000-000000000001',
     name: clean.name || "Sans nom",
     email: clean.email || "",
     phone: clean.phone || "",
@@ -3173,6 +3193,53 @@ async function logoutV33(){
   showAuthOverlay(true);
 }
 
+async function loadWorkspaceSettingsV41(){
+  if(!state.currentWorkspaceId || state.localFallback) return;
+  try{
+    const ws=encodeURIComponent(state.currentWorkspaceId);
+    const rows=await supabaseFetchV10(`workspace_settings?workspace_id=eq.${ws}&select=*`);
+    const row=Array.isArray(rows)?rows[0]:null;
+    const settings=row?.settings && typeof row.settings==="object" ? row.settings : {};
+    state.settings={
+      defaultChannel: settings.defaultChannel || "email",
+      conflictMode: settings.conflictMode || "warn",
+      companyName: settings.companyName || "Crew Scheduler"
+    };
+    saveSettings();
+  }catch(err){
+    console.warn("Chargement settings workspace échoué", err);
+  }
+}
+
+async function saveWorkspaceSettingsV41(){
+  if(!state.currentWorkspaceId || state.localFallback) return;
+  const payload={
+    workspace_id: state.currentWorkspaceId,
+    settings:{
+      defaultChannel: state.settings.defaultChannel || "email",
+      conflictMode: state.settings.conflictMode || "warn",
+      companyName: state.settings.companyName || "Crew Scheduler"
+    },
+    updated_at:new Date().toISOString()
+  };
+  await supabaseFetchV10("workspace_settings?on_conflict=workspace_id",{
+    method:"POST",
+    headers:{"Content-Type":"application/json","Prefer":"resolution=merge-duplicates,return=representation"},
+    body:JSON.stringify(payload)
+  });
+}
+
+async function renameCurrentWorkspaceV41(newName){
+  const clean=String(newName||"").trim();
+  if(!clean) throw new Error("Le nom de session est obligatoire.");
+  await supabaseFetchV10(`workspaces?id=eq.${encodeURIComponent(state.currentWorkspaceId)}`,{
+    method:"PATCH",
+    headers:{"Content-Type":"application/json","Prefer":"return=representation"},
+    body:JSON.stringify({name:clean,updated_at:new Date().toISOString()})
+  });
+  await refreshWorkspacesV38();
+}
+
 async function loadEventsFromSupabaseV10(){
   const ws=encodeURIComponent(state.currentWorkspaceId||'');
   const rows=await supabaseFetchV10(`events?workspace_id=eq.${ws}&select=*&order=start_date.asc`);
@@ -3237,6 +3304,7 @@ async function bootSupabaseCentral(){
     }
     const localEvents=loadEvents();
     const localEmployees=loadEmployees();
+    if(!state.localFallback) await loadWorkspaceSettingsV41();
     let [remoteEvents,remoteEmployees]= state.localFallback ? [[],[]] : await Promise.all([loadEventsFromSupabaseV10(), loadEmployeesFromSupabaseV10()]);
 
     // v39: une nouvelle session/workspace doit être vierge.
